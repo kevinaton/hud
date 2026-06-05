@@ -1,0 +1,49 @@
+{
+  "name": "hud",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --filter web build",
+    "start": "pnpm --filter web start",
+    "typecheck": "pnpm --filter web typecheck",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "test": "pnpm --filter web test",
+    "test:run": "pnpm --filter web test:run",
+    "db:generate": "pnpm --filter @hud/db db:generate",
+    "db:migrate": "pnpm --filter @hud/db db:migrate",
+    "db:studio": "pnpm --filter @hud/db db:studio",
+    "db:seed": "pnpm --filter web db:seed",
+    "import:cashflow": "pnpm --filter web import:cashflow",
+    "db:reset-password": "tsx scripts/reset-password.ts"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.10.0",
+    "drizzle-orm": "^0.38.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.15.21",
+    "tsx": "^4.19.4"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@biomejs/biome",
+      "@node-rs/argon2",
+      "better-sqlite3",
+      "esbuild",
+      "sharp"
+    ],
+    "overrides": {
+      "drizzle-orm": "0.38.4"
+    },
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "drizzle-orm>@opentelemetry/api": "*"
+      }
+    }
+  }
+}

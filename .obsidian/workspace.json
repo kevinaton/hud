@@ -1,0 +1,270 @@
+{
+  "main": {
+    "id": "413d647000b84bbb",
+    "type": "split",
+    "children": [
+      {
+        "id": "af872208ea77630f",
+        "type": "tabs",
+        "dimension": 41.92390524048816,
+        "children": [
+          {
+            "id": "5a398a8fb66ca4f1",
+            "type": "leaf",
+            "state": {
+              "type": "kanban",
+              "state": {
+                "file": "plan/Kanban.md",
+                "kanbanViewState": {
+                  "kanban-plugin": "board",
+                  "list-collapse": [
+                    false,
+                    false,
+                    false
+                  ]
+                }
+              },
+              "icon": "lucide-trello",
+              "title": "Kanban"
+            }
+          }
+        ]
+      },
+      {
+        "id": "e8f9d86048cc47e6",
+        "type": "tabs",
+        "dimension": 58.07609475951184,
+        "children": [
+          {
+            "id": "ea17319f1e5d3896",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "plan/tasks/Ticket 03 Implement Authentication Sign-up Login Session Lockout.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Ticket 03 Implement Authentication Sign-up Login Session Lockout"
+            }
+          },
+          {
+            "id": "c262f57be66b5b08",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "plan/tasks/Ticket 05 Add Transaction Write Modal API and Audit Log.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Ticket 05 Add Transaction Write Modal API and Audit Log"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "f4d6d7e5d475e5cb",
+    "type": "split",
+    "children": [
+      {
+        "id": "8f84154170ffa98e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "8c5fd57c10dc1b92",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "3b6c2ed2601a317e",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "git init",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "bdda1f22615569f3",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 242.5
+  },
+  "right": {
+    "id": "844e28ff0481de69",
+    "type": "split",
+    "children": [
+      {
+        "id": "0961ff0ecd8fcbf0",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "013751600ff43b59",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "0b30d3d9a5302d3c",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "fa71d30d06e5bf97",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "3f397d53264e0242",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "60cb425164a36d6f",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false,
+      "obsidian-kanban:Create new board": false,
+      "terminal:Open terminal": false
+    }
+  },
+  "active": "ea17319f1e5d3896",
+  "lastOpenFiles": [
+    "plan/tasks/Ticket 03 Implement Authentication Sign-up Login Session Lockout.md",
+    "data/hud.db-shm",
+    "data/hud.db-wal",
+    "apps/web/data/import-failures-2026-06-05T15-27-26-751Z.jsonl",
+    "apps/web/data",
+    "apps/web/scripts/import-cashflow.ts",
+    "apps/web/scripts",
+    "plan/Kanban.md",
+    "plan/tasks/Ticket 05 Add Transaction Write Modal API and Audit Log.md",
+    "apps/web/app/api/transactions/__tests__/route.test.ts",
+    "apps/web/app/api/transactions/__tests__",
+    "apps/web/components/hud/AddTransactionButton.tsx",
+    "apps/web/components/hud/AddTransactionModal.tsx",
+    "plan/tasks/Ticket 04 Build Cashflow Page Read View with Aggregations.md",
+    "plan/tasks/Ticket 01 Scaffold Monorepo and Design System.md",
+    "plan/blueprints/26060502-mvp-foundation-cashflow.md",
+    "plan/tasks/Ticket 00 Sample.md",
+    "plan/tasks/Ticket 06 Build CSV Importer CLI and Commit Production Config Artifacts.md",
+    "plan/tasks/Ticket 02 Build Database Schema Migrations and Money Library.md",
+    "plan/blueprints/26060504-mvp-agent-strategy.md",
+    "plan/Kevin HUD.md",
+    "plan/blueprints/26060503-multi-tenant-server-layout.md",
+    "plan/reference/Finance.md",
+    "plan/reference/HUD.md",
+    "plan/HUD Architecture v2.canvas",
+    "plan/reference/Obsidian vault management.md",
+    "plan/blueprints/26060402-obsidian-iphone-sync-webdav.md",
+    "plan/blueprints/26060401-obsidian-iphone-sync.md",
+    "plan/blueprints/adr/ADR-26060501-vault-client-model.md",
+    "plan/reference/caddy.md",
+    "Pasted image 20260604231547.png",
+    "plan/reference/SQlite.md",
+    "Pasted image 20260604231712.png",
+    "Pasted image 20260604232606.png",
+    "plan/reference/Dashboard.md",
+    "plan/Kevin Command Center.md",
+    "plan/Command Center Architecture v2.canvas",
+    "plan/reference/sentry-uptime-kuma.md",
+    "plan/reference/secrets.md",
+    "plan/reference/redis.md"
+  ]
+}

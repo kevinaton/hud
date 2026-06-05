@@ -1,0 +1,15 @@
+# Litestream replication config — committed in MVP, deployed in Phase 1
+# Replicates SQLite WAL to Cloudflare R2
+
+dbs:
+  - path: /var/lib/hud/data/hud.db
+    replicas:
+      - type: s3
+        endpoint: https://<account-id>.r2.cloudflarestorage.com
+        bucket: hud-db-backups
+        path: hud.db
+        access-key-id: ${R2_ACCESS_KEY_ID}
+        secret-access-key: ${R2_SECRET_ACCESS_KEY}
+        sync-interval: 1s
+        snapshot-interval: 24h
+        retention: 72h

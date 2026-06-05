@@ -1,0 +1,426 @@
+id,name,date,time,status,priority,description,created_at,updated_at,archived_at
+005,"Event organizer scalper","Feb 09 2026","",backlog,medium,"","2026-02-18 14:33:32","2026-02-18 14:33:32",
+008,"create chat support using gemini","Feb 17 2026","",backlog,medium,"","2026-02-18 14:33:32","2026-04-05 17:23:24",
+010,"database analyzer generate report and graphs that is long","Feb 17 2026","",backlog,medium,"","2026-02-18 14:33:32","2026-02-19 16:39:30",
+014,"Chat: message search","Feb 17 2026","",done,low,"","2026-02-18 14:33:32","2026-03-02 07:10:37",
+019,"Generate dynamic charts, and graphs","Feb 18 2026","",backlog,medium,"","2026-02-18 14:33:32","2026-03-04 16:49:44",
+021,"ascii table for telegram","Feb 18 2026","",done,low,"","2026-02-18 15:38:26","2026-02-19 17:04:20",
+025,"revamp API","Feb 20 2026","",done,medium,"Phase 5 partially complete - API deployed with JWT infrastructure ready but PM2 environment variable loading issue prevents JWT activation. System stable with X-Password authentication.","2026-02-20 02:06:25","2026-03-11 03:47:37",
+026,"Chat: Revamp chat in Emily's Web app","","",done,medium,"Remove openclaw as the backend chat for Emily's web app.","2026-02-21 17:04:34","2026-02-23 10:22:51",
+027,"openclaw agent outside root","Feb 22 2026",2:24AM,done,medium,"","2026-02-21 18:24:19","2026-02-24 15:23:34",
+028,"Improve security of web app","Feb 23 2026","",done,medium,"Documentation: /var/www/cashflow-manager/documentation/SECURITY-IMPROVEMENT-PLAN.md","2026-02-23 10:22:02","2026-02-24 15:23:37",
+029,"github skill","","",done,medium,"","2026-02-23 15:55:28","2026-02-25 04:16:14",
+030,"🌐 Add multilingual selection for find your seat app","Feb 24 2026","",done,medium,"Let's add language selection. it will be a dropdown that user can select. the option has the flag icon and the name of the language. example 🇺🇸 English, 🇫🇷 French.
+
+Languages to add are:
+English, Tagalog, French","2026-02-23 18:01:37","2026-02-27 11:10:44",
+031,"RSVP AI builder","Feb 24 2026",10:52AM,backlog,medium,"","2026-02-24 02:52:37","2026-02-24 02:52:37",
+033,"openrouter integration","","",done,medium,"","2026-02-24 14:35:40","2026-02-25 06:19:58",
+034,"Revamp quickactions chat","","",done,medium,"","2026-02-24 15:25:14","2026-02-25 09:12:06",
+036,"Github automation","","",done,medium,"Emily would be able to automate pull and push from the repos daily. ","2026-02-25 04:16:55","2026-03-02 07:10:28",
+037,"Image renamer","Feb 25 2026",12:20PM,done,medium,"AI comes up with names for the images downloaded from the site based on their website details.
+
+So far it is working.","2026-02-25 04:20:04","2026-02-25 09:12:20",
+038,"add SSE to cashflow","Feb 25 2026",2:22PM,done,medium,"when I request Emily to add update or delete an expense or earning in cashflow, I still need to refresh the cashflow tab. can we apply the ssd so that whenever there's an changes, it will update directly just like how it happens in task.","2026-02-25 06:22:28","2026-02-26 15:47:56",
+039,"🧪 Add TEST Header","Feb 26 2026",8:46AM,done,medium,"in cashflow tab, add TEST header text. put it in blue","2026-02-25 10:18:42","2026-02-26 06:20:08",
+040,"explore satellite communication","Feb 26 2026",8:18AM,backlog,medium,"","2026-02-26 00:18:54","2026-02-26 00:18:54",
+041,"Add emoji to tickets","Feb 26 2026",8:36AM,done,medium,"User can provide emoji manually, but if not, Emily will automatically suggest emoji based on the context of the ticket.","2026-02-26 00:36:30","2026-02-26 05:34:04",
+042,"Add ticket file manager","Feb 26 2026",8:38AM,backlog,medium,"User would be able to read files in the server like workspace and more","2026-02-26 00:38:48","2026-02-26 00:38:48",
+043,"add filter for status in task table","Feb 26 2026",8:48AM,done,medium,"","2026-02-26 00:48:37","2026-02-26 06:20:01",
+044,"🔊 Add sound to opencode when done","Feb 26 2026","",done,medium,"To add sound notifications to the OpenCode CLI on macOS, use the opencode-smart-voice-notify plugin. Install it by adding opencode-smart-voice-notify@latest to the plugin array in your ~/.config/opencode/opencode.json config file. Alternatively, create custom Bash scripts using afplay triggered by JavaScript plugins in ~/.config/opencode/plugins/. 
+GitHub
+GitHub
+ +2
+Here are the specific methods to add sound to OpenCode CLI on macOS:
+Method 1: Using the opencode-smart-voice-notify Plugin (Recommended) 
+This plugin plays sounds and sends notifications when tasks complete, errors occur, or permissions are needed. 
+GitHub
+GitHub
+Edit Config: Open or create ~/.config/opencode/opencode.json.
+Add Plugin: Update it to include the plugin:
+json
+{
+  ""$schema"": ""https://opencode.ai/config.json"",
+  ""plugin"": [""opencode-smart-voice-notify@latest""]
+}
+Automatic Setup: Upon running OpenCode, it will automatically install the plugin, generate configuration files, and add .mp3 sound files in ~/.config/opencode/","2026-02-26 05:28:29","2026-02-26 07:18:01",
+045,"🐶 App level: AI Pet Management app","Feb 26 2026",1:49PM,backlog,medium,"","2026-02-26 05:49:11","2026-03-02 02:00:22",
+046,"Add ID information in edit task modal","","",done,medium,"We need to add ID information in edit task modal in kanban,","2026-02-26 06:38:32","2026-02-26 06:49:33",
+047,"Untruncate description under activity logs","Feb 27 2026",12:29AM,done,low,"","2026-02-26 16:29:11","2026-02-27 14:44:53",
+048,"Explore maple.dev","Feb 27 2026",9:05AM,done,medium,"","2026-02-27 01:05:13","2026-02-27 08:12:13",
+049,"Explore ssh-mcp for opencode","","",done,medium,"Review https://github.com/tufantunc/ssh-mcp and check if it is feasible for our current setup so that I can use opencode in my terminal and access server through ssh and code easily in my local machine.
+
+Another request I have is I want to continue coding while on the gym. is there a way I can do that where opencode is accessible in mobile maybe bridging. or at least use openclaw to be the bridge.","2026-02-27 08:28:17","2026-03-02 07:10:58",
+050,"Create a backend tutorial","Feb 27 2026",10:17pm,done,medium,"So as a UX designer and wanting to become a design engineer and wanted to learn the fundamentals in backend. I already have the empathy of designer and frontend but as a backend developer I have not. I need to understand the process in development in backend and learn backend. You will be an expert educator where You can use our current server as the learning tool or example when teaching the backend.","2026-02-27 14:17:20","2026-03-22 02:49:01",
+051,"Add confetti animation and sound when ticket is done","Feb 27 2026",10:18pm,done,medium,"Once a ticket is done, there should be a confetti animation and sound to celebrate the completion.","2026-02-27 14:45:55","2026-03-06 11:56:40",
+052,"host opencode in server","Feb 28 2026",8:51PM,done,medium,"Currently opencode is installed in the server. Can we run it so that I can just access it in the web. refer the these reference:
+https://opencode.ai/docs/server/#:~:text=opencode%20serve%20%2D%2Dcors%20http,Spec
+https://opencode.ai/docs/web/
+
+So maybe access opencode in https://46.225.69.45/4096 then just use OPENCODE_SERVER_PASSWORD","2026-02-28 12:51:28","2026-03-01 14:49:32",
+053,"activity logs","Mar 1 2026",11:23PM,done,medium,"limit initial fetch. add pagination and display row 20, 50, 100","2026-03-01 15:23:20","2026-03-02 06:01:13",
+054,"understand AI model","Mar 01 2026",11:25PM,backlog,medium,"understand how openclaw understand context, opencode and claude. This is for improving find-your-seat on where we can efficiently architect the context of an event assistant on top of a low model but still effective","2026-03-01 15:25:45","2026-03-01 15:25:45",
+055,"explore wifi motion","Mar 02 2026",12:35AM,backlog,medium,https://www.opensourceprojects.dev/post/9c36ba1a-fc67-4ba2-b42a-8711cc91c2f6,"2026-03-01 16:35:07","2026-03-01 16:35:07",
+056,"temporary disable cashflow manager chat widget","Mar 2 2026",8:45AM,done,medium,"Chatbot is not really usable as of the moment. So we disable it temporarily","2026-03-02 00:45:37","2026-03-02 01:52:02",
+057,"add CRUD feature in cashflow tab","Mar 2 2026",9:55AM,done,medium,"So far cashflow tab has the delete function. we need to add the ability to add and edit cashflow in the web app. Reference the form in task.","2026-03-02 01:55:48","2026-03-02 07:07:15",
+058,"add table filter in cashflow tab","Mar 2 2026",9:58AM,done,medium,"Add a date filter for cashflow tab. these are the options:
+1. This month (default)
+2. Last month
+3. Date range. user can select multiple dates.","2026-03-02 01:58:16","2026-03-04 12:27:31",
+061,"ship cashflow manager","Mar 02 2026",10:59AM,backlog,medium,"we will ship cashflow-manager web app to github using my personal github account. So if user clone this, they will have their own cashflow manager runned by openclaw. We might need to remove details like we must not ship the soul, memory of Emily or openclaw. also the current data in db. and more. We need to list down all parameters that must be set to default so that user can set it up on their own","2026-03-03 03:00:03","2026-03-03 03:00:03",
+062,"call noel","Mar 03 2026",2:17PM,done,medium,"","2026-03-03 06:18:00","2026-03-03 15:57:17",
+063,"create local customer support agent","Mar 03 2026",10:59PM,backlog,medium,"use ollama, qwen 3. Agent replies in telegram","2026-03-03 14:59:51","2026-03-03 14:59:51",
+064,"integrate free models in Hugging Face","Mar 3 2026",11:42PM,done,medium,"Add Hugging Face models to the available model list. Currently, we have models from Zen and OpenRouter. check this article for potential models to add https://huggingface.co/blog/daya-shankar/open-source-llms. can we add them as api like how we integrate zen and openrouter here in opencode?","2026-03-03 15:42:25","2026-03-04 04:47:11",
+065,"optimize opencode token usage","","",done,medium,"currently opencode token usage is very high.","2026-03-04 04:55:57","2026-03-04 07:01:36",
+066,"test task from terminal","Mar 04 2026",1:40PM,done,medium,"","2026-03-04 05:40:31","2026-03-04 12:38:06",
+067,"Get endpoint for tasks","Mar 04 2026",1:50PM,done,medium,"","2026-03-04 05:50:33","2026-03-04 06:40:46",
+068,"study remotion","Mar 04 2026",6:37PM,backlog,medium,"review this https://www.remotion.dev/","2026-03-04 10:37:19","2026-03-04 10:37:19",
+069,"Research Marketing APIs","Mar 04 2026",8:46PM,backlog,medium,"explore possible marketing apis to get trends, insights in order to build followers, views in instagram, x and tiktok.","2026-03-04 12:49:28","2026-03-04 12:49:28",
+070,"Get Payment Allan","Mar 05 2026",12:00AM,done,medium,"","2026-03-04 16:00:12","2026-03-06 10:10:07",
+071,"Test Task from opencode","Mar 4 2026",2:30pm,done,medium,"Testing the add task API","2026-03-04 16:40:29","2026-03-06 10:09:17",
+072,"Check task review","Mar 05 2026",12:43AM,done,medium,"","2026-03-04 16:43:46","2026-03-04 16:44:41",
+073,"Make skill global","Mar 05 2026",7:35AM,backlog,medium,"Skills will be used by multiple openclaw agents and even opencode","2026-03-04 23:35:53","2026-03-04 23:35:53",
+074,"explore paperclip","Mar 05 2026",7:47AM,done,medium,https://github.com/paperclipai/paperclip,"2026-03-04 23:47:33","2026-04-25 08:18:26",
+075,"Host local AI model","Mar 05 2026",8:09AM,backlog,medium,"install ollama and add Qwen3.5 9B in macbook","2026-03-05 00:09:47","2026-03-05 00:09:47",
+076,"Local staging environment","Mar 05 2026",8:33PM,backlog,medium,"Why not move staging environment to local machine for faster and better development. but the problem is do we also stage openclaw in the staging environment to make sure the communication with openclaw and web app works?","2026-03-05 12:33:13","2026-03-05 12:33:13",
+077,"improve edit task md documentation section to be editable","Mar 06 2026",12:52AM,done,medium,"","2026-03-05 16:52:32","2026-03-07 03:15:21",
+078,"Edit Task Revamp","Mar 6 2026",6:05pm,done,medium,"Make MD section editable","2026-03-06 10:05:13","2026-04-02 02:46:17",
+079,"POC for Code Connect","Mar 6 2026",7:39pm,done,medium,"Use Figma code connect + claude to create prototypes and POC. https://youtu.be/_9OdGDjFrCw?si=sxg4-p35CeCLCN6c.
+
+Code connect is not feasible for now because it needs a higher subscription like organization in order to use the feature.","2026-03-06 11:39:19","2026-04-01 15:56:53",
+080,"Explore intent","","",done,medium,"https://www.augmentcode.com/blog/intent-a-workspace-for-agent-orchestration
+
+Unfortunately, intent is not opensource. So we have no freedom in it.","2026-03-09 03:23:14","2026-03-09 11:41:43",
+082,"explore pencil.dev","","",backlog,medium,"","2026-03-09 03:23:58","2026-03-09 03:23:58",
+083,"Update engineer-skill and opencode","","",done,medium,"Update Claude's engineer-skill to use the branch created in the documentation for the specific tasks. skill can stage, commit and push to the branch for the task as the user commands. This will help us manage our updates on the system and undo or fallback incase there are issues.
+
+Also update opencode with the same flow for the engineer-skill. where opencode will check documentation, will add the checking of git branch if there is any. can also stage, commit and push to the branch. will also assist user on git commands. I am not sure though what is best if we will just add this in agent.md or create a skill.","2026-03-09 05:09:26","2026-03-09 07:57:14",
+084,"update architect-skill","Mar 9 2026",1:10PM,done,medium,"whenever doing a task, create a git branch for the specific task and add it in the documentation so that engineer-skill or other agent can reference it whenever they do the task. Refer to github-skill in openclaw for details in git handling. also with this added flow, we can stage, commit, push, undo changes. then we can push to main branch if everything went well or undo or fallback if everything is not ok.","2026-03-09 05:10:55","2026-03-09 07:57:11",
+085,"Explore https://paper.design/","Mar 10 2026",10:14AM,done,medium,"","2026-03-10 02:14:47","2026-03-22 02:48:57",
+086,"Explore Marketing Agent","Mar 10 2026",10:16AM,backlog,medium,"look for an AI agent that can help in my marketing workflows like posting, editing reels","2026-03-10 02:16:10","2026-03-10 02:16:10",
+087,"Surfs Delight App","Mar 10 2026",10:30AM,done,medium,"Polish the reasearch.md and implementation.md then let Nick use the implementation plan to build the app.","2026-03-10 02:31:00","2026-04-01 14:40:09",
+088,"cross agent communication","Mar 21 2026",09:57AM,backlog,medium,"","2026-03-21 01:57:54","2026-03-21 01:57:54",
+089,"Browser visible in my server","Mar 22 2026",08:35AM,done,medium,"Goal is to run browsers in the server and be visible by a path then allow agents to control it. Architecture documented in: /var/www/cashflow-manager/documentation/089-improve-task.md (based on /root/.openclaw/workspaces/rick/SHARED_BROWSER_ARCHITECTURE.md).","2026-03-22 00:35:08","2026-03-22 07:52:37",
+090,"create Finance manager agent","Mar 22 2026",10:47AM,done,medium,"this agent will handle my financial matters and auditing my business airbnb, venued.app","2026-03-22 02:47:39","2026-04-01 13:35:55",
+091,"revamp ticket","Mar 24 2026",01:12AM,done,medium,"For tasks tickets revamp. Instead of the documentation is in /var/www/cashflow-manager/documentation, we will put it in the ticket instead along with the task name, description date & time, and more. Can you check what are affected with this update and adjust, openclaw skills are affected with this, also claude agent.md skills and opencode agents.md and skills are needed to be reviewed. Plan the implementation.","2026-03-23 17:12:52","2026-04-01 13:36:25",
+092,"Improve Cashflow Tab","Mar 26 2026",12:07PM,backlog,medium,"Strategic overhaul of the cashflow tab's API interactions – ensuring API requests are minimal, filters are smart, and SSE is gracefully removed.","2026-04-01 04:07:20","2026-04-01 04:07:20",
+093,"Secure API Key","Mar 26 2026",12:07PM,backlog,medium,"","2026-04-01 04:07:21","2026-04-01 04:07:21",
+094,"develop cron manager","Apr 01 2026"," 3:40PM",backlog,medium,"in cashflow-manager, we can display cron jobs currently available and also can create, edit and manage cron jobs","2026-04-01 07:40:12","2026-04-01 07:40:12",
+095,"Edit Task Revamp","Apr 01 2026",11:46PM,done,medium,"What if we add a Terminal in the ticket? also has it's own tmux session. the name of the tmux session is the ticket. User can create tabs of terminal if it wants","2026-04-01 15:46:17","2026-04-05 17:23:02",
+096,"log viewer","Apr 02 2026",12:51AM,backlog,medium,"add a log viewer on edit task popup wherein you can see a view only action of the development. This log viewer updates real time where user can see the activities, errors and successes","2026-04-01 16:51:25","2026-04-01 16:51:25",
+097,"Manus AI Automation","Apr 2 2026",10:47AM,backlog,medium,"I want to use manus AI for managing my Instagram and Facebook marketing for venued.app.
+So far I dont know what are the capabilities of manus but I can connect it to instagram.
+I want to check if it can compile lists of event and wedding organizers in some areas. Can it automate cold calls to these list of leads (event organizers), automate sharing existing posts to facebook groups by schedule. If there are more potentials it would be great.","2026-04-02 02:48:00","2026-04-25 08:18:30",
+098,"Setup Heartbeat","","",in_progress,medium,"Enhance agent heartbeat to do autonomous tasks.","2026-04-02 04:42:40","2026-04-29 04:03:03",
+099,"Embed Spreadsheet","Apr 02 2026"," 8:08PM",backlog,medium,"research for any tools, library that is opensource, free and light that is compatible with shadcnui and next.js","2026-04-02 12:08:53","2026-04-02 12:08:53",
+100,"Gogcli integration","Apr 3 2026",3:13PM,done,medium,"Gmail account connected to openclaw. What tools, steps to do. Research openclaw docs","2026-04-03 07:13:05","2026-04-08 01:54:48",
+101,"Gemma 4 run local","Apr 04 2026",10:04AM,backlog,medium,"Use Gemma 4 and run in Mac. Find ways to use it for object recognition, satellite communication","2026-04-04 02:04:56","2026-04-04 05:41:47",
+102,"Explore the-dev-squad","Apr 05 2026",11:03AM,in_progress,medium,"Check pros and cons on our current setup, https://github.com/johnkf5-ops/the-dev-squad?fbclid=IwQ0xDSwQ-sHRleHRuA2FlbQIxMQBzcnRjBmFwcF9pZAo2NjI4NTY4Mzc5AAEeOoB4U9gnIFjn_MFEglEwyP8yrH4AAkrUTHbUEstUp8uyf3e_Z7P4bCtTcwM_aem_1AWmwa7g4eE3CM72wZATKw","2026-04-05 03:03:38","2026-05-01 08:03:28",
+103,"Airbnb AI chat","Apr 05 2026",11:49AM,in_progress,medium,"Is there a way we can integrate with airbnb and allow AI to help chat with guests. one provider is https://www.getbesty.ai/integrations?category=besty-native","2026-04-05 03:49:32","2026-04-29 04:04:51",
+104,"Research Luma AI","Apr 5 2026",08:49PM,in_progress,medium,"What is Luma AI? 
+What are its usage?
+What usecase of Luma with Openclaw, Claude, Opencode","2026-04-05 12:49:34","2026-04-29 08:03:35",
+105,"Make edit task full screen","Apr 06 2026",09:01AM,in_progress,medium,"Instead of pop-up, edit task is full screen so that we can add more features on it later on.","2026-04-06 01:01:34","2026-04-29 16:04:20",
+106,"Explore Terminal for web","Apr 6 2026",09:08AM,in_progress,medium,"The following providers for adding terminal into the edit task page so that I dont need to open terminal separately.
+1. https://github.com/rabchev/web-terminal
+2. https://www.terminaltemple.com/
+3. https://github.com/xtermjs/xterm.js/
+4. https://github.com/rabchev/web-terminal
+
+Currently I am accessing current server we are hosted using ssh and opening claude manually. what if we expose the terminal here in the web app directly and here I can run claude or opencode directly without using terminal, ssh and running claude or opencode. the security issue is the same right? if I ssh or just directly here in the web app.","2026-04-06 01:08:10","2026-04-29 20:03:06",
+107,"Host N8N free","Apr 06 2026",09:26AM,backlog,medium,"Find a way to host n8n for free in the server","2026-04-06 01:26:22","2026-04-08 07:01:15",
+108,"Add UI/UX Pro Max skill","Apr 06 2026",05:30PM,in_progress,medium,"Add UI/UX Pro Max skill to Claude, Gemini and OpenCode","2026-04-06 09:30:12","2026-04-28 00:03:32",
+109,"Explore Gemma 4","Apr 6 2026",06:50PM,in_progress,medium,"Explore Gemma 4 for Macbook Intel or iPhone X. where can I install and run it locally.","2026-04-06 10:50:46","2026-04-28 00:03:58",
+110,"Blender to OpenClaw","Apr 07 2026",06:20PM,backlog,medium,"","2026-04-07 10:21:01","2026-04-07 10:53:00",
+111,"Tapo cat poop detector","Apr 07 2026",09:07PM,backlog,medium,"Detect cats vomitting and pooping","2026-04-07 13:08:24","2026-04-07 13:08:24",
+112,"Explore career-ops GitHub","Apr 08 2026",10:22AM,backlog,medium,"Explore https://github.com/santifer/career-ops/tree/main","2026-04-08 02:22:12","2026-04-08 02:22:12",
+113,"Speak in Google I/O","","",in_progress,high,"I am tasked to speak in Google I/O this May 16, 2026. And the audience will be non-techy people, coders, students, developers. And I need to create a 90min workshop to use Google AI Studio, Gemini and other google products.","2026-04-09 03:07:23","2026-05-01 04:02:37",
+114,"second brain","","",done,medium,"how to add obsidian for both claude, openclaw, opencode, gemini to combine all my knowledge. or maybe just use graphify https://github.com/safishamsi/graphify.
+
+Need to explore what are its usage, what are the differences, I dont need visuals so does obsidian really matters or just graphify?
+
+just saw this video in youtube https://youtu.be/EKbQ5sajVxA?si=mhSo-kPl9DP5SJZ6
+
+youtube transcript:
+
+The problem (Intro)
+If you're using Claude code and you
+think it actually knows your business,
+it's just pretending to. Every time you
+start a new session with Claude, it
+rereads all your files from scratch. The
+problem is that we're looking at
+thousands of tokens wasted for Claude to
+remember what it already knew. What
+we're looking at is Graphify inside of
+Obsidian. Graphy takes your entire
+codebase, your documents, your strategy
+plans, even your images into a knowledge
+graph. It maps how everything in your
+business actually connects to one
+another and it persists. You can see how
+my digital assets connect to other parts
+of my codebase. So when I ask Claude
+about business operations and revenue,
+it automatically intimates that
+conversation with my school community
+and my courses. It doesn't GP through
+300 files. It already has the map and it
+was a one-time build. 70 times fewer
+tokens per search. What we're basically
+looking at is a localized rag system for
+claw code. If I've piqu your interest,
+great, because I'm going to explain to
+you exactly what Graphy is. I'm going to
+show you how Graphify and Obsidian work
+together inside of Claude Code, and then
+most importantly, show you how to set it
+up a toz. This is the actual Graphify
+What is Graphify
+repo with over 16,000 stars in less than
+2 days. The build was inspired by a guy
+named Andre Carpathy, one of the
+founding members of OpenAI, and I dare
+say one of the least greediest of the
+whole bunch. He drops all the sauce on
+everything that works for him. And his
+recommendation is keeping a raw folder
+where you drop all of your assets and
+you let Claude sift through the mess and
+make sense of it all. And he dropped a
+post somewhere saying that somebody
+should build the solution to this
+problem. Within 24 hours, Graphify was
+built and created the answer to this
+problem. We're looking at 70 times fewer
+tokens per search. GP search is what
+GREP vs. Graphify
+Claude uses naturally. You can consider
+GP somewhat of a flashlight on your
+database. Graphify is a satellite for
+your codebase with a 5G connection. And
+I'm talking about with Verizon, not
+T-Mobile. GP searches for file names.
+Graphify takes it to the next level.
+Graphy will reveal relationships between
+every item in your codebase. If you're
+an anime lover, think about it in terms
+of solo leveling. The main character has
+an army of shadow soldiers, and each of
+their brains are connected
+instantaneously. So, the intel is shared
+throughout the battlefield all at once.
+So now Claude sees the whole map, not
+just the small room you're hanging out
+in. With GP, you have to know what
+you're searching for. It's going to do a
+linear search across the codebase. It's
+quick, but it's stateless. Versus
+Graphify, mapping relationships between
+the assets in the codebase. Mapped with
+persistent memory that costs close to
+nothing when it comes to tokens. Claude
+naturally using GP will tell you where
+something is. Graphy will tell you why
+it actually matters. Sentiment behind
+How Obsidian, Graphify, & Claude Work Together
+the searching. But where does Obsidian
+come into the mix of Graphify and Claude
+Code? That's a great question. Obsidian
+basically allows you to take all the
+data that Graphify has structured
+together in a JSON file and create a
+visual situation for you inside of the
+Obsidian Bula. To be clear, Clawed Code
+is not pulling the data from Obsidian,
+but rather from the Graphify output, and
+it's created the JSON and the HTML
+files. So, the actual functionality has
+nothing to do with Obsidian, but
+everything to do with this JSON file.
+Live Showcase of Graphify in Claude Terminal
+Now, as an exercise to show you how
+Graphify is going to work inside of
+Claude code, I'm going to ask Claude,
+""What kind of meaningful relationships
+with my data have you found via the
+Graphify JSON?"" And what Graphy found is
+about 137 community clusters. So when it
+comes to business revenue architecture
+for business operations and revenue,
+this one cluster that I showed you
+earlier on Obsidian, it maps how CNC
+strategic connects to agency done for
+you, brand deals, school community, and
+a future plan for an inner circle group.
+And it mapped the relationship to the
+different assets, the proposals, the
+playbooks, the PDFs. So my business
+model as a graph. So what about my
+content pipeline? I created a workflow
+called Go Viral Pro and it called it the
+content aggregation pipeline and it
+basically mapped out all the tools
+within that sector of this codebase and
+for people and avatar network it
+referenced all the people that I've
+spoken about with Claude and have saved
+in my files and created a whole cluster
+for just people and the more I chat with
+Claude about these people the better
+that the relationships are going to
+develop inside of the graph and
+eventually those people might also
+connect to other clusters of data it's
+creating I say meaningful ful
+relationships, but it's semantic
+relationships rather than just black and
+white file names. And Claude now has
+some very interesting findings that help
+me when I communicate with Claude. And
+Claude automatically has access to this
+graph report. So whenever you're opening
+Why It Helps Claude
+up this new conversation and you're
+searching for files or you have a
+question for Claude, it has tons of
+reference and he did the work earlier.
+It's not reinventing the wheel and
+putting in extra effort. It's all been
+mapped out one time for you with
+Graphify. And Obsidian just allows you
+to see everything cleanly. So if I open
+this up, I can look through and see the
+different types of connections. Now, a
+lot of this might not make any sense to
+you, and truly it doesn't make any sense
+to me all this because it's a lot of
+data, but AI can speak better to
+computers than any human will ever be
+able to. So the real and true benefit is
+just being able to see everything. And
+not going to lie, it looks really
+Sponsor and Community
+stinking cool. Quick word from our
+sponsor, which is me. If you guys want
+to go deeper on all things Claude Code
+and Agentic Coding tools, consider
+joining my free school that's linked
+below. It's the first link. I have all
+sorts of free assets that'll help you go
+from a level one claude code user to a
+level five. I do have a premium section
+and in 6 days from the posting of this
+video, we're releasing the zero to
+dangerous claude code course. We'll take
+you from beginner, which is level one.
+you're somebody who's just set up your
+claw.md file to somebody that's building
+full-blown applications and workflows
+that are enterprise hardened and are
+ready to sell and make you money. We'll
+teach you not only how to run and set up
+your system, but to how to actually get
+it to defend itself. And we now have a
+little over 2500 members. And there's no
+pressure to upgrade, but if you do
+decide to, you'll gain access to Apex.
+It's our proprietary ecosystem for
+Claude Code, a full unifiable system
+with all of our tools, plugins, and
+skills. Whether you're using Claude Code
+as a personal operating system, a
+website builder, social media manager,
+data analyst, or full-blown application
+builder, you'll have everything set up
+for you with the training and some extra
+goodies. So, if you sign up before April
+15th, 2026, we'll give you a free slot
+in our builder club where we'll showcase
+your recent build with your funnel
+links, your call to action, whatever it
+is you want us to share, we'll put in
+there for you, shown to 2500 members and
+growing every single day. But back to
+Installation Process
+the main thing. And now you're
+wondering, how do I set this up for
+myself, bro? All I want you to do is
+come to the main repo. It's going to be
+linked below. And grab this command,
+open a fresh terminal, paste it in, and
+let it run. Here's the command
+/graphify. Then just type in /graphify.
+I'm not going to run it because I've
+already run it and it's costing me a lot
+of tokens for the one-time setup. If you
+have a lot of files, it is going to cost
+a lot on the front end, but it's going
+to save you in the long term. It's going
+to take a little bit of time to go
+through out all the details, but just
+let it do its thing. When it's done,
+you're going to see this file here,
+graphify out, and you're going to see
+the JSON and HTML file. What I recommend
+is copying the path, giving it to
+Claude, and asking Claude to reference
+this path inside of the claw.md file to
+use as a rag system when looking for
+data in my codebase. And there's two
+ways to download Obsidian. Either just
+ask Claw to install it for you, or just
+come to Google, search for the download,
+and download it for your system. The
+file should show up as a little cool
+rock. Open that up. You're not going to
+have all this set up yet, so don't
+worry. This little thing down here,
+click that. Click manage volts. You want
+to open the folder as a vault and then
+inside of the file system that you have
+in your workspace, look for the graphify
+out. Let me take a step back real quick.
+When the file is done that's set up from
+graphify, ask it to set up a vault for
+Obsidian with the data from the graphify
+output. And then when you come back to
+open the folder as a vault, you'll find
+the Obsidian folder here. And you're
+just going to open that. And it'll show
+up here as a beautiful satellite
+structure. I just threw down a whole lot
+Final Thoughts
+of game here and I feel like I'm
+spoiling you guys, but I'm having a good
+time doing it. If you feel you've gotten
+value from this video, please like the
+video and consider subscribing with
+notifications turned on because I do
+about one to two videos like this every
+single week on all things Aentic coding
+tool templates and guides, plus an
+episode a week of the Aentic operators.
+If you want the playlist to that, I'll
+link it below. Me and my co-founder
+Chris Kaylor go balls deep on all things
+Claude Code, including our custom
+plugins that we've built for Claude
+Code. So again, I hope you enjoyed the
+video. Thanks for watching and being
+here. God bless you and I will see you
+guys on the next","2026-04-13 15:52:15","2026-04-25 08:14:07",
+115,"agent orchestration","","",in_progress,high,"I want to create an agent orchestration system where in you can see the communication between 2 agents or opencode agents in the terminal. this will run in my computer. There is a simple kanban that documents the task, progress, etc. and agent can reference to the ticket and also update it's status. the user can also see and talk to the agent that works on the ticket. user can click a start button then it opens a terminal where it spawn claude or opencode cli that will work the ticklet. after the back and forth with the user and made a progress, agent can document its progress to the kanban and also report to a general group chat where other AI agent can also see. AI can also tag an agent in the chat to wait for reply.
+
+The structure of the agent is something like this:
+1. Agent name: Architect
+2. Channel: Claude or opencode
+3. Skill: document, coding, github, etc
+4. model: opus 4.7 (claude), minimax 2.5 (opencode)
+
+Would this be possible?
+","2026-04-18 08:15:16","2026-05-01 04:03:29",
+116,"explore three.js","","",in_progress,medium,"use three.js for some usecase like landing page","2026-04-18 14:40:50","2026-04-28 04:03:18",
+117,"venued.app canva rsvp","","",in_progress,medium,"integrate canva rsvp to venued.app. Or build rsvp with agent then integrate to venued.app","2026-04-22 16:58:24","2026-04-28 04:03:59",
+118,"setup domain for server","","",completed,high,"configure DNS records and point domain to server","2026-04-23 15:17:48","2026-04-23 17:15:02",
+119,Multica,"","",in_progress,medium,"review the following if we can install it and run it in a specific path in our server. maybe like kevinaton.com/multica - https://github.com/multica-ai/multica, https://multica.ai/","2026-04-29 10:24:29","2026-04-29 12:03:32",

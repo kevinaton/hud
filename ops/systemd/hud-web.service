@@ -1,0 +1,28 @@
+[Unit]
+Description=HUD Web Application (Next.js)
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=hud
+Group=hud
+WorkingDirectory=/var/lib/hud
+EnvironmentFile=/var/lib/hud/.env
+ExecStart=/usr/bin/node /var/lib/hud/apps/web/.next/standalone/server.js
+Restart=on-failure
+RestartSec=5
+
+# Hardening
+ProtectSystem=strict
+ProtectHome=true
+NoNewPrivileges=true
+ReadWritePaths=/var/lib/hud/data
+PrivateTmp=true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hud-web
+
+[Install]
+WantedBy=multi-user.target

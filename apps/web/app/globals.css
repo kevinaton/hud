@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+:root {
+  /* surfaces */
+  --background: oklch(0% 0 0); /* #000 pure black canvas */
+  --surface: oklch(9% 0.008 240); /* #0A0E12 card */
+  --surface-2: oklch(12% 0.009 240); /* #11151A elevated card */
+  --border: oklch(22% 0.011 240); /* #262C33 thin lines */
+  --grid: oklch(16% 0.009 240); /* faint cross overlay (used at 0.6 alpha) */
+
+  /* text */
+  --foreground: oklch(92% 0.005 240); /* #E6E8EB primary text */
+  --muted: oklch(52% 0.008 240); /* #757B85 metadata text */
+  --muted-2: oklch(38% 0.007 240); /* tertiary */
+  --muted-foreground: oklch(52% 0.008 240); /* shadcn compat alias */
+
+  /* semantic */
+  --accent: oklch(72% 0.118 210); /* #0FB8C9 cyan — tabs, primary CTA, "+" */
+  --accent-fg: oklch(9% 0.008 240); /* dark text on cyan */
+  --accent-foreground: oklch(9% 0.008 240); /* shadcn compat alias */
+  --success: oklch(72% 0.178 145); /* #22C55E positive money / deltas */
+  --destructive: oklch(63% 0.222 25); /* #EF4444 negative money */
+  --destructive-foreground: oklch(92% 0.005 240); /* white on red */
+  --warning: oklch(75% 0.163 68); /* #F59E0B */
+
+  /* shadcn compat — mapped to our tokens */
+  --primary: oklch(72% 0.118 210); /* maps to --accent (cyan) */
+  --primary-foreground: oklch(9% 0.008 240); /* maps to --accent-fg */
+  --secondary: oklch(12% 0.009 240); /* maps to --surface-2 */
+  --secondary-foreground: oklch(92% 0.005 240);
+  --popover: oklch(9% 0.008 240); /* maps to --surface */
+  --popover-foreground: oklch(92% 0.005 240);
+  --card: oklch(9% 0.008 240); /* maps to --surface */
+  --card-foreground: oklch(92% 0.005 240);
+  --input: oklch(22% 0.011 240); /* maps to --border */
+  --ring: oklch(72% 0.118 210); /* maps to --accent (cyan focus ring) */
+
+  /* geometry */
+  --radius: 2px; /* sharp corners */
+  --hazard: 45deg; /* hazard stripe angle */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-2: var(--muted-2);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-warning: var(--warning);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-display: var(--font-orbitron);
+  --font-body: var(--font-oxanium);
+  --radius: var(--radius);
+}
+
+html,
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body, sans-serif);
+}
+
+/* Utility: tabular numerics — apply to ALL money and numeric displays */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* Fix: native date input calendar picker icon — invert to match light foreground on dark bg */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.6;
+  cursor: pointer;
+}

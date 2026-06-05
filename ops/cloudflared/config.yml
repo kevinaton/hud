@@ -1,0 +1,10 @@
+# Cloudflare Tunnel config — committed in MVP, deployed in Phase 1
+# Validate: cloudflared tunnel ingress validate
+
+tunnel: hud-tunnel
+credentials-file: /var/lib/hud/.cloudflared/hud-tunnel.json
+
+ingress:
+  - hostname: hud.kevinaton.com
+    service: http://localhost:3000
+  - service: http_status:404

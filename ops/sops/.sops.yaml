@@ -1,0 +1,8 @@
+# sops + age config — committed in MVP, deployed in Phase 1
+# Generate age key: age-keygen -o ~/.config/hud/age-key.txt
+# Encrypt: sops --encrypt --age <pub-key> .env > .env.enc
+
+creation_rules:
+  - path_regex: \.env\.enc$
+    age: >-
+      age1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
