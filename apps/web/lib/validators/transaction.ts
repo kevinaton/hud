@@ -47,3 +47,51 @@ export const createTransactionSchema = z.object({
 });
 
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
+
+/**
+ * Schema for PUT /api/transactions/[id].
+ *
+ * All fields are optional — but at least one must be present.
+ * The server applies only the provided fields, leaving others unchanged.
+ */
+export const updateTransactionSchema = z
+  .object({
+    /** Human-readable description of the transaction. */
+    item: z.string().trim().min(1, 'Item is required').max(200, 'Item is too long').optional(),
+
+    /**
+     * Decimal amount as a number. Non-zero, finite.
+     * Negative = expense (red). Positive = income (green).
+     */
+    amount: z
+      .number({ invalid_type_error: 'Amount must be a number' })
+      .finite('Amount must be a finite number')
+      .refine((v) => v !== 0, { message: 'Amount must be non-zero' })
+      .optional(),
+
+    /**
+     * ISO-8601 date string (YYYY-MM-DD). Optional.
+     */
+    date: z
+      .string()
+      .trim()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
+      .optional(),
+
+    /** Category name. Optional — pass null to remove. */
+    categoryName: z.string().trim().max(100, 'Category name is too long').optional().nullable(),
+
+    /** Optional notes / memo. Pass null to clear. */
+    notes: z.string().trim().max(1000, 'Notes are too long').optional().nullable(),
+  })
+  .refine(
+    (v) =>
+      v.item !== undefined ||
+      v.amount !== undefined ||
+      v.date !== undefined ||
+      v.categoryName !== undefined ||
+      v.notes !== undefined,
+    { message: 'At least one field must be provided' },
+  );
+
+export type UpdateTransactionInput = z.infer<typeof updateTransactionSchema>;

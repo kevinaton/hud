@@ -18,12 +18,11 @@
  * Delta: (current - prior) / |prior|. Zero prior → shows "—".
  */
 
-import { AddTransactionButton } from '@/components/hud/AddTransactionButton';
+import { CashflowTransactionSection } from '@/components/hud/CashflowTransactionSection';
 import { GridOverlay } from '@/components/hud/GridOverlay';
 import { HazardStripe } from '@/components/hud/HazardStripe';
 import { Money } from '@/components/hud/Money';
 import { TabBar } from '@/components/hud/TabBar';
-import { TransactionRow } from '@/components/hud/TransactionRow';
 import { requireSession } from '@/lib/auth/index';
 import { listCategories } from '@/lib/db/categories';
 import {
@@ -183,7 +182,11 @@ export default async function CashflowPage() {
                     >
                       Expense
                     </span>
-                    {expenseDelta !== null ? <SubDeltaBadge delta={expenseDelta} /> : <DashBadgeSm />}
+                    {expenseDelta !== null ? (
+                      <SubDeltaBadge delta={expenseDelta} />
+                    ) : (
+                      <DashBadgeSm />
+                    )}
                   </div>
                 </div>
               </div>
@@ -199,41 +202,21 @@ export default async function CashflowPage() {
           </section>
 
           {/* ---------------------------------------------------------------- */}
-          {/* TRANSACTIONS header + [+] placeholder                           */}
+          {/* TRANSACTIONS header + [+] button + clickable rows              */}
+          {/* (client component — manages add/edit modal state)               */}
           {/* ---------------------------------------------------------------- */}
-          <div className="flex items-center justify-between py-4">
-            <h2
-              className="font-body text-muted uppercase"
-              style={{ fontSize: '12px', letterSpacing: '0.18em', fontWeight: 500 }}
-            >
-              Transactions
-            </h2>
-            {/* AddTransactionButton manages the modal open/close state (client component) */}
-            <AddTransactionButton categories={categoryList} />
-          </div>
-
-          {/* ---------------------------------------------------------------- */}
-          {/* Transaction list                                                 */}
-          {/* ---------------------------------------------------------------- */}
-          <div className="flex flex-col flex-1 pb-8 border border-border">
-            {txRows.length === 0 ? (
-              <EmptyState />
-            ) : (
-              txRows.map((tx) => (
-                <TransactionRow
-                  key={tx.id}
-                  tx={{
-                    id: tx.id,
-                    item: tx.item,
-                    amountMinor: tx.amountMinor,
-                    currency: tx.currency,
-                    occurredAt: tx.occurredAt,
-                    category: tx.categoryName ?? undefined,
-                  }}
-                />
-              ))
-            )}
-          </div>
+          <CashflowTransactionSection
+            categories={categoryList}
+            transactions={txRows.map((tx) => ({
+              id: tx.id,
+              item: tx.item,
+              amountMinor: tx.amountMinor,
+              currency: tx.currency,
+              occurredAt: tx.occurredAt,
+              category: tx.categoryName ?? undefined,
+              notes: tx.notes ?? null,
+            }))}
+          />
         </div>
       </div>
     </div>
@@ -312,19 +295,5 @@ function DashBadgeSm() {
     >
       —
     </span>
-  );
-}
-
-/** Empty state — shown when current month has zero transactions. */
-function EmptyState() {
-  return (
-    <div className="flex flex-1 items-center justify-center py-16">
-      <p
-        className="font-body text-muted uppercase"
-        style={{ fontSize: '12px', letterSpacing: '0.18em' }}
-      >
-        No transactions this month
-      </p>
-    </div>
   );
 }

@@ -3,19 +3,15 @@
 /**
  * components/hud/AddTransactionButton.tsx
  *
- * The [+] button that opens the AddTransactionModal on the cashflow page.
- *
- * This is a client component because it manages the modal's open/close state
- * and calls router.refresh() after a successful add (via AddTransactionModal's
- * onSuccess callback, which itself calls router.refresh() internally).
- *
- * The categories list is passed as a prop from the Server Component parent
- * (cashflow page.tsx), so no client-side fetch is needed.
+ * The [+] button that opens the TransactionModal for creating a new transaction.
  *
  * Per hud-ui skill: bg-accent text-accent-fg, 2px radius, no inline hex.
+ *
+ * Note: For the cashflow page, which needs both add and edit mode in a single
+ * modal, use CashflowTransactionSection instead.
  */
 
-import { AddTransactionModal } from '@/components/hud/AddTransactionModal';
+import { TransactionModal } from '@/components/hud/TransactionModal';
 import { cn } from '@/lib/utils';
 import * as React from 'react';
 
@@ -47,7 +43,7 @@ export function AddTransactionButton({ categories }: AddTransactionButtonProps) 
         +
       </button>
 
-      <AddTransactionModal open={open} onOpenChange={setOpen} categories={categories} />
+      <TransactionModal open={open} onOpenChange={setOpen} categories={categories} />
     </>
   );
 }

@@ -20,6 +20,21 @@ import { findOrCreateCategory } from './categories';
 import { db } from './index';
 
 // ---------------------------------------------------------------------------
+// getTransactionById
+//
+// Returns the transaction with the given id belonging to userId, or null.
+// Ownership check is enforced by the userId filter.
+// ---------------------------------------------------------------------------
+export function getTransactionById(userId: number, transactionId: number): Transaction | null {
+  const row = db
+    .select()
+    .from(transactions)
+    .where(and(eq(transactions.id, transactionId), eq(transactions.userId, userId)))
+    .get();
+  return row ?? null;
+}
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
@@ -304,5 +319,178 @@ export function createTransaction(input: CreateTransactionDbInput, ctx: ReqCtx):
     });
 
     return row;
+  });
+}
+
+// ---------------------------------------------------------------------------
+// UpdateTransactionDbInput
+//
+// Only the fields that may be changed are included.
+// All are optional — at least one is guaranteed by the route's Zod check.
+// ---------------------------------------------------------------------------
+export interface UpdateTransactionDbInput {
+  item?: string;
+  /** Signed integer minor units. NEVER a float. */
+  amountMinor?: number;
+  /** ISO-8601 date-time string with timezone offset. */
+  occurredAt?: string;
+  /** Raw category name (stripped/upserted inside this function). null = remove. */
+  categoryName?: string | null;
+  /** memo. null = clear. */
+  notes?: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Internal helpers for updateTransaction
+// ---------------------------------------------------------------------------
+
+type UpdatePayload = Partial<{
+  item: string;
+  amountMinor: number;
+  occurredAt: string;
+  categoryId: number | null;
+  notes: string | null;
+  updatedAt: string;
+}>;
+
+type DiffResult = {
+  updatePayload: UpdatePayload;
+  beforeDiff: Record<string, unknown>;
+  afterDiff: Record<string, unknown>;
+};
+
+/**
+ * Compare `input` against `existingRow` and return:
+ *   - `updatePayload`: the Drizzle `.set()` object (changed fields + updatedAt)
+ *   - `beforeDiff` / `afterDiff`: the audit payload diff
+ *
+ * Extracted to reduce the cognitive complexity of `updateTransaction`.
+ */
+function buildUpdateDiff(
+  existingRow: Transaction,
+  input: UpdateTransactionDbInput,
+  categoryId: number | null | undefined,
+): DiffResult {
+  const updatePayload: UpdatePayload = { updatedAt: new Date().toISOString() };
+  const beforeDiff: Record<string, unknown> = {};
+  const afterDiff: Record<string, unknown> = {};
+
+  if (input.item !== undefined && input.item !== existingRow.item) {
+    beforeDiff.item = existingRow.item;
+    afterDiff.item = input.item;
+    updatePayload.item = input.item;
+  }
+  if (input.amountMinor !== undefined && input.amountMinor !== existingRow.amountMinor) {
+    beforeDiff.amountMinor = existingRow.amountMinor;
+    afterDiff.amountMinor = input.amountMinor;
+    updatePayload.amountMinor = input.amountMinor;
+  }
+  if (input.occurredAt !== undefined && input.occurredAt !== existingRow.occurredAt) {
+    beforeDiff.occurredAt = existingRow.occurredAt;
+    afterDiff.occurredAt = input.occurredAt;
+    updatePayload.occurredAt = input.occurredAt;
+  }
+  if (categoryId !== undefined && categoryId !== existingRow.categoryId) {
+    beforeDiff.categoryId = existingRow.categoryId;
+    afterDiff.categoryId = categoryId;
+    updatePayload.categoryId = categoryId;
+  }
+  if ('notes' in input && input.notes !== existingRow.notes) {
+    beforeDiff.notes = existingRow.notes;
+    afterDiff.notes = input.notes ?? null;
+    updatePayload.notes = input.notes ?? null;
+  }
+
+  return { updatePayload, beforeDiff, afterDiff };
+}
+
+// ---------------------------------------------------------------------------
+// updateTransaction
+//
+// Applies a partial update to an existing transaction row. Writes one audit
+// row containing only the before/after diff of changed fields.
+//
+// Caller is responsible for the ownership check (403 if userId doesn't match).
+// The `existing` row must be fetched first so this function can compute the diff.
+// ---------------------------------------------------------------------------
+export function updateTransaction(
+  userId: number,
+  existingRow: Transaction,
+  input: UpdateTransactionDbInput,
+  ctx: ReqCtx,
+): Transaction {
+  // Validate integer invariant for amount
+  if (input.amountMinor !== undefined && !Number.isInteger(input.amountMinor)) {
+    throw new TypeError(
+      `updateTransaction: amountMinor must be an integer, got ${input.amountMinor}`,
+    );
+  }
+
+  return db.transaction((tx) => {
+    // 1. Resolve category if provided
+    let categoryId: number | null | undefined = undefined;
+    if ('categoryName' in input) {
+      categoryId = input.categoryName?.trim()
+        ? findOrCreateCategory(tx, userId, input.categoryName)
+        : null;
+    }
+
+    // 2. Build diff (pure helper — reduces complexity here)
+    const { updatePayload, beforeDiff, afterDiff } = buildUpdateDiff(
+      existingRow,
+      input,
+      categoryId,
+    );
+
+    // 3. Execute update
+    const row = tx
+      .update(transactions)
+      .set(updatePayload)
+      .where(and(eq(transactions.id, existingRow.id), eq(transactions.userId, userId)))
+      .returning()
+      .get();
+
+    if (!row) {
+      throw new Error('updateTransaction: update returned no row');
+    }
+
+    // 4. Audit log — diff-only payload (per hud-audit skill)
+    writeAuditLog(tx, {
+      userId,
+      actor: ctx.actor,
+      action: 'update',
+      entity: 'transaction',
+      entityId: String(row.id),
+      payload: { entity_id: String(row.id), before: beforeDiff, after: afterDiff },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    });
+
+    return row;
+  });
+}
+
+// ---------------------------------------------------------------------------
+// deleteTransaction
+//
+// Hard-deletes a transaction row and writes a single audit log entry in the
+// same Drizzle transaction. Caller is responsible for the ownership check.
+// ---------------------------------------------------------------------------
+export function deleteTransaction(userId: number, transactionId: number, ctx: ReqCtx): void {
+  db.transaction((tx) => {
+    tx.delete(transactions)
+      .where(and(eq(transactions.id, transactionId), eq(transactions.userId, userId)))
+      .run();
+
+    writeAuditLog(tx, {
+      userId,
+      actor: ctx.actor,
+      action: 'delete',
+      entity: 'transaction',
+      entityId: String(transactionId),
+      payload: undefined,
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    });
   });
 }

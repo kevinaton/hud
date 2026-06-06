@@ -22,6 +22,8 @@ export interface TransactionDisplay {
 interface TransactionRowProps {
   tx: TransactionDisplay;
   className?: string;
+  /** Called when the row is clicked (edit mode). */
+  onClick?: () => void;
 }
 
 /** Month abbreviations — hardcoded to avoid locale-dependent output. */
@@ -66,12 +68,35 @@ function formatDate(iso: string): string {
   return `${monthName} ${dayPadded}, ${year}`;
 }
 
-export function TransactionRow({ tx, className }: TransactionRowProps) {
+export function TransactionRow({ tx, className, onClick }: TransactionRowProps) {
   const datePart = formatDate(tx.occurredAt);
   const metaParts = [datePart, tx.category].filter(Boolean).join(' | ');
 
+  const isClickable = onClick !== undefined;
+
   return (
-    <div className={cn('flex items-start justify-between p-3 border-b border-border', className)}>
+    <div
+      role={isClickable ? 'button' : undefined}
+      tabIndex={isClickable ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={
+        isClickable
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
+      aria-label={isClickable ? `Edit transaction: ${tx.item}` : undefined}
+      className={cn(
+        'flex items-start justify-between p-3 border-b border-border',
+        isClickable &&
+          'cursor-pointer hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset',
+        className,
+      )}
+    >
       <div className="flex flex-col gap-0.5 min-w-0 flex-1">
         <span className="font-body text-foreground text-[15px] truncate">{tx.item}</span>
         <span
