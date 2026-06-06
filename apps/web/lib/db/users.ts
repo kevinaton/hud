@@ -83,6 +83,94 @@ export function createUser(input: CreateUserInput, ctx: ReqCtx): User {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Profile update helpers
+// ---------------------------------------------------------------------------
+
+export interface UpdateProfileInput {
+  displayName?: string;
+  email?: string;
+  avatarPath?: string;
+}
+
+/**
+ * Update a user's profile fields (displayName, email, avatarPath).
+ * Writes an update audit entry. Actor is always 'user' from the web request.
+ */
+export function updateUserProfile(userId: number, input: UpdateProfileInput, ctx: ReqCtx): User {
+  return db.transaction((tx) => {
+    const existing = tx.select().from(users).where(eq(users.id, userId)).get();
+    if (!existing) throw new Error('User not found');
+
+    const patch: Partial<typeof existing> = {};
+    const before: Record<string, unknown> = {};
+    const after: Record<string, unknown> = {};
+
+    if (input.displayName !== undefined && input.displayName !== existing.displayName) {
+      before.displayName = existing.displayName;
+      after.displayName = input.displayName;
+      patch.displayName = input.displayName;
+    }
+    if (input.email !== undefined && input.email !== existing.email) {
+      before.email = maskEmail(existing.email);
+      after.email = maskEmail(input.email);
+      patch.email = input.email.toLowerCase();
+    }
+    if (input.avatarPath !== undefined && input.avatarPath !== existing.avatarPath) {
+      before.avatarPath = existing.avatarPath;
+      after.avatarPath = input.avatarPath;
+      patch.avatarPath = input.avatarPath;
+    }
+
+    const updated = tx
+      .update(users)
+      .set({ ...patch, updatedAt: new Date().toISOString() })
+      .where(eq(users.id, userId))
+      .returning()
+      .get();
+
+    if (!updated) throw new Error('Failed to update user');
+
+    writeAuditLog(tx, {
+      userId,
+      actor: ctx.actor ?? 'user',
+      action: 'update',
+      entity: 'user',
+      entityId: String(userId),
+      payload: { before, after },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    });
+
+    return updated;
+  });
+}
+
+/**
+ * Update a user's password hash from the profile page (user-initiated).
+ * Writes an update audit entry with field='password'.
+ * Never logs the hash.
+ */
+export function updateUserPassword(userId: number, newHash: string, ctx: ReqCtx): void {
+  db.transaction((tx) => {
+    tx.update(users)
+      .set({ passwordHash: newHash, updatedAt: new Date().toISOString() })
+      .where(eq(users.id, userId))
+      .run();
+
+    writeAuditLog(tx, {
+      userId,
+      actor: ctx.actor ?? 'user',
+      action: 'update',
+      entity: 'user',
+      entityId: String(userId),
+      payload: { field: 'password' },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    });
+  });
+}
+
 /**
  * Update a user's password hash (used by the CLI reset-password script).
  * Writes a password_reset audit entry with actor='system'.

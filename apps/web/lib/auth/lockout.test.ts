@@ -19,6 +19,7 @@ sqlite.exec(`
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL DEFAULT 'hash',
     display_name TEXT,
+    avatar_path TEXT,
     failed_attempts INTEGER NOT NULL DEFAULT 0,
     locked_until TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),

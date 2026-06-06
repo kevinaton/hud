@@ -1,26 +1,37 @@
 /**
  * app/(app)/finance/layout.tsx
  *
- * Finance section shell — sticky header with hamburger (left) and "Finance" title (center).
+ * Finance section shell — sticky header with hamburger (left), "Finance" title (center),
+ * and avatar link to /profile (right).
  * Auth is enforced by the parent (app)/layout.tsx via requireSession().
  *
  * Header spec (per hud-ui skill):
  *   - Height: 56px
- *   - Background: --surface with --border bottom border
+ *   - Background: bg-background with --border bottom border
  *   - Hamburger: left, aria-label="Open navigation"
  *   - "Finance" title: center, Oxanium 500 16px
+ *   - Avatar link: right, navigates to /profile
  */
 
-export default function FinanceLayout({
+import { AvatarDisplay } from '@/components/hud/AvatarDisplay';
+import { requireSession } from '@/lib/auth/index';
+import Link from 'next/link';
+
+export default async function FinanceLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // requireSession is already called in (app)/layout.tsx but we need user data for the avatar.
+  // The call is memoized per request via React.cache() so there is no extra DB round-trip.
+  const ctx = await requireSession();
+  const { user } = ctx;
+
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col">
       {/* Sticky header */}
       <header
-        className="sticky top-0 z-30 flex h-14 items-center"
+        className="sticky top-0 z-50 flex h-14 items-center bg-background border-b border-border"
         style={{ height: '56px' }}
       >
         {/* Hamburger — left */}
@@ -52,6 +63,22 @@ export default function FinanceLayout({
           <span className="font-body text-foreground" style={{ fontSize: '16px', fontWeight: 500 }}>
             Finance
           </span>
+        </div>
+
+        {/* Avatar link to /profile — right */}
+        <div className="ml-auto pr-3">
+          <Link
+            href="/profile"
+            aria-label="Go to profile"
+            className="flex items-center justify-center rounded-[var(--radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <AvatarDisplay
+              avatarPath={user.avatarPath ?? null}
+              displayName={user.displayName ?? null}
+              email={user.email}
+              size={32}
+            />
+          </Link>
         </div>
       </header>
 
