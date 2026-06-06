@@ -9,7 +9,7 @@ User=hud
 Group=hud
 WorkingDirectory=/var/lib/hud
 EnvironmentFile=/var/lib/hud/.env
-ExecStart=/usr/bin/node /var/lib/hud/apps/web/.next/standalone/server.js
+ExecStart=/usr/bin/node apps/web/.next/standalone/server.js
 Restart=on-failure
 RestartSec=5
 
@@ -17,7 +17,7 @@ RestartSec=5
 ProtectSystem=strict
 ProtectHome=true
 NoNewPrivileges=true
-ReadWritePaths=/var/lib/hud/data
+ReadWritePaths=/var/lib/hud
 PrivateTmp=true
 
 StandardOutput=journal

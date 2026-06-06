@@ -26,7 +26,6 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import * as readline from 'node:readline';
 
 // ---------------------------------------------------------------------------
 // Parse CLI args
@@ -74,37 +73,52 @@ function parseArgs(argv: string[]): CliArgs {
 // CSV parser — handles quoted fields with embedded commas/newlines
 // ---------------------------------------------------------------------------
 
-function parseCsvLine(line: string): string[] {
-  const fields: string[] = [];
+/** Parse a single CSV field starting at startIdx. Returns value + next index. */
+function parseCsvField(line: string, startIdx: number): { value: string; nextIdx: number } {
   let current = '';
-  let inQuote = false;
+  let i = startIdx;
+  const inQuote = line[i] === '"';
+  if (inQuote) i++;
 
-  for (let i = 0; i < line.length; i++) {
+  while (i < line.length) {
     const ch = line[i] as string;
     if (inQuote) {
       if (ch === '"') {
-        // Check for escaped double-quote ""
         if (line[i + 1] === '"') {
           current += '"';
-          i++;
+          i += 2;
         } else {
-          inQuote = false;
+          i++; // closing quote
+          break;
         }
       } else {
         current += ch;
+        i++;
       }
     } else {
-      if (ch === '"') {
-        inQuote = true;
-      } else if (ch === ',') {
-        fields.push(current);
-        current = '';
-      } else {
-        current += ch;
-      }
+      if (ch === ',') break;
+      current += ch;
+      i++;
     }
   }
-  fields.push(current);
+  return { value: current, nextIdx: i };
+}
+
+function parseCsvLine(line: string): string[] {
+  const fields: string[] = [];
+  let i = 0;
+
+  while (i <= line.length) {
+    const { value, nextIdx } = parseCsvField(line, i);
+    fields.push(value);
+    i = nextIdx;
+    if (i < line.length && line[i] === ',') {
+      i++;
+    } else {
+      break;
+    }
+  }
+
   return fields;
 }
 
@@ -148,26 +162,25 @@ const TIME_12H = /^(\d{1,2}):(\d{2})\s*([AaPp][Mm])$/;
 function parseTime(raw: string): { hh: number; mm: number } {
   const trimmed = raw.trim();
 
-  // Empty time field — default to midnight (00:00)
   if (trimmed.length === 0) {
     return { hh: 0, mm: 0 };
   }
 
-  let m: RegExpMatchArray | null;
-
-  if ((m = trimmed.match(TIME_12H))) {
-    let hh = Number(m[1]) % 12; // 12 AM → 0, 12 PM → 12
-    const mm = Number(m[2]);
-    if (/[Pp]/.test((m[3] as string)[0] as string)) hh += 12;
+  const m12 = trimmed.match(TIME_12H);
+  if (m12) {
+    let hh = Number(m12[1]) % 12; // 12 AM → 0, 12 PM → 12
+    const mm = Number(m12[2]);
+    if (/[Pp]/.test((m12[3] as string)[0] as string)) hh += 12;
     if (hh < 0 || hh > 23 || mm < 0 || mm > 59) {
       throw new ParseError('time out of range', { raw });
     }
     return { hh, mm };
   }
 
-  if ((m = trimmed.match(TIME_24H))) {
-    const hh = Number(m[1]);
-    const mm = Number(m[2]);
+  const m24 = trimmed.match(TIME_24H);
+  if (m24) {
+    const hh = Number(m24[1]);
+    const mm = Number(m24[2]);
     if (hh < 0 || hh > 23 || mm < 0 || mm > 59) {
       throw new ParseError('time out of range', { raw });
     }
@@ -206,14 +219,14 @@ function buildOccurredAt(date: string, time: string, tz: string): string {
 // 4. Category normalization — strip leading emoji + title-case
 // ---------------------------------------------------------------------------
 
-// Matches leading Extended_Pictographic characters and combining sequences.
-// The EMOJI_PREFIX from the skill uses Extended_Pictographic.
-const EMOJI_PREFIX = /^[\p{Extended_Pictographic}\u{FE0F}\u{200D}\s]+/u;
+// Match leading Extended_Pictographic characters (emoji) plus variation selectors,
+// zero-width joiners, and surrounding whitespace.
+// Using alternation instead of character class to avoid combining-character issues.
+const EMOJI_PREFIX = /^(?:\p{Extended_Pictographic}|️|‍|\s)+/u;
 
 function normalizeCategory(raw: string): string {
   let s = (raw ?? '').replace(EMOJI_PREFIX, '');
   s = s.replace(/\s+/g, ' ').trim();
-  // Title-case: uppercase first letter of each word
   s = s.replace(/\b\p{L}/gu, (c) => c.toUpperCase());
   return s.length === 0 ? 'Other' : s;
 }
@@ -233,7 +246,7 @@ function validateCurrency(raw: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// CSV row type
+// CSV row types
 // ---------------------------------------------------------------------------
 
 interface CsvRow {
@@ -265,34 +278,22 @@ interface FailureRecord {
   error: string;
 }
 
+interface ParseResult {
+  normalized: NormalizedRow[];
+  failures: FailureRecord[];
+  categoryNames: Set<string>;
+}
+
 // ---------------------------------------------------------------------------
-// Main
+// CSV loading
 // ---------------------------------------------------------------------------
 
-async function main(): Promise<void> {
-  const { file, userEmail, dryRun } = parseArgs(process.argv);
-  const startMs = Date.now();
-
-  process.stdout.write(`HUD cashflow importer — ${new Date().toISOString()}\n`);
-  process.stdout.write(`Source:       ${file}\n`);
-  process.stdout.write(`User:         ${userEmail}\n`);
-  process.stdout.write(`Mode:         ${dryRun ? 'dry-run' : 'live'}\n`);
-
-  // -------------------------------------------------------------------------
-  // Resolve the CSV path relative to the project root (two levels up from
-  // apps/web/scripts/), because the CLI is invoked from the workspace root.
-  // -------------------------------------------------------------------------
-  const projectRoot = path.resolve(__dirname, '..', '..', '..');
-  const csvPath = path.resolve(projectRoot, file);
-
+function loadCsv(csvPath: string): { dataLines: string[]; colIdx: (name: string) => number } {
   if (!fs.existsSync(csvPath)) {
     process.stderr.write(`Error: CSV file not found: ${csvPath}\n`);
     process.exit(1);
   }
 
-  // -------------------------------------------------------------------------
-  // Read and parse CSV
-  // -------------------------------------------------------------------------
   const content = fs.readFileSync(csvPath, 'utf-8');
   const lines = content.split('\n').filter((l) => l.trim().length > 0);
 
@@ -304,7 +305,17 @@ async function main(): Promise<void> {
   const headerLine = lines[0] as string;
   const headers = parseCsvLine(headerLine).map((h) => h.trim().toLowerCase());
 
-  const requiredColumns = ['id', 'item', 'amount', 'currency', 'date', 'time', 'timezone', 'category', 'notes'];
+  const requiredColumns = [
+    'id',
+    'item',
+    'amount',
+    'currency',
+    'date',
+    'time',
+    'timezone',
+    'category',
+    'notes',
+  ];
   for (const col of requiredColumns) {
     if (!headers.includes(col)) {
       process.stderr.write(`Error: CSV missing required column: ${col}\n`);
@@ -312,21 +323,24 @@ async function main(): Promise<void> {
     }
   }
 
-  const colIdx = (name: string): number => headers.indexOf(name);
+  return {
+    dataLines: lines.slice(1),
+    colIdx: (name: string) => headers.indexOf(name),
+  };
+}
 
-  const dataLines = lines.slice(1);
-  process.stdout.write(`Read:         ${dataLines.length} rows\n`);
+// ---------------------------------------------------------------------------
+// Row normalization
+// ---------------------------------------------------------------------------
 
-  // -------------------------------------------------------------------------
-  // Normalize rows
-  // -------------------------------------------------------------------------
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: CLI normalization loop — multiple validations per row are inherent to the domain
+function normalizeRows(dataLines: string[], colIdx: (name: string) => number): ParseResult {
   const normalized: NormalizedRow[] = [];
   const failures: FailureRecord[] = [];
   const categoryNames = new Set<string>();
 
   for (let i = 0; i < dataLines.length; i++) {
-    const line = dataLines[i] as string;
-    const fields = parseCsvLine(line);
+    const fields = parseCsvLine(dataLines[i] as string);
 
     const raw: CsvRow = {
       id: (fields[colIdx('id')] ?? '').trim(),
@@ -341,8 +355,7 @@ async function main(): Promise<void> {
     };
 
     try {
-      // Validate external_id
-      const externalId = raw.id.trim();
+      const externalId = raw.id;
       if (!externalId || !/^\d+$/.test(externalId)) {
         throw new ParseError('external_id must be non-empty all-digit string', { id: raw.id });
       }
@@ -354,7 +367,6 @@ async function main(): Promise<void> {
       const notes = raw.notes.length > 0 ? raw.notes : null;
 
       categoryNames.add(categoryName);
-
       normalized.push({
         externalId,
         item: raw.item || 'Unknown',
@@ -366,20 +378,59 @@ async function main(): Promise<void> {
         source: 'csv-import',
       });
     } catch (err) {
-      const errMsg = err instanceof Error ? err.message : String(err);
       failures.push({
-        rowIndex: i + 1, // 1-based, skip header
+        rowIndex: i + 1,
         raw: raw as unknown as Record<string, string>,
-        error: errMsg,
+        error: err instanceof Error ? err.message : String(err),
       });
     }
   }
 
+  return { normalized, failures, categoryNames };
+}
+
+// ---------------------------------------------------------------------------
+// Write failure records to a JSONL file
+// ---------------------------------------------------------------------------
+
+function writeFailures(failures: FailureRecord[]): void {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const outPath = path.join(process.cwd(), 'data', `import-failures-${timestamp}.jsonl`);
+  try {
+    fs.mkdirSync(path.dirname(outPath), { recursive: true });
+    const content = `${failures.map((f) => JSON.stringify(f)).join('\n')}\n`;
+    fs.writeFileSync(outPath, content, 'utf-8');
+    process.stderr.write(`Failures written to: ${outPath}\n`);
+  } catch {
+    process.stderr.write(`Warning: could not write failure file to ${outPath}\n`);
+    for (const f of failures) {
+      process.stderr.write(`  Row ${f.rowIndex}: ${f.error} — ${JSON.stringify(f.raw)}\n`);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+
+async function main(): Promise<void> {
+  const { file, userEmail, dryRun } = parseArgs(process.argv);
+  const startMs = Date.now();
+
+  process.stdout.write(`HUD cashflow importer — ${new Date().toISOString()}\n`);
+  process.stdout.write(`Source:       ${file}\n`);
+  process.stdout.write(`User:         ${userEmail}\n`);
+  process.stdout.write(`Mode:         ${dryRun ? 'dry-run' : 'live'}\n`);
+
+  const projectRoot = path.resolve(__dirname, '..', '..', '..');
+  const csvPath = path.resolve(projectRoot, file);
+
+  const { dataLines, colIdx } = loadCsv(csvPath);
+  process.stdout.write(`Read:         ${dataLines.length} rows\n`);
+
+  const { normalized, failures, categoryNames } = normalizeRows(dataLines, colIdx);
   process.stdout.write(`Parsed:       ${normalized.length}\n`);
 
-  // -------------------------------------------------------------------------
-  // Dry-run: report only, zero DB writes
-  // -------------------------------------------------------------------------
   if (dryRun) {
     const sortedCats = [...categoryNames].sort();
     process.stdout.write('\nNormalized categories:\n');
@@ -387,11 +438,10 @@ async function main(): Promise<void> {
       process.stdout.write(`  - ${cat}\n`);
     }
     process.stdout.write('\n');
-    process.stdout.write(`Inserted:     (dry-run — no writes)\n`);
-    process.stdout.write(`Skipped:      (dry-run — no writes)\n`);
+    process.stdout.write('Inserted:     (dry-run — no writes)\n');
+    process.stdout.write('Skipped:      (dry-run — no writes)\n');
     process.stdout.write(`Failed:       ${failures.length}\n`);
     process.stdout.write(`Wallclock:    ${Date.now() - startMs}ms\n`);
-
     if (failures.length > 0) {
       writeFailures(failures);
       process.exit(2);
@@ -399,18 +449,12 @@ async function main(): Promise<void> {
     process.exit(0);
   }
 
-  // -------------------------------------------------------------------------
-  // Live run — initialize DB
-  // -------------------------------------------------------------------------
-  // Import DB lazily so dry-run doesn't require a DB connection.
-  // The tsconfig paths (@/*) won't resolve in tsx without the Next.js bundler,
-  // so we use relative paths here.
+  // Live run — lazily import DB (dry-run never touches DB)
   const { db } = await import('../lib/db/index.js');
   const { users, transactions, categories } = await import('@hud/db');
   const { writeAuditLog } = await import('../lib/audit/index.js');
   const { eq, and } = await import('drizzle-orm');
 
-  // Look up user by email
   const user = db.select().from(users).where(eq(users.email, userEmail.toLowerCase())).get();
   if (!user) {
     process.stderr.write(`Error: user with email "${userEmail}" not found in the database\n`);
@@ -421,50 +465,40 @@ async function main(): Promise<void> {
   const userId = user.id;
   process.stdout.write(`User ID:      ${userId}\n`);
 
-  // -------------------------------------------------------------------------
-  // Insert in batches of 100
-  // -------------------------------------------------------------------------
   let inserted = 0;
   let skipped = 0;
   const newCategoryNames: string[] = [];
 
-  // Helper: findOrCreate category within a transaction
-  function findOrCreateCategoryInTx(
-    tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
-    name: string,
-    amountMinorForKind: number,
-  ): number {
-    const existing = tx
-      .select({ id: categories.id })
-      .from(categories)
-      .where(and(eq(categories.userId, userId), eq(categories.name, name)))
-      .get();
-
-    if (existing) return existing.id;
-
-    const kind = amountMinorForKind < 0 ? 'expense' : amountMinorForKind > 0 ? 'income' : 'transfer';
-
-    const inserted = tx
-      .insert(categories)
-      .values({ userId, name, kind })
-      .returning({ id: categories.id })
-      .get();
-
-    if (!inserted) throw new Error(`Failed to insert category "${name}"`);
-    newCategoryNames.push(name);
-    return inserted.id;
-  }
-
-  // Process in chunks of 100
   const CHUNK_SIZE = 100;
-  for (let chunkStart = 0; chunkStart < normalized.length; chunkStart += CHUNK_SIZE) {
-    const chunk = normalized.slice(chunkStart, chunkStart + CHUNK_SIZE);
+  for (let start = 0; start < normalized.length; start += CHUNK_SIZE) {
+    const chunk = normalized.slice(start, start + CHUNK_SIZE);
 
+    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: transaction callback — findOrCreate + insert + audit per row is irreducible
     db.transaction((tx) => {
       for (const row of chunk) {
-        const categoryId = findOrCreateCategoryInTx(tx, row.categoryName, row.amountMinor);
+        // findOrCreate category
+        const existing = tx
+          .select({ id: categories.id })
+          .from(categories)
+          .where(and(eq(categories.userId, userId), eq(categories.name, row.categoryName)))
+          .get();
 
-        // onConflictDoNothing on (user_id, external_id) partial unique index
+        let categoryId: number;
+        if (existing) {
+          categoryId = existing.id;
+        } else {
+          const kind =
+            row.amountMinor < 0 ? 'expense' : row.amountMinor > 0 ? 'income' : 'transfer';
+          const newCat = tx
+            .insert(categories)
+            .values({ userId, name: row.categoryName, kind })
+            .returning({ id: categories.id })
+            .get();
+          if (!newCat) throw new Error(`Failed to insert category "${row.categoryName}"`);
+          newCategoryNames.push(row.categoryName);
+          categoryId = newCat.id;
+        }
+
         const result = tx
           .insert(transactions)
           .values({
@@ -483,7 +517,6 @@ async function main(): Promise<void> {
           .get();
 
         if (result) {
-          // Write per-transaction audit row per ticket AC
           writeAuditLog(tx, {
             userId,
             actor: 'system',
@@ -507,7 +540,7 @@ async function main(): Promise<void> {
     });
   }
 
-  // Write importer-level audit summary
+  // Importer-level audit summary
   db.transaction((tx) => {
     writeAuditLog(tx, {
       userId,
@@ -526,14 +559,13 @@ async function main(): Promise<void> {
     });
   });
 
-  // -------------------------------------------------------------------------
-  // Print summary
-  // -------------------------------------------------------------------------
   process.stdout.write(`Inserted:     ${inserted}\n`);
   process.stdout.write(`Skipped (dup): ${skipped}\n`);
   process.stdout.write(`Failed:       ${failures.length}\n`);
   if (newCategoryNames.length > 0) {
-    process.stdout.write(`Categories created: ${newCategoryNames.length} (${newCategoryNames.join(', ')})\n`);
+    process.stdout.write(
+      `Categories created: ${newCategoryNames.length} (${newCategoryNames.join(', ')})\n`,
+    );
   }
   process.stdout.write(`Wallclock:    ${Date.now() - startMs}ms\n`);
 
@@ -545,35 +577,11 @@ async function main(): Promise<void> {
   process.exit(0);
 }
 
-// ---------------------------------------------------------------------------
-// Write failure records to a JSONL file
-// ---------------------------------------------------------------------------
-
-function writeFailures(failures: FailureRecord[]): void {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const outPath = path.join(process.cwd(), 'data', `import-failures-${timestamp}.jsonl`);
-  try {
-    fs.mkdirSync(path.dirname(outPath), { recursive: true });
-    const content = failures.map((f) => JSON.stringify(f)).join('\n') + '\n';
-    fs.writeFileSync(outPath, content, 'utf-8');
-    process.stderr.write(`Failures written to: ${outPath}\n`);
-  } catch {
-    process.stderr.write(`Warning: could not write failure file to ${outPath}\n`);
-    for (const f of failures) {
-      process.stderr.write(`  Row ${f.rowIndex}: ${f.error} — ${JSON.stringify(f.raw)}\n`);
-    }
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Entry point
-// ---------------------------------------------------------------------------
-
 main().catch((err: unknown) => {
   const msg = err instanceof Error ? err.message : String(err);
   process.stderr.write(`Fatal error: ${msg}\n`);
   if (err instanceof Error && err.stack) {
-    process.stderr.write(err.stack + '\n');
+    process.stderr.write(`${err.stack}\n`);
   }
   process.exit(3);
 });

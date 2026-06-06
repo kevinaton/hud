@@ -1,10 +1,14 @@
 # Cloudflare Tunnel config — committed in MVP, deployed in Phase 1
-# Validate: cloudflared tunnel ingress validate
+# Phase 1 provisioning: cloudflared tunnel create hud-tunnel
+#   Outputs the tunnel UUID — replace <TUNNEL_ID> below.
+#
+# Validate after provisioning: cloudflared tunnel ingress validate --config ops/cloudflared/config.yml
 
-tunnel: hud-tunnel
-credentials-file: /var/lib/hud/.cloudflared/hud-tunnel.json
+tunnel: <TUNNEL_ID>
+credentials-file: /var/lib/hud/.cloudflared/<TUNNEL_ID>.json
 
 ingress:
   - hostname: hud.kevinaton.com
     service: http://localhost:3000
+  # Catch-all: any unmatched request returns 404
   - service: http_status:404

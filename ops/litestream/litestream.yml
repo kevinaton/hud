@@ -2,11 +2,11 @@
 # Replicates SQLite WAL to Cloudflare R2
 
 dbs:
-  - path: /var/lib/hud/data/hud.db
+  - path: /var/lib/hud/hud.db
     replicas:
       - type: s3
         endpoint: https://<account-id>.r2.cloudflarestorage.com
-        bucket: hud-db-backups
+        bucket: <R2_BUCKET>
         path: hud.db
         access-key-id: ${R2_ACCESS_KEY_ID}
         secret-access-key: ${R2_SECRET_ACCESS_KEY}
