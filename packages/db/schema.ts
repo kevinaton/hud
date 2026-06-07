@@ -1,5 +1,5 @@
 import { isNotNull, sql } from 'drizzle-orm';
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { check, index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 // ---------------------------------------------------------------------------
 // users
@@ -101,7 +101,16 @@ export const auditLog = sqliteTable(
     userAgent: text('user_agent'),
     createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
   },
-  (table) => [index('idx_audit_user_time').on(table.userId, table.createdAt)],
+  (table) => [
+    index('idx_audit_user_time').on(table.userId, table.createdAt),
+    // Prefix-based constraint: adding a new persona/CLI is data-only, no migration needed.
+    // 'anon' covers pre-auth events (login attempts, signup); 'user' covers browser sessions;
+    // 'system' covers migrations/seeders; 'agent:<persona>/<cli>' covers agent tool calls.
+    check(
+      'chk_audit_actor',
+      sql`actor = 'user' OR actor = 'anon' OR actor = 'system' OR actor LIKE 'agent:%/%'`,
+    ),
+  ],
 );
 
 // ---------------------------------------------------------------------------
