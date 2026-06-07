@@ -2,11 +2,12 @@
   "mcpServers": {
     "hud": {
       "command": "node",
-      "args": ["/Users/kevinaton/Documents/Project/HUD/packages/mcp-hud/dist/index.js"],
+      "args": ["/srv/hud/app/packages/mcp-hud/dist/index.js"],
       "env": {
+        "DATABASE_URL": "/srv/hud/data/hud.db",
         "HUD_AGENT_ACTOR": "agent:emily",
         "HUD_AGENT_NAME": "emily",
-        "HUD_AGENT_CLI": "gemini"
+        "HUD_AGENT_CLI": "claude"
       }
     }
   }
