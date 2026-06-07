@@ -1,10 +1,10 @@
 ---
 title: Build vault stays local — prod /vault is born blank in Phase 2
 type: adr
-status: accepted
+status: superseded
 author: architect
 created: 2026-06-06
-updated: 2026-06-06
+updated: 2026-06-07
 tags:
   - architecture
   - adr
@@ -13,13 +13,15 @@ tags:
   - deploy
   - security
 supersedes: []
-superseded-by: []
+superseded-by: ["operator-decision-2026-06-07"]
 related:
   - "[[plan/blueprints/adr/ADR-26060501-vault-client-model]]"
   - "[[plan/blueprints/26060503-multi-tenant-server-layout]]"
   - "[[plan/reference/Obsidian vault management]]"
   - "[[HUD]]"
 ---
+
+> **SUPERSEDED 2026-06-07 by operator decision.** D1 (untrack `plan/` via `.gitignore`) was never executed and is now voided. `plan/` stays tracked in git and coexists with the codebase. D2 (prod `/srv/hud/vault/` born empty) and D3–D6 remain valid independently.
 
 # ADR-26060602 — Build vault stays local; prod /vault is born blank in Phase 2
 

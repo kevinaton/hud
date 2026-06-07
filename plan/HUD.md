@@ -128,7 +128,7 @@ A single-server personal HUD (Hetzner Ubuntu) that combines an agentic second br
 - Sentry on every agent process
 - Audit log table in SQLite for every agent write action
 - One vault, one DB, one skills tree — no per-agent forks
-- Build vault (`plan/`) is **MacBook-local only** — gitignored, never reaches Hetzner per [[ADR-26060602-build-vault-separation]]
+- Build vault (`plan/`) is **tracked in git and coexists with the codebase** — excluded from Hetzner at deploy time only (rsync `--exclude=plan/`); never merged into the prod vault (`/srv/hud/vault/`). See [[ADR-26060602-build-vault-separation]] (D1 voided 2026-06-07; D2–D6 still apply)
 
 ---
 
@@ -157,7 +157,7 @@ A single-server personal HUD (Hetzner Ubuntu) that combines an agentic second br
 ## ADRs
 
 - [[ADR-26060501-vault-client-model]] — MacBook first, Nexus last, iPhone deferred. Defines `/srv/hud/vault/` client model and the format-fidelity contract.
-- [[ADR-26060602-build-vault-separation]] — `plan/` is MacBook-only, gitignored. `/srv/hud/vault/` is born blank in Phase 2. `obsidian-headless` rejected. Single `main` branch through MVP.
+- [[ADR-26060602-build-vault-separation]] — ~~`plan/` gitignored (D1 voided 2026-06-07).~~ `plan/` stays tracked in git, excluded at deploy time only. `/srv/hud/vault/` is born blank in Phase 2 (D2). `obsidian-headless` rejected (D5). Single `main` branch through MVP (D4).
 
 ## Reference
 

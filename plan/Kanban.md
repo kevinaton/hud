@@ -6,11 +6,19 @@ kanban-plugin: board
 
 ## Todo
 
+- [ ] [[Ticket 19 Add HUD Favicon]]
+- [ ] [[Ticket 20 Fix Cloudflare Insights CSP Violation]]
+- [ ] [[Ticket 21 Fix Login Attempt Counter Decrement]]
+
 
 ## In Progress
 
+
 ## Done
 
+- [x] [[Ticket 19 Add HUD Favicon]]
+- [x] [[Ticket 20 Fix Cloudflare Insights CSP Violation]]
+- [x] [[Ticket 21 Fix Login Attempt Counter Decrement]]
 - [x] [[Ticket 18 Add Node 22 and pnpm to Provision Script and Write Deploy Runbook]]
 - [x] [[Ticket 17 Write Emily AGENT.md Persona and Cashflow SKILL.md]]
 - [x] [[Ticket 16 Implement Seven Cashflow MCP Tools with Vitest Coverage]]
