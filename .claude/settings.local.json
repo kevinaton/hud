@@ -50,7 +50,14 @@
       "Skill(update-config)",
       "Bash(python3 -c \"import json; print\\(json.load\\(open\\('/srv/hud/app/.claude/settings.local.json'\\)\\)['permissions']['defaultMode']\\)\")",
       "Bash(python3 *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(ssh -T git@github.com)",
+      "Bash(ssh-keygen -lf /root/.ssh/id_ed25519.pub)",
+      "Bash(git config *)",
+      "Bash(git fetch *)",
+      "Bash(git rebase *)"
     ]
   },
   "enabledPlugins": {
