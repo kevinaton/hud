@@ -11,10 +11,12 @@
  * Category names are stored without leading/trailing emoji or whitespace.
  */
 
+import { writeAuditLog } from '@/lib/audit/index';
 import { categories } from '@hud/db';
 import type { Category } from '@hud/db';
 import { and, eq } from 'drizzle-orm';
 import { db } from './index';
+import type { ReqCtx } from './transactions';
 
 // ---------------------------------------------------------------------------
 // Emoji-strip
@@ -103,4 +105,61 @@ export function findOrCreateCategory(
   }
 
   return inserted.id;
+}
+
+// ---------------------------------------------------------------------------
+// createCategory
+//
+// Explicitly creates a new category with the given name and kind (expense,
+// income, or transfer). Strips emoji from the name before storing.
+//
+// Writes one audit_log row in the same Drizzle transaction as the insert.
+// Throws if the name is empty after emoji-strip or if a category with the
+// same (userId, name) already exists (unique constraint violation).
+//
+// Per hud-db skill: userId is always the first parameter.
+// Per hud-audit skill: writeAuditLog is called inside the same transaction.
+// ---------------------------------------------------------------------------
+export function createCategory(
+  userId: number,
+  input: { name: string; kind: 'expense' | 'income' | 'transfer' },
+  ctx: ReqCtx,
+): Category {
+  const normalized = stripEmojiFromCategoryName(input.name);
+
+  if (!normalized) {
+    throw new Error('createCategory: category name is empty after emoji strip');
+  }
+
+  return db.transaction((tx) => {
+    const row = tx
+      .insert(categories)
+      .values({
+        userId,
+        name: normalized,
+        kind: input.kind,
+      })
+      .returning()
+      .get();
+
+    if (!row) {
+      throw new Error('createCategory: insert returned no row');
+    }
+
+    writeAuditLog(tx, {
+      userId,
+      actor: ctx.actor,
+      action: 'create',
+      entity: 'category',
+      entityId: String(row.id),
+      payload: {
+        name: row.name,
+        kind: row.kind,
+      },
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+    });
+
+    return row;
+  });
 }
