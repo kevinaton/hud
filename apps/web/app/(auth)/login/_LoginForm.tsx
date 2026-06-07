@@ -6,7 +6,8 @@
  * Handles:
  *  - Fetching CSRF token from GET /api/auth/csrf on mount (sets cookie + returns token in body)
  *  - Injecting CSRF token into POST header
- *  - Showing failed attempt count via WarningCounter
+ *  - Showing remaining-attempts count via WarningCounter (server-driven, not client-side math)
+ *  - Showing lockout countdown when account is locked
  *  - Showing error messages from server response
  *  - Redirecting on success
  */
@@ -15,10 +16,14 @@ import { WarningCounter } from '@/components/hud/WarningCounter';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+/** Sentinel: null = no failed attempts yet (fresh state, no counter shown). */
+type RemainingAttempts = number | null;
+
 export function LoginForm() {
   const router = useRouter();
   const [csrfToken, setCsrfToken] = useState<string | null>(null);
-  const [failedAttempts, setFailedAttempts] = useState(0);
+  /** Remaining attempts before lockout, as returned by the server. null = no failures yet. */
+  const [remainingAttempts, setRemainingAttempts] = useState<RemainingAttempts>(null);
   const [isLocked, setIsLocked] = useState(false);
   const [lockedUntil, setLockedUntil] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -47,12 +52,14 @@ export function LoginForm() {
         setIsLocked(false);
         setLockedUntil(null);
         setLockCountdown('');
+        setRemainingAttempts(null);
         setError(null);
         return;
       }
       const mins = Math.floor(remaining / 60000);
       const secs = Math.floor((remaining % 60000) / 1000);
-      setLockCountdown(`${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`);
+      const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      setLockCountdown(formatted);
     };
 
     tick();
@@ -84,12 +91,15 @@ export function LoginForm() {
       const data = (await res.json()) as {
         error?: string;
         failedAttempts?: number;
+        remainingAttempts?: number;
         lockedUntil?: string;
         redirect?: string;
       };
 
       if (res.ok) {
-        // Successful login — redirect to cashflow home
+        // Successful login — clear any stale warning state then redirect
+        setRemainingAttempts(null);
+        setError(null);
         router.push('/finance/cashflow');
         return;
       }
@@ -97,12 +107,17 @@ export function LoginForm() {
       if (res.status === 429) {
         setError('Too many attempts. Please wait before trying again.');
       } else if (data.lockedUntil) {
+        // Account just locked (or already locked) — start/maintain countdown
+        const until = new Date(data.lockedUntil);
         setIsLocked(true);
-        setLockedUntil(new Date(data.lockedUntil));
-        setFailedAttempts(data.failedAttempts ?? 5);
-        setError(`Account locked — try again in ${lockCountdown}`);
+        setLockedUntil(until);
+        setRemainingAttempts(0);
+        // Error message is rendered dynamically from lockCountdown state (see JSX below)
+        setError('locked');
       } else {
-        setFailedAttempts(data.failedAttempts ?? 0);
+        // Wrong credentials — server returns the authoritative remaining count
+        const remaining = data.remainingAttempts ?? null;
+        setRemainingAttempts(remaining);
         setError(data.error ?? 'Invalid credentials');
       }
     } catch {
@@ -112,10 +127,22 @@ export function LoginForm() {
     }
   }
 
+  // Derive the visible error string
+  function errorMessage(): string {
+    if (error === 'locked') {
+      return lockCountdown
+        ? `Locked — try again in ${lockCountdown}`
+        : 'Account locked — try again in 15 minutes';
+    }
+    return error ?? '';
+  }
+
   return (
     <div className="flex flex-col gap-8">
-      {/* Warning counter — shows failed attempts */}
-      <WarningCounter count={failedAttempts} />
+      {/* Warning counter — only shown after at least one failed attempt */}
+      {remainingAttempts !== null && (
+        <WarningCounter count={remainingAttempts} label="Attempts Remaining" />
+      )}
 
       {/* Error message */}
       {error && (
@@ -124,7 +151,7 @@ export function LoginForm() {
           className="font-body text-destructive"
           style={{ fontSize: '13px', letterSpacing: '0.04em' }}
         >
-          {isLocked && lockCountdown ? `Locked — try again in ${lockCountdown}` : error}
+          {errorMessage()}
         </div>
       )}
 
