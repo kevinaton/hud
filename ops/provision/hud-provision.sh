@@ -326,20 +326,6 @@ else
   step_created "apt repo: cloudflared"
 fi
 
-# --- litestream repo ---
-LITESTREAM_KEYRING="/usr/share/keyrings/litestream-archive-keyring.gpg"
-LITESTREAM_LIST="/etc/apt/sources.list.d/litestream.list"
-
-if [[ -f "${LITESTREAM_KEYRING}" && -f "${LITESTREAM_LIST}" ]]; then
-  step_skipped "apt repo: litestream"
-else
-  curl -fsSL https://packagecloud.io/benbjohnson/litestream/gpgkey \
-    | gpg --dearmor -o "${LITESTREAM_KEYRING}"
-  echo "deb [signed-by=${LITESTREAM_KEYRING}] https://packagecloud.io/benbjohnson/litestream/any/ any main" \
-    >"${LITESTREAM_LIST}"
-  step_created "apt repo: litestream"
-fi
-
 # --- NodeSource repo (Node 22 LTS) ---
 NODESOURCE_LIST="/etc/apt/sources.list.d/nodesource.list"
 
@@ -358,7 +344,6 @@ step_updated "apt-get update"
 PACKAGES=(
   caddy
   cloudflared
-  litestream
   nodejs
   sqlite3
   age
@@ -381,6 +366,21 @@ else
   corepack enable
   corepack prepare pnpm@latest --activate
   step_created "pnpm (via corepack)"
+fi
+
+# --- litestream (binary install — packagecloud apt repo lacks Ubuntu 26.04 support) ---
+LITESTREAM_VERSION="0.3.13"
+LITESTREAM_BIN="/usr/local/bin/litestream"
+if [[ -f "${LITESTREAM_BIN}" ]]; then
+  step_skipped "litestream ${LITESTREAM_VERSION} (binary already installed)"
+else
+  LITESTREAM_TMP="$(mktemp -d)"
+  curl -fsSL "https://github.com/benbjohnson/litestream/releases/download/v${LITESTREAM_VERSION}/litestream-v${LITESTREAM_VERSION}-linux-amd64.tar.gz" \
+    -o "${LITESTREAM_TMP}/litestream.tar.gz"
+  tar -xzf "${LITESTREAM_TMP}/litestream.tar.gz" -C "${LITESTREAM_TMP}"
+  install -m 755 "${LITESTREAM_TMP}/litestream" "${LITESTREAM_BIN}"
+  rm -rf "${LITESTREAM_TMP}"
+  step_created "litestream ${LITESTREAM_VERSION} (binary installed to ${LITESTREAM_BIN})"
 fi
 
 # ---------------------------------------------------------------------------
