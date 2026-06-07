@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "hud": {
+      "command": "node",
+      "args": ["/Users/kevinaton/Documents/Project/HUD/packages/mcp-hud/dist/index.js"],
+      "env": {
+        "HUD_AGENT_ACTOR": "agent:emily",
+        "HUD_AGENT_NAME": "emily",
+        "HUD_AGENT_CLI": "gemini"
+      }
+    }
+  }
+}

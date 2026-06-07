@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# hud-status — show systemd status for all HUD and Portfolio service units
+# Deployed to /opt/agents/bin/hud-status by hud-provision.sh
+set -euo pipefail
+
+exec systemctl --no-pager status \
+  hud-web.service \
+  hud-litestream.service \
+  portfolio-web.service \
+  caddy.service \
+  cloudflared.service

@@ -2,6 +2,10 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  // Prevent Webpack/Turbopack from trying to bundle native .node binaries and
+  // the Sentry instrumentation package — each is require()'d at runtime from
+  // node_modules instead. Eliminates bundling warnings and speeds up cold compile.
+  serverExternalPackages: ['better-sqlite3', '@node-rs/argon2', '@sentry/nextjs'],
   experimental: {
     // Enable server actions (default in Next 15, but explicit for clarity)
   },

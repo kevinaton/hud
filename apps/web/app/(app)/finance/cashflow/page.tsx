@@ -112,9 +112,8 @@ export default async function CashflowPage() {
                   amountMinor={current.net}
                   currency="PHP"
                   variant="neutral"
-                  className="font-display tabular text-foreground"
+                  className="font-display text-3xl tabular text-foreground"
                   style={{
-                    fontSize: '64px',
                     fontWeight: 400,
                     lineHeight: 1,
                     letterSpacing: '-0.02em',

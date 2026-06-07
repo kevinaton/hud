@@ -1,3 +1,9 @@
+# IMPORTANT: This unit runs `next start` against the pre-built standalone output.
+# NEVER replace ExecStart with `next dev` or `pnpm dev` on this server.
+# Running the dev compiler on Hetzner is 5-15x slower than next start, will
+# consume all available RAM, and is not a supported production configuration.
+# Always deploy via: pnpm build && systemctl restart hud-web
+
 [Unit]
 Description=HUD Web Application (Next.js)
 After=network.target
@@ -7,8 +13,8 @@ Wants=network.target
 Type=simple
 User=hud
 Group=hud
-WorkingDirectory=/var/lib/hud
-EnvironmentFile=/var/lib/hud/.env
+WorkingDirectory=/srv/hud/app
+EnvironmentFile=/srv/hud/secrets/.env
 ExecStart=/usr/bin/node apps/web/.next/standalone/server.js
 Restart=on-failure
 RestartSec=5
@@ -17,7 +23,7 @@ RestartSec=5
 ProtectSystem=strict
 ProtectHome=true
 NoNewPrivileges=true
-ReadWritePaths=/var/lib/hud
+ReadWritePaths=/srv/hud
 PrivateTmp=true
 
 StandardOutput=journal

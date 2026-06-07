@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# agent-opencode — run the Opencode CLI as agent-hud
+# Operator's shell stays as kevin; the agent process runs under agent-hud UID.
+# Deployed to /opt/agents/bin/agent-opencode by hud-provision.sh
+set -euo pipefail
+
+exec sudo -u agent-hud -E opencode "$@"

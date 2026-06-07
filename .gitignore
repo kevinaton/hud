@@ -40,3 +40,19 @@ coverage/
 
 # Sentry
 .sentryclirc
+
+# User uploads (generated content)
+apps/web/public/uploads/
+
+# Generated DB type files
+apps/web/lib/db/index.d.ts
+apps/web/lib/db/index.d.ts.map
+apps/web/lib/db/index.js
+apps/web/lib/db/index.js.map
+
+# Opencode session files
+.opencode/opencode-loop/
+
+# Obsidian workspace state
+.obsidian/workspace.json
+.obsidian/canvas.json

@@ -4,13 +4,18 @@ type: adr
 status: accepted
 author: architect
 created: 2026-06-05
-updated: 2026-06-05
-tags: [architecture, adr, vault, nexus, obsidian]
+updated: 2026-06-06
+tags:
+  - architecture
+  - adr
+  - vault
+  - nexus
+  - obsidian
 supersedes: []
 superseded-by: []
 related:
   - "[[plan/reference/Obsidian vault management]]"
-  - "[[plan/Kevin HUD]]"
+  - "[[HUD]]"
   - "[[plan/blueprints/26060402-obsidian-iphone-sync-webdav]]"
 ---
 
@@ -92,6 +97,6 @@ A full STRIDE pass for Nexus belongs in the Phase-5 implementation blueprint (`b
 
 ## Related Documents
 
-- `plan/Kevin HUD.md` — overall HUD architecture and roadmap.
+- `plan/HUD.md` — overall HUD architecture and roadmap.
 - `plan/reference/Obsidian vault management.md` — vault sync reference; needs a "deferred" banner on the iPhone WebDAV sections (companion change to this ADR).
 - `plan/blueprints/26060402-obsidian-iphone-sync-webdav.md` — iPhone sync blueprint, now shelved; reactivate if/when the deferral trigger fires.

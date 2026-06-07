@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# hud-tail <tenant> — follow journald logs for <tenant>-web
+# Deployed to /opt/agents/bin/hud-tail by hud-provision.sh
+set -euo pipefail
+
+if [[ $# -lt 1 ]]; then
+  echo "Usage: hud-tail <tenant>" >&2
+  exit 1
+fi
+
+exec journalctl -fu "${1}-web"

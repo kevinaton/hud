@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# hud-map — display the server map in $PAGER
+# Deployed to /opt/agents/bin/hud-map by hud-provision.sh
+set -euo pipefail
+
+exec ${PAGER:-less} /etc/hud/server-map.md

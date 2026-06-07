@@ -14,35 +14,35 @@ import {
 // ---------------------------------------------------------------------------
 describe('formatMoney', () => {
   it('formats zero', () => {
-    expect(formatMoney(0, 'PHP')).toBe('P0.00');
+    expect(formatMoney(0, 'PHP')).toBe('₱0.00');
   });
 
   it('formats a negative value', () => {
     // -280.00 PHP
-    expect(formatMoney(-28000, 'PHP')).toBe('-P280.00');
+    expect(formatMoney(-28000, 'PHP')).toBe('-₱280.00');
   });
 
   it('formats an amount with 2 decimals (< 7 integer digits)', () => {
     // 192,938.45 PHP
-    expect(formatMoney(19293845, 'PHP')).toBe('P192,938.45');
+    expect(formatMoney(19293845, 'PHP')).toBe('₱192,938.45');
   });
 
   it('formats a large amount with no decimals (>= 7 integer digits)', () => {
     // 125,999,597.00 PHP — 9 integer digits → no decimals
-    expect(formatMoney(12599959700, 'PHP')).toBe('P125,999,597');
+    expect(formatMoney(12599959700, 'PHP')).toBe('₱125,999,597');
   });
 
   it('formats large negative amounts with no decimals', () => {
     // -125,999,597.00 PHP
-    expect(formatMoney(-12599959700, 'PHP')).toBe('-P125,999,597');
+    expect(formatMoney(-12599959700, 'PHP')).toBe('-₱125,999,597');
   });
 
   it('formats a small positive amount', () => {
-    expect(formatMoney(100, 'PHP')).toBe('P1.00');
+    expect(formatMoney(100, 'PHP')).toBe('₱1.00');
   });
 
   it('formats 1 centavo correctly', () => {
-    expect(formatMoney(1, 'PHP')).toBe('P0.01');
+    expect(formatMoney(1, 'PHP')).toBe('₱0.01');
   });
 
   it('uses ISO code as symbol for unknown currencies', () => {
@@ -51,7 +51,7 @@ describe('formatMoney', () => {
 
   it('formats exactly 7-digit integer part with no decimals', () => {
     // 1,000,000.00 PHP — 7 integer digits → no decimals
-    expect(formatMoney(100000000, 'PHP')).toBe('P1,000,000');
+    expect(formatMoney(100000000, 'PHP')).toBe('₱1,000,000');
   });
 });
 

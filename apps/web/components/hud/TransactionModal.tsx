@@ -538,43 +538,45 @@ export function TransactionModal({
                 </div>
               )}
 
-              {/* Cancel + Submit */}
-              <div className={cn('flex gap-3', isEdit ? '' : 'flex-1')}>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => onOpenChange(false)}
-                  disabled={isSubmitting || isDeleting}
-                  className={cn(
-                    'rounded-[var(--radius)]',
-                    'font-body uppercase tracking-[0.12em] text-xs text-muted',
-                    'hover:text-foreground hover:bg-surface-2',
-                    !isEdit && 'flex-1',
-                  )}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || isDeleting}
-                  className={cn(
-                    'rounded-[var(--radius)]',
-                    'bg-accent text-accent-fg',
-                    'font-body uppercase tracking-[0.12em] text-xs font-medium',
-                    'hover:bg-accent/90',
-                    'focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                    !isEdit && 'flex-1',
-                  )}
-                >
-                  {isEdit
-                    ? isSubmitting
-                      ? 'Saving...'
-                      : 'Save Changes'
-                    : isSubmitting
-                      ? 'Saving...'
-                      : 'Add'}
-                </Button>
-              </div>
+              {/* Cancel + Submit — hidden while delete confirmation is active */}
+              {deleteState === 'idle' && (
+                <div className={cn('flex gap-3', isEdit ? '' : 'flex-1')}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => onOpenChange(false)}
+                    disabled={isSubmitting}
+                    className={cn(
+                      'rounded-[var(--radius)]',
+                      'font-body uppercase tracking-[0.12em] text-xs text-muted',
+                      'hover:text-foreground hover:bg-surface-2',
+                      !isEdit && 'flex-1',
+                    )}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className={cn(
+                      'rounded-[var(--radius)]',
+                      'bg-accent text-accent-fg',
+                      'font-body uppercase tracking-[0.12em] text-xs font-medium',
+                      'hover:bg-accent/90',
+                      'focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                      !isEdit && 'flex-1',
+                    )}
+                  >
+                    {isEdit
+                      ? isSubmitting
+                        ? 'Saving...'
+                        : 'Save Changes'
+                      : isSubmitting
+                        ? 'Saving...'
+                        : 'Add'}
+                  </Button>
+                </div>
+              )}
             </div>
           </form>
         </Form>

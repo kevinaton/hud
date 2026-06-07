@@ -1,0 +1,23 @@
+# /etc/hud/tenants/hud.yml
+# Tenant manifest — HUD (private personal command centre)
+# Deployed by hud-provision.sh to /etc/hud/tenants/hud.yml
+name: hud
+description: Personal HUD — finance, agents, dashboard
+owner_user: hud
+owner_group: hud
+agent_user: agent-hud
+slice: hud.slice
+root: /srv/hud
+domain: hud.kevinaton.com
+public: false
+auth: cloudflare-access
+upstream: 127.0.0.1:3000
+db:
+  engine: sqlite
+  path: /srv/hud/data/hud.db
+  replication: litestream
+  destination: r2://hud-litestream
+services:
+  - hud-web.service
+  - hud-litestream.service
+trust_level: high

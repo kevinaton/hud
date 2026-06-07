@@ -1,0 +1,21 @@
+# /etc/hud/tenants/portfolio.yml
+# Tenant manifest — Portfolio (public-facing site at kevinaton.com)
+# Deployed by hud-provision.sh to /etc/hud/tenants/portfolio.yml
+name: portfolio
+description: Public portfolio site — kevinaton.com
+owner_user: portfolio
+owner_group: portfolio
+agent_user: agent-portfolio
+slice: portfolio.slice
+root: /srv/portfolio
+domain: kevinaton.com
+public: true
+upstream: 127.0.0.1:3001
+db:
+  engine: sqlite
+  path: /srv/portfolio/data/portfolio.db
+  replication: none
+  destination: ""
+services:
+  - portfolio-web.service
+trust_level: medium

@@ -1,0 +1,15 @@
+{
+  "mcp": {
+    "servers": {
+      "hud": {
+        "command": "node",
+        "args": ["/srv/hud/app/packages/mcp-hud/dist/index.js"],
+        "env": {
+          "HUD_AGENT_ACTOR": "agent:emily",
+          "HUD_AGENT_NAME": "emily",
+          "HUD_AGENT_CLI": "opencode"
+        }
+      }
+    }
+  }
+}

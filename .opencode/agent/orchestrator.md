@@ -6,7 +6,6 @@ description: >
   engineer agent. Use when planning features, triaging work, creating tickets,
   or asking about project status.
 mode: primary
-model: claude-sonnet-4-6
 permission:
   read: allow
   glob: allow

@@ -4,7 +4,7 @@ type: blueprint
 status: proposed
 author: architect
 created: 2026-06-05
-updated: 2026-06-05
+updated: 2026-06-06
 decisions-resolved: 2026-06-05
 tags:
   - architecture
@@ -17,7 +17,7 @@ tags:
 supersedes: []
 superseded-by: []
 related:
-  - "[[plan/Kevin HUD.md]]"
+  - "[[HUD]]"
   - "[[plan/blueprints/26060502-mvp-foundation-cashflow.md]]"
   - "[[plan/reference/caddy.md]]"
   - "[[plan/reference/secrets.md]]"
@@ -43,7 +43,7 @@ This combination creates three competing pressures:
 
 This blueprint defines a layout that satisfies all three.
 
-It also surfaces a strategic contradiction with `plan/Kevin HUD.md`:
+It also surfaces a strategic contradiction with `plan/HUD.md`:
 - Layer 1 says: *"Portfolio — hosted separately, out of scope"*
 - Phase 5 says: *"Portfolio guest agent (separate hosting)"*
 
@@ -513,8 +513,8 @@ graph TB
 
 ## Open Questions — Resolved 2026-06-05
 
-- **OQ-1. Update `Kevin HUD.md` strategy?**
-  - **Decision:** No. Portfolio stays "Plan A: Cloudflare Pages / separate hosting" in the strategy doc. This blueprint pre-structures the Hetzner server so Portfolio **can** be added later as Plan B without re-paving. `Kevin HUD.md` Phase 5 wording stays as-is.
+- **OQ-1. Update `HUD.md` strategy?**
+  - **Decision:** No. Portfolio stays "Plan A: Cloudflare Pages / separate hosting" in the strategy doc. This blueprint pre-structures the Hetzner server so Portfolio **can** be added later as Plan B without re-paving. `HUD.md` Phase 5 wording stays as-is.
 - **OQ-2. Where is the Portfolio repo today?**
   - **Decision:** Does not exist yet. Portfolio is the next project after HUD. The Hetzner layout reserves `/srv/portfolio/` and provisions the user/group/slice at L0, but `portfolio-web.service` is not built or deployed. Phase L3 in this blueprint is marked **deferred-indefinitely**.
 - **OQ-3. Domain layout.**

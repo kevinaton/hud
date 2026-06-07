@@ -496,6 +496,7 @@ export async function handleSummary(rawInput: unknown, ctx: ToolCtx): Promise<To
   const priorAgg = agg(prior.year, prior.month);
 
   return ok({
+    currency: 'PHP',
     net: current.net,
     gross: current.gross,
     expense: current.expense,

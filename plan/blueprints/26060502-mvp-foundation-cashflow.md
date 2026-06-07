@@ -4,7 +4,7 @@ type: blueprint
 status: draft
 author: architect
 created: 2026-06-05
-updated: 2026-06-05
+updated: 2026-06-06
 tags:
   - architecture
   - mvp
@@ -17,7 +17,7 @@ tags:
 supersedes: []
 superseded-by: []
 related:
-  - "[[plan/Kevin HUD.md]]"
+  - "[[HUD]]"
   - "[[plan/reference/Finance.md]]"
   - "[[plan/reference/caddy.md]]"
   - "[[plan/reference/secrets.md]]"
@@ -29,7 +29,7 @@ related:
 
 ## Context
 
-Original Phase 0 (in `plan/Kevin HUD.md`) bundled a finance domain model, CSV import, MCP server, four agent skills, dashboard, Litestream replication, and Syncthing mobile sync into one MVP. That scope conflates "stand up the platform" with "deliver a domain". The platform work is invisible once done; the domain work is the visible payoff. Mixing them risks shipping neither.
+Original Phase 0 (in `plan/HUD.md`) bundled a finance domain model, CSV import, MCP server, four agent skills, dashboard, Litestream replication, and Syncthing mobile sync into one MVP. That scope conflates "stand up the platform" with "deliver a domain". The platform work is invisible once done; the domain work is the visible payoff. Mixing them risks shipping neither.
 
 This blueprint rescopes Phase 0 to **foundation + cashflow only**, **built locally first**, and pushes everything else (Hetzner deploy, MCP servers, agent skills, Syncthing) to later phases per the user instruction:
 
@@ -49,7 +49,7 @@ Legacy data lives in `db backups/cashflow_export.csv` (~1k rows; columns `id,ite
 
 ## Current State
 
-- `plan/Kevin HUD.md` defines the 4-layer architecture (Edge / Gateways / Agents / Tools / Memory).
+- `plan/HUD.md` defines the 4-layer architecture (Edge / Gateways / Agents / Tools / Memory).
 - `plan/reference/` has design docs for Caddy, Redis, secrets (sops+age), Sentry+Kuma. SQLite and HUD reference docs exist but are empty.
 - `plan/blueprints/adr/ADR-26060501-vault-client-model.md` exists (not read in detail this session).
 - `plan/blueprints/26060402-obsidian-iphone-sync-webdav.md` proposes Caddy WebDAV + Remotely Save for mobile vault sync — relevant to Phase 2, not MVP.
@@ -467,7 +467,7 @@ Each sub-phase is independently shippable to `main` and demoable locally.
 
 ## Debt Incurred
 
-None at this layer. MVP is intentionally a smaller surface than the original Phase 0; the deferred items (Hetzner deploy, MCP servers, agent skills, Syncthing, Telegram) move to their natural phases in `plan/Kevin HUD.md` rather than being deferred as debt.
+None at this layer. MVP is intentionally a smaller surface than the original Phase 0; the deferred items (Hetzner deploy, MCP servers, agent skills, Syncthing, Telegram) move to their natural phases in `plan/HUD.md` rather than being deferred as debt.
 
 ## Tasks
 

@@ -5,7 +5,7 @@
 # Validate after provisioning: cloudflared tunnel ingress validate --config ops/cloudflared/config.yml
 
 tunnel: <TUNNEL_ID>
-credentials-file: /var/lib/hud/.cloudflared/<TUNNEL_ID>.json
+credentials-file: /srv/hud/secrets/.cloudflared/<TUNNEL_ID>.json
 
 ingress:
   - hostname: hud.kevinaton.com

@@ -19,7 +19,11 @@
       ".opencode/**",
       "plan/**",
       "db backups/**",
-      "apps/web/components/ui/**"
+      "apps/web/components/ui/**",
+      "apps/web/lib/db/*.js",
+      "apps/web/lib/db/*.d.ts",
+      "apps/web/lib/db/*.js.map",
+      "apps/web/lib/db/*.d.ts.map"
     ]
   },
   "formatter": {

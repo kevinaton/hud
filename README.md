@@ -8,6 +8,9 @@ Built with Next.js 15 (App Router), SQLite + Drizzle, and Tailwind v4.
 ### Prerequisites
 
 - **Node.js 22 LTS** (`node --version` should print `v22.x.x`)
+  - A `.nvmrc` is included — run `nvm use` in the repo root to switch automatically.
+  - If switching from a different Node version: `nvm use 22 && rm -rf node_modules apps/web/node_modules && pnpm install`
+    so that native packages (`better-sqlite3`, `@node-rs/argon2`) use prebuilt binaries for Node 22.
 - **pnpm 9** (`pnpm --version` should print `9.x.x`)
   - Install: `corepack enable && corepack use pnpm@latest`
 - **Git**
@@ -101,6 +104,13 @@ pnpm test:run         # Vitest (single run)
 pnpm db:studio        # Drizzle Studio (DB browser at localhost:4983)
 pnpm db:generate      # Regenerate migrations after schema changes
 ```
+
+## Production
+
+> **Never run `pnpm dev` on the server.** Production always runs `pnpm build && pnpm start`
+> (or the standalone bundle via `ops/systemd/hud-web.service`). Running `next dev` on Hetzner
+> is 5–15× slower than `next start` due to the Webpack/Turbopack compiler overhead and will
+> exhaust available RAM. Any server-side smoke test must use `pnpm start`.
 
 ## Production config (Phase 1)
 

@@ -4,7 +4,7 @@ type: blueprint
 status: proposed
 author: architect
 created: 2026-06-05
-updated: 2026-06-05
+updated: 2026-06-06
 tags:
   - architecture
   - agents
@@ -16,7 +16,7 @@ tags:
 supersedes: []
 superseded-by: []
 related:
-  - "[[plan/Kevin HUD.md]]"
+  - "[[HUD]]"
   - "[[plan/blueprints/26060502-mvp-foundation-cashflow.md]]"
   - "[[plan/blueprints/26060503-multi-tenant-server-layout.md]]"
 ---
@@ -25,7 +25,7 @@ related:
 
 ## Context
 
-The MVP (per `26060502`) is ~11 person-days of work across scaffold, design system, DB, auth, cashflow read, cashflow write, CSV importer, and production config. The user is one operator with three CLI backends available — Claude (Opus + Sonnet), Gemini (Flash, free tier), Opencode — per Layer 2 of `Kevin HUD.md`.
+The MVP (per `26060502`) is ~11 person-days of work across scaffold, design system, DB, auth, cashflow read, cashflow write, CSV importer, and production config. The user is one operator with three CLI backends available — Claude (Opus + Sonnet), Gemini (Flash, free tier), Opencode — per Layer 2 of `HUD.md`.
 
 The question: do we use **one full-stack engineer agent** or **specialist agents per domain (frontend / backend / DB)**?
 
@@ -44,9 +44,9 @@ Both questions have the same answer once you separate the two axes that actually
 
 ## Current State
 
-- **Three CLI backends available** per `Kevin HUD.md` Layer 2: Claude CLI, Gemini CLI, Opencode CLI. Rate-limit-aware routing planned ("cheap model first (Gemini free), escalate to Claude when needed") but not yet implemented as a router — at MVP build time, the operator chooses which CLI to invoke.
+- **Three CLI backends available** per `HUD.md` Layer 2: Claude CLI, Gemini CLI, Opencode CLI. Rate-limit-aware routing planned ("cheap model first (Gemini free), escalate to Claude when needed") but not yet implemented as a router — at MVP build time, the operator chooses which CLI to invoke.
 - **No agent identity separation in place yet.** Multi-tenant blueprint (`26060503`) defines `agent-hud` user + `agent-claude`/`agent-gemini`/`agent-opencode` wrappers, but these are for the deployed server (post-MVP). During MVP build (laptop), the operator runs CLIs as themselves.
-- **No `skills/` tree yet.** `Kevin HUD.md` Layer 3 names skills (`categorize-transaction`, `monthly-report`, …) but those are runtime/agent skills, not build-time skills.
+- **No `skills/` tree yet.** `HUD.md` Layer 3 names skills (`categorize-transaction`, `monthly-report`, …) but those are runtime/agent skills, not build-time skills.
 - **Architect role exists** (this role, you talking to me right now) — produces blueprints, no code. Already separated.
 - **Builder/Reviewer/Tester roles do not exist yet** as conscious choices — the operator currently runs "Claude does everything" implicitly.
 

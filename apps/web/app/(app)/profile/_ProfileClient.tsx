@@ -529,7 +529,7 @@ export function ProfileClient({ userId, email, displayName, avatarPath }: Profil
   );
 
   return (
-    <div className="flex flex-col px-4">
+    <div className="flex flex-col px-4 max-w-2xl mx-auto w-full">
       <AvatarSection
         userId={userId}
         avatarPath={currentAvatarPath}

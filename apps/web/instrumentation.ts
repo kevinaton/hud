@@ -2,13 +2,16 @@
  * Next.js instrumentation hook.
  * Runs once when the server is first initialized.
  *
- * Initializes Sentry (no-op when SENTRY_DSN is absent).
- * beforeSend scrubs request bodies on /api/auth/* routes
- * so passwords never appear in Sentry events.
+ * Sentry is only imported when SENTRY_DSN is set — this eliminates the Sentry
+ * module from the dev bundle entirely when DSN is absent, which is the single
+ * largest cause of slow dev cold-compile (Webpack/Turbopack must instrument
+ * every server entry when Sentry is loaded statically).
+ *
+ * beforeSend scrubs request bodies on /api/auth/* routes so passwords never
+ * appear in Sentry events.
  */
 
 import type { ErrorEvent } from '@sentry/nextjs';
-import * as Sentry from '@sentry/nextjs';
 
 /** Scrub sensitive data from Sentry events for auth routes. */
 function scrubAuthEvent(event: ErrorEvent): ErrorEvent | null {
@@ -40,8 +43,11 @@ function scrubAuthEvent(event: ErrorEvent): ErrorEvent | null {
 export async function register() {
   const dsn = process.env.SENTRY_DSN;
 
-  // If no DSN is set, skip initialization (dev / test environments)
+  // No DSN → skip entirely. Module is never loaded; no chunk emitted.
   if (!dsn) return;
+
+  // Dynamic import: bundler tree-shakes this when DSN is absent.
+  const Sentry = await import('@sentry/nextjs');
 
   Sentry.init({
     dsn,

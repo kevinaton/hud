@@ -5,16 +5,16 @@
  * - Divide by 100 to get major units.
  * - If the absolute value has >= 7 display digits (before decimal), show NO decimals.
  * - Otherwise show 2 decimal places.
- * - Currency prefix: PHP → "P", others use the ISO code.
+ * - Currency prefix: PHP → "₱", others use the ISO code.
  *
  * Examples:
- *   formatMoney(12599959700, 'PHP')  → 'P125,999,597'   (no decimals, >= 7 digits)
- *   formatMoney(19293845, 'PHP')     → 'P192,938.45'    (2 decimals, < 7 digits)
- *   formatMoney(-28000, 'PHP')       → '-P280.00'
+ *   formatMoney(12599959700, 'PHP')  → '₱125,999,597'   (no decimals, >= 7 digits)
+ *   formatMoney(19293845, 'PHP')     → '₱192,938.45'    (2 decimals, < 7 digits)
+ *   formatMoney(-28000, 'PHP')       → '-₱280.00'
  */
 
 const CURRENCY_SYMBOL: Record<string, string> = {
-  PHP: 'P',
+  PHP: '₱',
 };
 
 function currencySymbol(currency: string): string {
