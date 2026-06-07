@@ -19,7 +19,12 @@ import { writeAuditLog } from '@/lib/audit/index';
 import { setCsrfCookie, setSessionCookie } from '@/lib/auth/cookie';
 import { getSessionToken } from '@/lib/auth/cookie';
 import { generateCsrfToken, verifyOrigin } from '@/lib/auth/csrf';
-import { checkLockout, clearLockout, recordFailedAttempt } from '@/lib/auth/lockout';
+import {
+  LOCKOUT_THRESHOLD,
+  checkLockout,
+  clearLockout,
+  recordFailedAttempt,
+} from '@/lib/auth/lockout';
 import { DUMMY_HASH, MIN_PASSWORD_LENGTH, verifyPassword } from '@/lib/auth/password';
 import { checkLoginRateLimit, resetLoginRateLimit } from '@/lib/auth/rate-limit';
 import { rotateSession } from '@/lib/auth/session';
@@ -96,7 +101,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // Constant-time: perform dummy verify to prevent timing oracle
     await verifyPassword(password, DUMMY_HASH).catch(() => null);
     return padAndReturn(
-      NextResponse.json({ error: 'Invalid credentials', failedAttempts: 0 }, { status: 401 }),
+      NextResponse.json(
+        {
+          error: 'Invalid credentials',
+          failedAttempts: 0,
+          remainingAttempts: LOCKOUT_THRESHOLD,
+        },
+        { status: 401 },
+      ),
     );
   }
 
@@ -108,6 +120,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         {
           error: 'Invalid credentials',
           failedAttempts: user.failedAttempts,
+          remainingAttempts: 0,
           lockedUntil: lockout.lockedUntil.toISOString(),
         },
         { status: 401 },
@@ -162,9 +175,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // Re-read lockout state after recording failure
     const updatedUser = db.select().from(users).where(eq(users.id, user.id)).get();
+    const remainingAttempts = Math.max(0, LOCKOUT_THRESHOLD - newCount);
     const responseBody: Record<string, unknown> = {
       error: 'Invalid credentials',
       failedAttempts: newCount,
+      remainingAttempts,
     };
     if (updatedUser?.lockedUntil) {
       responseBody.lockedUntil = updatedUser.lockedUntil;
