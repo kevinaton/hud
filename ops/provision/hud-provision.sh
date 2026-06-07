@@ -160,6 +160,20 @@ ensure_dir "/srv/hud/runtime"      700 "hud:hud"
 ensure_dir "/srv/hud/vault"        750 "hud:hud"
 ensure_dir "/srv/hud/backups"      700 "hud:hud"
 
+# agent-hud's dedicated XDG runtime subtree — per ADR-26060701-agent-hud-xdg-runtime.
+# `agent-hud` (uid 2011, primary group `hud`) needs somewhere to write its own CLI
+# config/cache/data/state without writing into the `hud`-owned, group-read-only (750,
+# no group-write) tenant root. This subtree is owned and mode 700 by `agent-hud:hud` —
+# `agent-hud` can read/write/traverse; `hud` (the tenant owner) cannot read it at all.
+# The agent-* wrappers redirect XDG_CONFIG_HOME/XDG_CACHE_HOME/XDG_DATA_HOME/
+# XDG_STATE_HOME/XDG_RUNTIME_DIR here so no CLI ever touches /srv/hud's dotfile space.
+ensure_dir "/srv/hud/agent-runtime"         700 "agent-hud:hud"
+ensure_dir "/srv/hud/agent-runtime/config"  700 "agent-hud:hud"
+ensure_dir "/srv/hud/agent-runtime/cache"   700 "agent-hud:hud"
+ensure_dir "/srv/hud/agent-runtime/data"    700 "agent-hud:hud"
+ensure_dir "/srv/hud/agent-runtime/state"   700 "agent-hud:hud"
+ensure_dir "/srv/hud/agent-runtime/runtime" 700 "agent-hud:hud"
+
 # ---------------------------------------------------------------------------
 # Section 3: Directory tree — /srv/portfolio/
 # ---------------------------------------------------------------------------
@@ -249,22 +263,39 @@ echo ""
 echo "=== SECTION 6: Sudoers Entry ==="
 
 SUDOERS_FILE="/etc/sudoers.d/hud-operator"
-SUDOERS_CONTENT="kevin ALL=(agent-hud) NOPASSWD: /opt/agents/bin/*"
 
-if [[ -f "${SUDOERS_FILE}" ]] && grep -qF "${SUDOERS_CONTENT}" "${SUDOERS_FILE}"; then
+# env_keep allowlist: the agent-* wrapper scripts (per ADR-26060701-agent-hud-xdg-runtime)
+# redirect the agent CLIs' XDG runtime dirs into agent-hud's own subtree by passing
+# VAR=value assignments through `sudo -u agent-hud -E ...`. Because the command spec
+# below is a glob (/opt/agents/bin/*), not ALL, SETENV is not implied — these five vars
+# must be explicitly allow-listed so sudo permits the wrapper to set them on the target
+# command's environment instead of silently stripping them (which would put the CLIs
+# back to writing into $HOME=/srv/hud and reproduce the Ticket 26 EACCES failure).
+SUDOERS_CONTENT='kevin ALL=(agent-hud) NOPASSWD: /opt/agents/bin/*
+Defaults:kevin env_keep += "XDG_CONFIG_HOME XDG_CACHE_HOME XDG_DATA_HOME XDG_STATE_HOME XDG_RUNTIME_DIR"'
+
+if [[ -f "${SUDOERS_FILE}" ]] && [[ "$(cat "${SUDOERS_FILE}")" == "${SUDOERS_CONTENT}" ]]; then
   step_skipped "sudoers ${SUDOERS_FILE}"
 else
   sudoers_tmpfile="$(mktemp)"
-  echo "${SUDOERS_CONTENT}" >"${sudoers_tmpfile}"
+  printf '%s\n' "${SUDOERS_CONTENT}" >"${sudoers_tmpfile}"
   chmod 0440 "${sudoers_tmpfile}"
 
   # Validate before installing
   if visudo -c -f "${sudoers_tmpfile}" &>/dev/null; then
-    cp "${sudoers_tmpfile}" "${SUDOERS_FILE}"
-    chmod 0440 "${SUDOERS_FILE}"
-    chown root:root "${SUDOERS_FILE}"
-    rm -f "${sudoers_tmpfile}"
-    step_created "sudoers ${SUDOERS_FILE}"
+    if [[ -f "${SUDOERS_FILE}" ]]; then
+      cp "${sudoers_tmpfile}" "${SUDOERS_FILE}"
+      chmod 0440 "${SUDOERS_FILE}"
+      chown root:root "${SUDOERS_FILE}"
+      rm -f "${sudoers_tmpfile}"
+      step_updated "sudoers ${SUDOERS_FILE}"
+    else
+      cp "${sudoers_tmpfile}" "${SUDOERS_FILE}"
+      chmod 0440 "${SUDOERS_FILE}"
+      chown root:root "${SUDOERS_FILE}"
+      rm -f "${sudoers_tmpfile}"
+      step_created "sudoers ${SUDOERS_FILE}"
+    fi
   else
     rm -f "${sudoers_tmpfile}"
     echo "ERROR: sudoers validation failed — not writing ${SUDOERS_FILE}" >&2
@@ -446,6 +477,7 @@ echo "    plan/blueprints/26060503-multi-tenant-server-layout.md"
 echo ""
 echo "  Key paths:"
 echo "    /srv/hud/                    — HUD tenant root (750 hud:hud)"
+echo "    /srv/hud/agent-runtime/      — agent-hud XDG runtime (700 agent-hud:hud)"
 echo "    /srv/portfolio/              — Portfolio tenant root (750 portfolio:portfolio)"
 echo "    /opt/agents/bin/             — Shared agent CLI wrappers"
 echo "    /etc/hud/tenants/            — Tenant manifests (YAML)"

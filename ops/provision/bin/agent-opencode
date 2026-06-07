@@ -10,6 +10,28 @@
 # CLI's config/cache dirs to resolve under agent-hud's real home — without
 # this override the CLI tries to mkdir under the invoker's $HOME and fails
 # with EACCES (Ticket 26).
+#
+# XDG_CONFIG_HOME/XDG_CACHE_HOME/XDG_DATA_HOME/XDG_STATE_HOME/XDG_RUNTIME_DIR
+# redirect each CLI's runtime state into agent-hud's own subtree
+# (/srv/hud/agent-runtime/, 700 agent-hud:hud) instead of the XDG defaults
+# under $HOME=/srv/hud — which is owned hud:hud, mode 750 with no group-write
+# bit, so agent-hud cannot mkdir into it (this is the exact EACCES that hard-
+# failed opencode's `mkdir '/srv/hud/.local/share/opencode'` in Ticket 26). Per
+# ADR-26060701-agent-hud-xdg-runtime: this keeps the tenant root's "one owner,
+# no foreign dotfiles" invariant intact while giving agent-hud a place it
+# actually owns to persist config, caches, OAuth tokens/credentials, and CLI
+# history. These five vars are allow-listed in the sudoers env_keep entry in
+# /etc/sudoers.d/hud-operator so `-E` carries them through the privilege
+# change instead of sudo stripping them.
 set -euo pipefail
 
-exec sudo -u agent-hud -E HOME=/srv/hud opencode "$@"
+AGENT_RUNTIME=/srv/hud/agent-runtime
+
+exec sudo -u agent-hud -E \
+  HOME=/srv/hud \
+  XDG_CONFIG_HOME="${AGENT_RUNTIME}/config" \
+  XDG_CACHE_HOME="${AGENT_RUNTIME}/cache" \
+  XDG_DATA_HOME="${AGENT_RUNTIME}/data" \
+  XDG_STATE_HOME="${AGENT_RUNTIME}/state" \
+  XDG_RUNTIME_DIR="${AGENT_RUNTIME}/runtime" \
+  opencode "$@"
