@@ -1,3 +1,7 @@
+---
+name: cashflow
+description: Tools for managing Kevin's transactions, spending summaries, and categories.
+---
 # Skill: Cashflow
 
 ## When to load
@@ -68,6 +72,26 @@ Mandatory sequence whenever Kevin names a category:
 6. **On n/no or anything else:** proceed without a category (omit `categoryId`).
 
 **`kind` inference for `createCategory`:** expense context → `"expense"`; income context → `"income"`. If ambiguous, ask.
+
+## Shorthand patterns
+
+Kevin uses specific shorthands for fast entry. Adhere to these mappings:
+
+- **"<Category> <Item> <Amount>"** (e.g., "airbnb clean 280")
+  - `categoryId`: Resolve from `<Category>` (e.g., "airbnb")
+  - `item`: Use `<Item>` (e.g., "clean")
+  - `amountMinor`: Use `<Amount>` × 100 × -1 (always negative/expense)
+  - Result: `item: "clean"`, `amountMinor: -28000`, category: "airbnb"
+
+- **"income <Amount>"** (e.g., "income 20000")
+  - `categoryId`: Resolve from "income"
+  - `item`: Use "Income"
+  - `amountMinor`: Use `<Amount>` × 100 (always positive/income)
+  - Result: `item: "Income"`, `amountMinor: 2000000`, category: "income"
+
+- **"clean airbnb 280"** (item-category swap)
+  - If the first two words are ambiguous, assume the one that matches an existing category name is the category.
+  - If both or neither match, treat the first as category and the second as item.
 
 ## Common patterns
 
