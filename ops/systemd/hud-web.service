@@ -15,7 +15,7 @@ User=hud
 Group=hud
 WorkingDirectory=/srv/hud/app
 EnvironmentFile=/srv/hud/secrets/.env
-ExecStart=/usr/bin/node apps/web/.next/standalone/server.js
+ExecStart=/usr/bin/node apps/web/.next/standalone/apps/web/server.js
 Restart=on-failure
 RestartSec=5
 
