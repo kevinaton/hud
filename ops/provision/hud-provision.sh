@@ -175,7 +175,7 @@ ensure_dir "/srv/portfolio/runtime"            700 "portfolio:portfolio"
 # public/ — Caddy reads static files here; caddy group needs read access
 ensure_dir "/srv/portfolio/public"             755 "portfolio:caddy"
 # guest-sandbox/ — Phase 5: agent-portfolio's writable area
-ensure_dir "/srv/portfolio/guest-sandbox"      770 "portfolio:agent-portfolio"
+ensure_dir "/srv/portfolio/guest-sandbox"      770 "portfolio:portfolio"
 
 # ---------------------------------------------------------------------------
 # Section 4: /opt/agents/bin/ and /etc/hud/ scaffolding
