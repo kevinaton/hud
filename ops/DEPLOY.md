@@ -156,10 +156,47 @@ sudo -u hud pnpm --filter @hud/mcp-hud build
 Expected output: `pnpm build` finishes with `Route (app)` table and
 `Next.js` build summary. No TypeScript errors.
 
-For re-deploys, restart the service after build:
+### ⚠️ REQUIRED: copy static assets into the standalone output
+
+`next build` with `output: 'standalone'` does **not** copy `.next/static/`
+or `public/` into `.next/standalone/apps/web/` — Next.js explicitly
+documents this as a manual deploy step
+(https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats).
+`hud-web.service` runs `server.js` from inside `.next/standalone/apps/web/`
+with that directory as its `cwd`, so without this copy **every**
+`/_next/static/*` and `public/` request (favicons, fonts, all JS/CSS
+chunks) 404s with a `text/plain` body — which the browser then refuses
+to execute as a script (`ChunkLoadError` / MIME-type rejection on the
+login page and everywhere else). `cleanDistDir: true` wipes and
+regenerates `.next/` on every build, so this copy must run **every time**,
+not just on first deploy.
+
+```bash
+sudo -u hud cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
+sudo -u hud cp -r apps/web/public/. apps/web/.next/standalone/apps/web/public/
+```
+
+Verify before restarting (replace the hash with whatever `pnpm build`
+just generated for the login page — check
+`apps/web/.next/static/chunks/app/(auth)/login/`):
+
+```bash
+ls apps/web/.next/standalone/apps/web/.next/static/chunks/app/'(auth)'/login/
+ls apps/web/.next/standalone/apps/web/public/
+```
+
+For re-deploys, restart the service after the build **and** the copy:
 
 ```bash
 sudo systemctl restart hud-web
+```
+
+Then confirm a real asset loads (replace the hash as above):
+
+```bash
+curl -I http://localhost:3000/favicon.ico
+curl -I "http://localhost:3000/_next/static/chunks/app/(auth)/login/page-<hash>.js"
+# Both must return 200 with the correct Content-Type — NOT 404 / text/plain
 ```
 
 ---
@@ -254,6 +291,20 @@ matches the actual file at `/srv/hud/secrets/.cloudflared/<TUNNEL_ID>.json`.
 1. Pull latest: `cd /srv/hud/app && sudo -u hud git pull --ff-only`
 2. Install any new deps: `sudo -u hud pnpm install --frozen-lockfile`
 3. Build: `sudo -u hud pnpm build && sudo -u hud pnpm --filter @hud/mcp-hud build`
-4. Migrate (if schema changed): `cd apps/web && sudo -u hud pnpm db:migrate`
-5. Restart: `sudo systemctl restart hud-web`
-6. Verify: `sudo systemctl status hud-web` and `curl -I https://hud.kevinaton.com`
+4. **Copy static assets into the standalone output (REQUIRED — `cleanDistDir`
+   wipes these every build; skipping this step 404s every `_next/static/*`
+   and `public/` request and breaks every page with a `ChunkLoadError`):**
+   ```bash
+   sudo -u hud cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
+   sudo -u hud cp -r apps/web/public/. apps/web/.next/standalone/apps/web/public/
+   ```
+5. Migrate (if schema changed): `cd apps/web && sudo -u hud pnpm db:migrate`
+6. Restart: `sudo systemctl restart hud-web`
+7. Verify:
+   - `sudo systemctl status hud-web` and `curl -I https://hud.kevinaton.com`
+   - **Also verify static assets serve** (the most common regression —
+     see Step 6's "REQUIRED: copy static assets" note for the full
+     rationale): `curl -I http://localhost:3000/favicon.ico` must be
+     `200`, not `404`. Load `/login` in an incognito browser tab and
+     confirm zero console errors (no 404s under `_next/static/`, no
+     `ChunkLoadError`).
