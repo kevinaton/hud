@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" shape-rendering="crispEdges">
+  <!-- Background: solid accent #0FB8C9 -->
+  <rect width="32" height="32" fill="#0FB8C9"/>
+  <!-- Letter H: geometric path, dark fill, centered in 32x32 box -->
+  <!-- Left vertical bar: x=6, y=5, w=5, h=22 -->
+  <rect x="6" y="5" width="5" height="22" fill="#0A0E12"/>
+  <!-- Right vertical bar: x=21, y=5, w=5, h=22 -->
+  <rect x="21" y="5" width="5" height="22" fill="#0A0E12"/>
+  <!-- Horizontal crossbar: centered at y=16, height=4 -->
+  <rect x="6" y="14" width="20" height="4" fill="#0A0E12"/>
+</svg>

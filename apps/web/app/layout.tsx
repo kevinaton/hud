@@ -24,6 +24,13 @@ const oxanium = Oxanium({
 export const metadata: Metadata = {
   title: 'HUD',
   description: 'Operator console — authorized personnel only',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: '16x16 32x32', type: 'image/x-icon' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
 };
 
 export default function RootLayout({
