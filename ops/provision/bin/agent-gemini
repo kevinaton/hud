@@ -2,6 +2,14 @@
 # agent-gemini — run the Gemini CLI as agent-hud
 # Operator's shell stays as kevin; the agent process runs under agent-hud UID.
 # Deployed to /opt/agents/bin/agent-gemini by hud-provision.sh
+#
+# -E preserves the invoker's environment (DATABASE_URL, HUD_AGENT_* per the
+# emily blueprint's OQ-2 propagation contract); HOME=/srv/hud explicitly
+# overrides whatever -E would otherwise leak through (e.g. /root when invoked
+# from a root shell, or /home/kevin when invoked by the operator), forcing the
+# CLI's config/cache dirs to resolve under agent-hud's real home — without
+# this override the CLI tries to mkdir under the invoker's $HOME and fails
+# with EACCES (Ticket 26).
 set -euo pipefail
 
-exec sudo -u agent-hud -E gemini "$@"
+exec sudo -u agent-hud -E HOME=/srv/hud gemini "$@"
