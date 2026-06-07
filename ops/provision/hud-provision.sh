@@ -312,20 +312,6 @@ else
   step_created "apt repo: caddy"
 fi
 
-# --- cloudflared repo ---
-CLOUDFLARED_KEYRING="/usr/share/keyrings/cloudflare-main.gpg"
-CLOUDFLARED_LIST="/etc/apt/sources.list.d/cloudflared.list"
-
-if [[ -f "${CLOUDFLARED_KEYRING}" && -f "${CLOUDFLARED_LIST}" ]]; then
-  step_skipped "apt repo: cloudflared"
-else
-  curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg \
-    | gpg --dearmor -o "${CLOUDFLARED_KEYRING}"
-  echo "deb [signed-by=${CLOUDFLARED_KEYRING}] https://pkg.cloudflare.com/cloudflared ${CODENAME} main" \
-    >"${CLOUDFLARED_LIST}"
-  step_created "apt repo: cloudflared"
-fi
-
 # --- NodeSource repo (Node 22 LTS) ---
 NODESOURCE_LIST="/etc/apt/sources.list.d/nodesource.list"
 
@@ -343,7 +329,6 @@ step_updated "apt-get update"
 # Install packages (apt-get install is idempotent — already-installed pkgs are no-ops)
 PACKAGES=(
   caddy
-  cloudflared
   nodejs
   sqlite3
   age
@@ -366,6 +351,17 @@ else
   corepack enable
   corepack prepare pnpm@latest --activate
   step_created "pnpm (via corepack)"
+fi
+
+# --- cloudflared (binary install — apt repo lacks Ubuntu 26.04 support) ---
+if command -v cloudflared &>/dev/null; then
+  step_skipped "cloudflared (already installed)"
+else
+  curl -fsSL "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb" \
+    -o /tmp/cloudflared.deb
+  dpkg -i /tmp/cloudflared.deb >/dev/null 2>&1
+  rm -f /tmp/cloudflared.deb
+  step_created "cloudflared (binary deb installed)"
 fi
 
 # --- litestream (binary install — packagecloud apt repo lacks Ubuntu 26.04 support) ---
