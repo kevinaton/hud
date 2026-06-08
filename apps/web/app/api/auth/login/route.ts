@@ -7,16 +7,42 @@
  *  2. Check IP rate limit → 429 if exceeded
  *  3. Verify Origin header (CSRF-exempt route uses origin check instead)
  *  4. Look up user by (normalized) email
- *     - not found → constant-time dummy verify, write a real login_fail audit
- *       row (userId: null), return 401 with remainingAttempts = LOCKOUT_THRESHOLD
+ *     - not found → constant-time dummy verify, consult the per-IP
+ *       "anonymous" lockout tracker (lib/auth/anon-lockout.ts), write a real
+ *       login_fail (+ maybe lockout) audit row (userId: null), return 401
+ *       with a REAL, server-authoritative, decrementing `remainingAttempts`
+ *       / `lockedUntil` — see "Per-IP anonymous lockout layer" below
  *     - found → continue
  *  5. Check account lockout → 401 if locked
  *  6. Verify password
  *  7. On failure: recordFailedAttempt, write audit login_fail, return 401
- *  8. On success: clearLockout, rotateSession, set cookies, write audit login, return 200
+ *  8. On success: clearLockout, resetAnonAttempts, rotateSession, set cookies,
+ *     write audit login, return 200
  *
  * Timing: failure path takes ≥ 200ms (argon2 verify handles most of this;
  * we pad with a minimum delay to cover the "user not found" fast path).
+ *
+ * --- Per-IP anonymous lockout layer (Ticket 30, REOPENED 2026-06-08) ---
+ *
+ * The first pass at this ticket (commit 257df9c) recorded "no such account"
+ * submissions as real audit rows but returned a STATIC
+ * `remainingAttempts: LOCKOUT_THRESHOLD` for that branch — there was no
+ * `users` row to decrement a counter against. Kevin reproduced the resulting
+ * gap live: the on-screen counter sat at "3" forever when he clicked
+ * "Authenticate" with empty/garbage fields (the exact "accidental click"
+ * scenario), and could never visibly lock out.
+ *
+ * Kevin's instruction draws no distinction by account existence — "all
+ * invalid credentials will decrement the 3 attempts chance," zero exceptions.
+ * `lib/auth/anon-lockout.ts` supplies a per-IP, in-memory counter (same
+ * storage model as `lib/auth/rate-limit.ts`) that mirrors the per-account
+ * lockout's threshold/window/lock semantics exactly, so the unknown-account
+ * branch now produces the SAME-SHAPED, SAME-MOVING `remainingAttempts` /
+ * `lockedUntil` the known-account branch does. The displayed sequence
+ * (3 → 2 → 1 → locked) is now byte-for-byte uniform regardless of whether the
+ * submitted email matches a real account — see that module's header comment
+ * for the full design rationale, and this ticket's Notes for the live
+ * re-verification and the account-enumeration security write-up.
  *
  * --- Why no Zod `.email()` / `.min(MIN_PASSWORD_LENGTH)` gate here (Ticket 30) ---
  *
@@ -51,6 +77,11 @@
  */
 
 import { writeAuditLog } from '@/lib/audit/index';
+import {
+  checkAnonLockout,
+  recordAnonFailedAttempt,
+  resetAnonAttempts,
+} from '@/lib/auth/anon-lockout';
 import { setCsrfCookie, setSessionCookie } from '@/lib/auth/cookie';
 import { getSessionToken } from '@/lib/auth/cookie';
 import { generateCsrfToken, verifyOrigin } from '@/lib/auth/csrf';
@@ -89,6 +120,114 @@ function getIp(req: NextRequest): string {
     req.headers.get('x-real-ip') ??
     '127.0.0.1'
   );
+}
+
+interface AnonAttemptContext {
+  ip: string;
+  userAgent: string;
+  email: string;
+}
+
+/**
+ * Build the 401 response body + write the audit row(s) for a "no such
+ * account" submission, consulting the per-IP anonymous-lockout tracker so the
+ * displayed `remainingAttempts` / `lockedUntil` decrement and lock UNIFORMLY
+ * with the known-account branch — see the module-level "Per-IP anonymous
+ * lockout layer" comment and `lib/auth/anon-lockout.ts` for the full design
+ * rationale (Ticket 30, reopened 2026-06-08).
+ *
+ * Extracted to its own function to keep `POST`'s cognitive complexity within
+ * the project's Biome threshold — this is pure orchestration glue, not a
+ * change in behavior from having it inline.
+ */
+function recordUnknownAccountAttempt(ctx: AnonAttemptContext): Record<string, unknown> {
+  const { ip, userAgent, email } = ctx;
+  const anonCheck = checkAnonLockout(ip);
+
+  if (anonCheck.locked) {
+    // Already locked from prior failures on this IP — return the SAME shape
+    // (and SAME generic message) the per-account "already locked" branch
+    // returns, so the two are indistinguishable on screen. Per
+    // `lib/auth/lockout.ts`'s rule, do not record/increment further while
+    // locked — but the submission is still independently logged so the
+    // forensic trail is complete (mirrors the known-account audit write).
+    db.transaction((tx) => {
+      writeAuditLog(tx, {
+        userId: null,
+        actor: 'anon',
+        action: 'login_fail',
+        entity: 'user',
+        payload: { email_attempted: email, reason: 'no_such_account' },
+        ipAddress: ip,
+        userAgent,
+      });
+    });
+
+    const lockedUntilIso =
+      anonCheck.lockedUntil?.toISOString() ??
+      new Date(Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000).toISOString();
+
+    return {
+      error: 'Invalid credentials',
+      failedAttempts: 0,
+      remainingAttempts: 0,
+      lockedUntil: lockedUntilIso,
+    };
+  }
+
+  const anonResult = recordAnonFailedAttempt(ip);
+
+  // This is still a real wrong-credential submission and MUST be recorded as
+  // one (Ticket 30 AC: "This applies whether or not the submitted email
+  // corresponds to an existing account"). Write a real login_fail audit row
+  // with userId: null (audit_log.user_id is nullable for exactly this
+  // pre-auth case — see .claude/skills/hud-audit/SKILL.md), plus a `lockout`
+  // row on the attempt that trips the per-IP threshold — same pattern as the
+  // known-account branch.
+  db.transaction((tx) => {
+    writeAuditLog(tx, {
+      userId: null,
+      actor: 'anon',
+      action: 'login_fail',
+      entity: 'user',
+      // No row exists for this email — there is nothing to point entityId at.
+      payload: {
+        email_attempted: email,
+        reason: 'no_such_account',
+        anon_failed_attempts: anonResult.count,
+      },
+      ipAddress: ip,
+      userAgent,
+    });
+
+    if (anonResult.justLocked && anonResult.lockedUntil) {
+      writeAuditLog(tx, {
+        userId: null,
+        actor: 'anon',
+        action: 'lockout',
+        entity: 'user',
+        payload: {
+          locked_until: anonResult.lockedUntil.toISOString(),
+          failed_attempts: anonResult.count,
+          scope: 'anon_ip',
+          ip_address: ip,
+        },
+        ipAddress: ip,
+        userAgent,
+      });
+    }
+  });
+
+  const responseBody: Record<string, unknown> = {
+    error: 'Invalid credentials',
+    failedAttempts: anonResult.count,
+    remainingAttempts: anonResult.remainingAttempts,
+  };
+  if (anonResult.lockedUntil) {
+    responseBody.lockedUntil = anonResult.lockedUntil.toISOString();
+  }
+
+  return responseBody;
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -142,39 +281,37 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // Constant-time: perform dummy verify to prevent timing oracle
     await verifyPassword(password, DUMMY_HASH).catch(() => null);
 
-    // No account exists for this email, so there is no failed_attempts counter
-    // to decrement and no lockout state to update — but this is still a real
-    // wrong-credential submission and MUST be recorded as one (Ticket 30 AC:
-    // "This applies whether or not the submitted email corresponds to an
-    // existing account"). Write a real login_fail audit row with userId: null
-    // (audit_log.user_id is nullable for exactly this pre-auth case — see
-    // .claude/skills/hud-audit/SKILL.md).
-    db.transaction((tx) => {
-      writeAuditLog(tx, {
-        userId: null,
-        actor: 'anon',
-        action: 'login_fail',
-        entity: 'user',
-        // No row exists for this email — there is nothing to point entityId at.
-        payload: {
-          email_attempted: email,
-          reason: 'no_such_account',
-        },
-        ipAddress: ip,
-        userAgent,
-      });
-    });
-
-    return padAndReturn(
-      NextResponse.json(
-        {
-          error: 'Invalid credentials',
-          failedAttempts: 0,
-          remainingAttempts: LOCKOUT_THRESHOLD,
-        },
-        { status: 401 },
-      ),
-    );
+    // --- Ticket 30 (reopened 2026-06-08): per-IP "anonymous" lockout layer ---
+    //
+    // No account exists for this email, so there is no `users` row to
+    // decrement `failed_attempts` on or set `locked_until` for. Earlier this
+    // branch wrote a real audit row but returned a STATIC
+    // `remainingAttempts: LOCKOUT_THRESHOLD` — the displayed counter never
+    // moved off "3" and could never reach "locked" for a non-matching email.
+    // That is precisely the scenario Kevin reproduced live: clicking
+    // "Authenticate" with empty/garbage fields never visibly decremented the
+    // counter.
+    //
+    // Kevin's instruction draws no distinction by account existence — "all
+    // invalid credentials will decrement the 3 attempts chance," zero
+    // exceptions — so we now consult `lib/auth/anon-lockout.ts` (via
+    // `recordUnknownAccountAttempt`, extracted to its own function to keep
+    // this handler's complexity within Biome's threshold), a per-IP
+    // in-memory tracker that mirrors the per-account lockout's threshold,
+    // window, and lock semantics EXACTLY (see that module's header comment
+    // for the full design rationale). It supplies the SAME-SHAPED
+    // `remainingAttempts` / `lockedUntil` the per-account branch produces, so
+    // the on-screen sequence (3 → 2 → 1 → locked) is byte-for-byte uniform
+    // regardless of whether the email matches a real account.
+    //
+    // This also CLOSES an account-enumeration oracle: previously an attacker
+    // could tell "this account exists" from "it doesn't" purely by watching
+    // whether repeat submissions against the same email moved the counter
+    // (known accounts decremented; unknown accounts froze at 3). Uniform
+    // per-IP counting removes that signal — see this ticket's Notes for the
+    // full security write-up.
+    const responseBody = recordUnknownAccountAttempt({ ip, userAgent, email });
+    return padAndReturn(NextResponse.json(responseBody, { status: 401 }));
   }
 
   // 5. Check account lockout
@@ -284,6 +421,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   // Reset IP rate limit on successful login
   await resetLoginRateLimit(ip);
+
+  // Reset this IP's per-IP "anonymous" failed-attempt counter on successful
+  // login — mirrors `clearLockout` resetting the per-account counter on
+  // success (see lib/auth/anon-lockout.ts header comment for why this layer
+  // exists). Prevents a legitimate user who fat-fingered a few attempts from
+  // a shared/NAT'd IP from being penalized by stale anon-counter state after
+  // they successfully authenticate.
+  resetAnonAttempts(ip);
 
   // Set session + CSRF cookies
   await setSessionCookie(plainToken);
