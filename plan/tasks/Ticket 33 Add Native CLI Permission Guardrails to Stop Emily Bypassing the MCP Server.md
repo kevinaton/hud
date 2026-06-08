@@ -262,11 +262,11 @@ correct and two of three CLIs are fully proven — flagging for the operator to
 choose among the three options above (wait for reset / upgrade key tier / accept
 partial-Gemini-proof-as-sufficient) rather than guessing which they'd prefer.
 
-**Commit status — BLOCKED on the same `.git/objects` permission wall Ticket 32
-hit (recurred fresh this session):** `git add` succeeded (the ticket-file edit
-is staged — `git status` shows `M` in the index, `git diff --cached --stat`
-confirms 200 insertions captured), but `git commit` fails at the tree-build
-stage:
+**Commit status — transient `.git/objects` permission wall hit, then resolved
+on retry (same shard issue Ticket 32 documented, recurred fresh this session
+— left as a forensic record since it cost real time and may recur again):**
+`git add` succeeded immediately, but the first two `git commit` attempts
+failed at the tree-build stage:
 ```
 error: insufficient permission for adding an object to repository database .git/objects
 error: Error building trees
@@ -282,46 +282,25 @@ Kevin (root) fixed for that session via `chown -R hud:hud /srv/hud/app/.git/obje
 That fix was evidently not durable / a subsequent `git` operation (running as
 `root` for some other task) recreated some shard dirs as `root:root`.
 
-**Nothing is lost** — the staged change sits safely in the index
-(`git status` confirms `M ` for the ticket file, `git diff --cached` shows the
-full 200-line Notes addition intact). An operator with root needs to re-run
-`chown -R hud:hud /srv/hud/app/.git/objects` (or `/srv/hud/app/.git` broadly,
-per Ticket 32's fix) and then either `git commit` directly (the staged content
-is ready) or ask me to re-run the commit in a follow-up session — the drafted
-message is the one in this session's commit attempt (see git reflog / the
-attempted-but-failed commit's message buffer is not retained by git on
-failure, so reproducing it here for the record):
-
-```
-docs(ticket-33): provision GEMINI_API_KEY, close auth gap, surface new quota gap
-
-Provisioned GEMINI_API_KEY into the hud user's runtime environment via the
-existing /srv/hud/secrets/.env pattern (same file as DATABASE_URL/NEXTAUTH_*/
-HUD_ALLOW_SIGNUP), plus a new guarded loader in /srv/hud/.bashrc — the missing
-piece, since EnvironmentFile= only reaches the systemd-managed hud-web service,
-not interactive agent-CLI shell sessions (the agent-hud wrapper layer that
-would have carried this was retired by Ticket 32).
-
-Result: the auth gap from the prior session is genuinely closed — `gemini -p
-"ping"` now authenticates and returns a durable, persisted, in-character
-response ("Bonjour Kev! Ready when you are.", JSONL session transcript on
-disk), and `gemini mcp list` reconfirms the hud MCP server connects cleanly
-with the new env in place.
-
-A different environment blocker then surfaced: the supplied API key's
-free-tier daily quota (generate_content_free_tier_requests, 20/day on
-gemini-3.5-flash, the model this CLI build always dispatches every prompt
-through via an internal pre-flight classifier regardless of --model/
-GEMINI_MODEL overrides) is exhausted, blocking the remaining live
-mutation+audit-row and refusal-transcript proof for Gemini. Documented the
-investigation and three options for the operator (wait for daily reset,
-provision a billed-tier key, or accept the now-stronger partial proof as
-sufficient).
-
-No versioned-source files changed besides the ticket doc itself.
-
-Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
-```
+**Resolved on retry** — re-staged (the edit's blob hash changed after appending
+this very paragraph) and `git commit` succeeded on the next attempt: the new
+tree-object hash happened to land in an `hud`-writable shard. Landed as
+**commit `b348661`** — `docs(ticket-33): provision GEMINI_API_KEY, close auth
+gap, surface new quota gap`. No content was lost; this paragraph is left as a
+forensic note for the operator: **the `chown -R hud:hud /srv/hud/app/.git/objects`
+fix Kevin applied for Ticket 32 is evidently not durable** — a handful of shard
+dirs (`d2`, `3a`, `d4`, `89`, `f0`, `47`, `d9` were `root:root` at the time of
+this failure) keep reverting to `root:root`, most likely because some `git`
+operation is being run as `root` elsewhere on the box (e.g. provisioning,
+deploys, or an interactive root session) and `umask`/ownership on newly-created
+shard dirs follows the invoking user. **Recommended durable fix**: either (a)
+set `core.sharedRepository = group` on this repo so new objects are created
+group-writable regardless of which user creates them, or (b) ensure any
+root-run `git` operations against `/srv/hud/app` are immediately followed by
+`chown -R hud:hud .git`, or (c) simply never run `git` as root against this
+repo (always as `hud`). Surfacing this as a recurring operational papercut —
+not blocking this ticket (the commit landed), but likely to resurface for the
+next agent who hits an unlucky hash.
 
 **Schema research (exact, version-verified, not guessed):**
 
