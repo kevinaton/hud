@@ -20,6 +20,7 @@ import { setCsrfCookie, setSessionCookie } from '@/lib/auth/cookie';
 import { getSessionToken } from '@/lib/auth/cookie';
 import { generateCsrfToken, verifyOrigin } from '@/lib/auth/csrf';
 import {
+  LOCKOUT_DURATION_MINUTES,
   LOCKOUT_THRESHOLD,
   checkLockout,
   clearLockout,
@@ -153,8 +154,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       });
 
       // If account just hit lockout threshold, write lockout audit too
-      if (count >= 5) {
-        const lockedUntilTs = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+      if (count >= LOCKOUT_THRESHOLD) {
+        const lockedUntilTs = new Date(
+          Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000,
+        ).toISOString();
         writeAuditLog(tx, {
           userId: user.id,
           actor: 'anon',

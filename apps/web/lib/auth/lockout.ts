@@ -4,7 +4,7 @@
  * Per-account lockout logic.
  *
  * Rules:
- *   - 5 consecutive failed attempts → locked_until = now + 15 min
+ *   - 3 consecutive failed attempts → locked_until = now + 15 min
  *   - On successful login: reset failed_attempts = 0, locked_until = NULL
  *   - On attempt while locked: return same error as wrong password (no oracle)
  *     Do NOT increment counter further; do NOT extend lockout window.
@@ -19,9 +19,14 @@ import { db } from '@/lib/db/index';
 import type { DrizzleTx } from '@/lib/db/index';
 import { users } from '@hud/db';
 import { eq } from 'drizzle-orm';
+// Single source of truth for these values lives in lockout-constants (a
+// pure module with no native/Drizzle deps) so client components such as
+// `_LoginForm.tsx` can import them without bundling `better-sqlite3`.
+// Re-exported here so existing server-side imports from this module
+// continue to work unchanged.
+import { LOCKOUT_DURATION_MINUTES, LOCKOUT_THRESHOLD } from './lockout-constants';
 
-export const LOCKOUT_THRESHOLD = 5;
-export const LOCKOUT_DURATION_MINUTES = 15;
+export { LOCKOUT_THRESHOLD, LOCKOUT_DURATION_MINUTES } from './lockout-constants';
 
 /**
  * Check if an account is currently locked.

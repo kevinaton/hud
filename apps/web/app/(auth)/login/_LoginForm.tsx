@@ -13,17 +13,20 @@
  */
 
 import { WarningCounter } from '@/components/hud/WarningCounter';
+import { LOCKOUT_DURATION_MINUTES, LOCKOUT_THRESHOLD } from '@/lib/auth/lockout-constants';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-
-/** Sentinel: null = no failed attempts yet (fresh state, no counter shown). */
-type RemainingAttempts = number | null;
 
 export function LoginForm() {
   const router = useRouter();
   const [csrfToken, setCsrfToken] = useState<string | null>(null);
-  /** Remaining attempts before lockout, as returned by the server. null = no failures yet. */
-  const [remainingAttempts, setRemainingAttempts] = useState<RemainingAttempts>(null);
+  /**
+   * Remaining attempts before lockout, as returned by the server on failure.
+   * Always visible — starts at the full threshold on fresh page load (no
+   * hide-until-failure: Kevin wants the counter shown from the moment the
+   * page loads, decrementing with each wrong attempt).
+   */
+  const [remainingAttempts, setRemainingAttempts] = useState<number>(LOCKOUT_THRESHOLD);
   const [isLocked, setIsLocked] = useState(false);
   const [lockedUntil, setLockedUntil] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +55,8 @@ export function LoginForm() {
         setIsLocked(false);
         setLockedUntil(null);
         setLockCountdown('');
-        setRemainingAttempts(null);
+        // Lockout has expired — reset to the fresh-state full threshold
+        setRemainingAttempts(LOCKOUT_THRESHOLD);
         setError(null);
         return;
       }
@@ -97,8 +101,8 @@ export function LoginForm() {
       };
 
       if (res.ok) {
-        // Successful login — clear any stale warning state then redirect
-        setRemainingAttempts(null);
+        // Successful login — reset warning state to fresh-state value, then redirect
+        setRemainingAttempts(LOCKOUT_THRESHOLD);
         setError(null);
         router.push('/finance/cashflow');
         return;
@@ -116,7 +120,7 @@ export function LoginForm() {
         setError('locked');
       } else {
         // Wrong credentials — server returns the authoritative remaining count
-        const remaining = data.remainingAttempts ?? null;
+        const remaining = data.remainingAttempts ?? LOCKOUT_THRESHOLD;
         setRemainingAttempts(remaining);
         setError(data.error ?? 'Invalid credentials');
       }
@@ -132,17 +136,15 @@ export function LoginForm() {
     if (error === 'locked') {
       return lockCountdown
         ? `Locked — try again in ${lockCountdown}`
-        : 'Account locked — try again in 15 minutes';
+        : `Account locked — try again in ${LOCKOUT_DURATION_MINUTES} minutes`;
     }
     return error ?? '';
   }
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Warning counter — only shown after at least one failed attempt */}
-      {remainingAttempts !== null && (
-        <WarningCounter count={remainingAttempts} label="Attempts Remaining" />
-      )}
+      {/* Warning counter — always visible, starting at the full threshold on fresh load */}
+      <WarningCounter count={remainingAttempts} label="Attempts Remaining" />
 
       {/* Error message */}
       {error && (
