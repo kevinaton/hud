@@ -5,7 +5,7 @@ name: hud
 description: Personal HUD — finance, agents, dashboard
 owner_user: hud
 owner_group: hud
-agent_user: agent-hud
+agent_user: hud
 slice: hud.slice
 root: /srv/hud
 domain: hud.kevinaton.com
