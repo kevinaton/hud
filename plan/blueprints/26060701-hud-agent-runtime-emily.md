@@ -706,6 +706,7 @@ Emily reads transaction `notes` and `item` fields. A malicious string in a trans
 
 - **OQ-2. MCP server DB connection.**
   - **Decision:** **Option (c) — import the web app's `lib/db/index.ts` and reuse its env-driven connection.** The wrapper passes through the same `DATABASE_URL` (or equivalent) the `hud-web.service` uses. Single source of DB config; if the web app's connection config changes, MCP follows automatically. Implementing ticket A1 must verify the env propagation under `sudo -E` (`-E` preserves env across the privilege change, but only for vars allowlisted in sudoers `env_keep`).
+  - **Related (2026-06-07):** OQ-2 covers how the MCP subprocess reaches the **DB**. Where the agent **CLI itself** keeps its own runtime state (XDG config/cache/data/state, incl. OAuth tokens) — given `agent-hud`'s `HOME=/srv/hud` is the `hud`-owned tenant root — is decided separately in [[plan/blueprints/adr/ADR-26060701-agent-hud-xdg-runtime|ADR-26060701]]: a dedicated `/srv/hud/agent-runtime/` subtree (`700 agent-hud:hud`) with redirected XDG env vars added to the same sudoers `env_keep` allowlist as `DATABASE_URL` and `HUD_AGENT_*`.
 
 - **OQ-3. Greeting behavior on session start.**
   - **Decision:** **Silent start.** Emily waits for Kevin's first message before producing any output. Saves tokens, reduces noise, matches CLI norms. AGENT.md will include: *"On session start, do not greet. Wait for the operator's first message and respond to it directly."*

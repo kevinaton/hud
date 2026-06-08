@@ -53,6 +53,12 @@ apps/web/lib/db/index.js.map
 # Opencode session files
 .opencode/opencode-loop/
 
+# Local tool config
+.claude/settings.local.json
+
+# TypeScript incremental build cache
+*.tsbuildinfo
+
 # Obsidian workspace state
 .obsidian/workspace.json
 .obsidian/canvas.json
