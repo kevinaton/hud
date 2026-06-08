@@ -2,10 +2,14 @@
  * POST /api/auth/login
  *
  * Flow:
- *  1. Parse + validate body (Zod)
+ *  1. Parse body as JSON; coerce email/password to strings (never schema-reject —
+ *     see "Why no Zod format/length gate" below)
  *  2. Check IP rate limit → 429 if exceeded
  *  3. Verify Origin header (CSRF-exempt route uses origin check instead)
- *  4. Look up user by email; if not found → constant-time dummy verify → 401
+ *  4. Look up user by (normalized) email
+ *     - not found → constant-time dummy verify, write a real login_fail audit
+ *       row (userId: null), return 401 with remainingAttempts = LOCKOUT_THRESHOLD
+ *     - found → continue
  *  5. Check account lockout → 401 if locked
  *  6. Verify password
  *  7. On failure: recordFailedAttempt, write audit login_fail, return 401
@@ -13,6 +17,37 @@
  *
  * Timing: failure path takes ≥ 200ms (argon2 verify handles most of this;
  * we pad with a minimum delay to cover the "user not found" fast path).
+ *
+ * --- Why no Zod `.email()` / `.min(MIN_PASSWORD_LENGTH)` gate here (Ticket 30) ---
+ *
+ * Earlier versions validated `email`/`password` shape with Zod *before* doing
+ * anything else, and returned a bare `{ error: 'Invalid credentials' }` (400,
+ * no `remainingAttempts`, no DB write, no audit row) on any schema-validation
+ * failure. That meant a 1-character password, an empty field, or a malformed
+ * email silently bypassed the entire wrong-credential recording machinery —
+ * the lockout counter never moved, no `audit_log` row was written, and the
+ * `WarningCounter` on the login form had nothing to display.
+ *
+ * Per Kevin's explicit correction (2026-06-07): "regardless if user only add
+ * 1 character or accidentally click authenticate flag it as wrong credential
+ * not only the 12+ character." There is therefore deliberately NO format or
+ * length validation gate on this route — *any* string value for email/password
+ * (including empty string, 1 char, garbage) is treated as a real credential
+ * submission and flows through the SAME constant-time wrong-credential path
+ * (dummy-verify-and-record for unknown emails; lockout-check → argon2.verify
+ * → recordFailedAttempt for known emails) as a normal wrong password.
+ *
+ * `MIN_PASSWORD_LENGTH` remains the signup/hashing-side minimum (enforced when
+ * *creating* a password — see lib/auth/password.ts) — it is a password-quality
+ * rule, not a login-input gate, and was never a meaningful security boundary on
+ * the login path (argon2.verify cost is dominated by its memory/time params,
+ * not candidate length, so a short candidate is exactly as expensive — and as
+ * safe to check — as a long one).
+ *
+ * The only structural pre-lookup rejection that remains is "request body isn't
+ * parseable JSON" (line below) — that's not a credential submission (there is
+ * no email/password to record against), so it cannot participate in the
+ * lockout/audit machinery; it returns 400 with no `remainingAttempts` by design.
  */
 
 import { writeAuditLog } from '@/lib/audit/index';
@@ -26,7 +61,7 @@ import {
   clearLockout,
   recordFailedAttempt,
 } from '@/lib/auth/lockout';
-import { DUMMY_HASH, MIN_PASSWORD_LENGTH, verifyPassword } from '@/lib/auth/password';
+import { DUMMY_HASH, verifyPassword } from '@/lib/auth/password';
 import { checkLoginRateLimit, resetLoginRateLimit } from '@/lib/auth/rate-limit';
 import { rotateSession } from '@/lib/auth/session';
 import { db } from '@/lib/db/index';
@@ -37,9 +72,15 @@ import { z } from 'zod';
 
 const MIN_RESPONSE_MS = 200;
 
-const loginSchema = z.object({
-  email: z.string().email().toLowerCase(),
-  password: z.string().min(MIN_PASSWORD_LENGTH),
+/**
+ * Deliberately permissive: coerces any input to a string (non-strings become
+ * `''`), with NO format or length validation. See the module-level comment for
+ * why — every credential shape must flow into the recorded wrong-credential
+ * path, not bail out early as "malformed request."
+ */
+const loginInputSchema = z.object({
+  email: z.unknown().transform((v) => (typeof v === 'string' ? v : '')),
+  password: z.unknown().transform((v) => (typeof v === 'string' ? v : '')),
 });
 
 function getIp(req: NextRequest): string {
@@ -72,12 +113,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return padAndReturn(NextResponse.json({ error: 'Invalid request body' }, { status: 400 }));
   }
 
-  const parsed = loginSchema.safeParse(body);
-  if (!parsed.success) {
-    return padAndReturn(NextResponse.json({ error: 'Invalid credentials' }, { status: 400 }));
-  }
-
-  const { email, password } = parsed.data;
+  // Deliberately permissive — never rejects on shape. See module-level comment
+  // for why: every (email, password) pair, however malformed, must flow into
+  // the recorded wrong-credential path below, not bail out as "bad request."
+  const { email: rawEmail, password } = loginInputSchema.parse(body);
+  const email = rawEmail.trim().toLowerCase();
 
   // 2. IP rate limit
   const rateResult = await checkLoginRateLimit(ip);
@@ -101,6 +141,30 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!user) {
     // Constant-time: perform dummy verify to prevent timing oracle
     await verifyPassword(password, DUMMY_HASH).catch(() => null);
+
+    // No account exists for this email, so there is no failed_attempts counter
+    // to decrement and no lockout state to update — but this is still a real
+    // wrong-credential submission and MUST be recorded as one (Ticket 30 AC:
+    // "This applies whether or not the submitted email corresponds to an
+    // existing account"). Write a real login_fail audit row with userId: null
+    // (audit_log.user_id is nullable for exactly this pre-auth case — see
+    // .claude/skills/hud-audit/SKILL.md).
+    db.transaction((tx) => {
+      writeAuditLog(tx, {
+        userId: null,
+        actor: 'anon',
+        action: 'login_fail',
+        entity: 'user',
+        // No row exists for this email — there is nothing to point entityId at.
+        payload: {
+          email_attempted: email,
+          reason: 'no_such_account',
+        },
+        ipAddress: ip,
+        userAgent,
+      });
+    });
+
     return padAndReturn(
       NextResponse.json(
         {
