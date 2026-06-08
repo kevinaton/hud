@@ -1,4 +1,17 @@
 {
+  "tools": {
+    "core": [
+      "read_file",
+      "list_directory",
+      "glob",
+      "grep_search",
+      "ripgrep",
+      "read_mcp_resource",
+      "list_mcp_resources",
+      "update_topic",
+      "ask_user"
+    ]
+  },
   "mcpServers": {
     "hud": {
       "command": "node",

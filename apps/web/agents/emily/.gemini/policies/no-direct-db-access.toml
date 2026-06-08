@@ -1,0 +1,55 @@
+# Workspace policy — Emily must never touch the cashflow DB directly.
+#
+# Loaded automatically from <workspace>/.gemini/policies/*.toml (workspace tier,
+# priority band 3.xxx — below admin/user, above the bundled defaults). See
+# packages/core/dist/src/policy/policy-engine.js (getWorkspacePoliciesDir).
+#
+# These rules are CLI-enforced (Policy Engine), not model judgment: a matching
+# rule produces a hard "Tool execution denied by policy." error before the tool
+# ever runs — see packages/core/dist/src/scheduler/policy.js getPolicyDenialError.
+#
+# "MCP-only CRUD, never raw SQL" (AGENT.md hard rule #2) is the instruction;
+# this file is the technical control underneath it.
+
+# ---- 1. Block shell invocations of sqlite3 / psql / mysql anywhere in the
+#         command line (argsPattern matches the JSON-stringified tool args, so
+#         it catches "sqlite3 ...", "sudo sqlite3 ...", "env X=Y sqlite3 ...",
+#         compound shells, etc. — not just a literal command prefix). ----
+
+[[rule]]
+toolName = "run_shell_command"
+argsPattern = '"command":"[^"]*\b(sqlite3|psql|mysql|mariadb|sqlite)\b'
+decision = "deny"
+priority = 100
+denyMessage = "Direct DB-shell access is blocked by HUD policy. Use the hud MCP server's cashflow.* tools — they validate input, enforce money rules, and write the audit_log row that raw SQL would silently skip."
+
+# ---- 2. Block ANY shell command that mentions the database file by name —
+#         catches "cat /srv/hud/data/hud.db", "cp hud.db ...", redirection
+#         tricks, etc., independent of which binary is used. ----
+
+[[rule]]
+toolName = "run_shell_command"
+argsPattern = '"command":"[^"]*hud\.db'
+decision = "deny"
+priority = 100
+denyMessage = "Direct access to the cashflow database file is blocked by HUD policy. Use the hud MCP server's cashflow.* tools instead — see AGENT.md hard rule #2."
+
+# ---- 3. Block the built-in file tools from touching the DB file or its
+#         WAL/SHM siblings directly (defense in depth alongside tools.exclude
+#         in settings.json, which removes write_file/replace from the registry
+#         entirely; read_file remains registered for legitimate skill-file
+#         reads, so it needs its own path-scoped deny here). ----
+
+[[rule]]
+toolName = ["read_file", "write_file", "replace"]
+argsPattern = '"(file_path|path)":"[^"]*hud\.db'
+decision = "deny"
+priority = 100
+denyMessage = "Reading or writing the cashflow database file directly is blocked by HUD policy. Use the hud MCP server's cashflow.* tools instead — see AGENT.md hard rule #2."
+
+[[rule]]
+toolName = ["read_file", "write_file", "replace"]
+argsPattern = '"(file_path|path)":"/srv/hud/data/'
+decision = "deny"
+priority = 90
+denyMessage = "Direct access to /srv/hud/data/ is blocked by HUD policy. The cashflow database lives there — use the hud MCP server's cashflow.* tools instead."
