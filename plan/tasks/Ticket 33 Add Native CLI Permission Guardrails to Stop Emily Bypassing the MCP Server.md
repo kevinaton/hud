@@ -63,7 +63,265 @@ None requiring architect input. One environment-level follow-up surfaced (not a 
 
 ## Notes
 
-### 2026-06-08 — implementation + verification
+### 2026-06-08 — Gemini env provisioned; auth gap closed, new quota gap surfaced
+
+Kevin supplied a `GEMINI_API_KEY` to unblock the one gap from the prior session
+(no working Gemini model-auth credential for the `hud` user). Provisioned it and
+re-ran the live Gemini verification. **Net result: the auth gap is now closed —
+but a *different*, also-environmental blocker (API key daily quota) prevented
+completing the remaining live-mutation and live-refusal-transcript proof.**
+Documenting both honestly below; recommending `review` stand pending either a
+quota reset or a higher-tier key.
+
+**Env provisioning (secret-handling per the operator's rule — value never
+written to any `plan/` file, referenced here by name only):**
+- Added `GEMINI_API_KEY` as a new line in `/srv/hud/secrets/.env` — the exact
+  same file/pattern that already holds `DATABASE_URL`/`NEXTAUTH_URL`/
+  `NEXTAUTH_SECRET`/`HUD_ALLOW_SIGNUP`, and the same file the `hud-web` systemd
+  unit loads via `EnvironmentFile=/srv/hud/secrets/.env` (`ops/systemd/hud-web.service`).
+  File remains `600 hud:hud` — mode/ownership unchanged, only a new `KEY=value`
+  line appended.
+- **New finding this session**: `EnvironmentFile=` only reaches the systemd-managed
+  `hud-web` service process — it does **not** populate interactive/agent shell
+  sessions (confirmed: `hud`'s `.bashrc` had no mechanism sourcing
+  `/srv/hud/secrets/.env`, and Ticket 32 confirmed `claude`/`gemini`/`opencode`
+  now run directly as `hud` from an interactive shell, not via any wrapper —
+  the `agent-hud` wrapper-script layer Ticket 27 built was retired). Without a
+  shell-level loader, `GEMINI_API_KEY` would sit in the secrets file but never
+  reach `gemini`'s `process.env` (confirmed from bundle source: the CLI reads
+  `GEMINI_API_KEY` directly off `process.env`, no `.env`-file auto-loading of
+  any kind exists in the bundle — `grep` for `dotenv`/`readEnvFile`/`.gemini/.env`
+  in the bundle returns zero matches).
+- **Fix**: added a guarded loader block to `/srv/hud/.bashrc` (writable `664
+  hud:hud`, the per-user interactive-shell rcfile every `bash -i`/agent CLI
+  session sources):
+  ```bash
+  if [ -r /srv/hud/secrets/.env ]; then
+    set -a
+    . /srv/hud/secrets/.env
+    set +a
+  fi
+  ```
+  `set -a`/`set +a` exports every assignment sourced from the file into the
+  environment (verified the file's existing leading-whitespace `  KEY=value`
+  formatting parses correctly under plain `bash` `source` — tested with a
+  scratch fixture before touching the live file). This is a **runtime artifact
+  edit** (`/srv/hud/.bashrc`, like the `hud`-owned `~/.claude/settings.json`
+  Ticket 32 documented as a live-system change) — not a versioned-source change,
+  because there is no wrapper script anymore for the secret-loading logic to live
+  in (the `agent-{claude,gemini,opencode}` wrappers Ticket 27 built were deleted
+  by Ticket 32's retirement of `agent-hud`). Verified live:
+  ```
+  $ bash -ic 'echo "GEMINI_API_KEY is set: ${GEMINI_API_KEY:+yes (len=${#GEMINI_API_KEY})}"'
+  GEMINI_API_KEY is set: yes (len=39)
+  ```
+
+**Auth gap — CLOSED, live-proven:**
+```
+$ cd apps/web/agents/emily && GEMINI_CLI_TRUST_WORKSPACE=true gemini -p "ping"
+Bonjour Kev! Ready when you are.
+```
+No more `Please set an Auth method...` error. This turn is durably persisted in
+`/srv/hud/.gemini/tmp/emily/chats/session-2026-06-08T12-24-8a133b09.jsonl`
+(`type: "gemini"`, `content: "Bonjour Kev! Ready when you are."`,
+`timestamp: "2026-06-08T12:24:35.824Z"`) — independently re-checkable, not a
+one-off terminal capture. `gemini mcp list` also re-confirmed
+`✓ hud: node /srv/hud/app/packages/mcp-hud/dist/index.js (stdio) - Connected`
+with the new env in place — registry-level MCP proof still holds.
+
+**New blocker — API key daily quota exhausted (a *different* environment gap
+than the one Kevin's key was meant to fix, surfaced only once auth started
+working):**
+
+Every subsequent attempt — to list the 8 MCP tools, run a real mutation+delete
+for the `audit_log` proof, or capture the refusal transcript — failed with:
+```
+TerminalQuotaError: You have exhausted your daily quota on this model.
+  ...
+  message: 'You exceeded your current quota ... \n' +
+    '* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests,
+       limit: 20, model: gemini-3.5-flash\n' +
+    'Please retry in ...s.',
+```
+Investigated thoroughly before concluding this is unfixable from the client side
+this session:
+1. **Confirmed it's a *daily* cap, not a transient rate limit**: read
+   `classifyGoogleError` in the bundle (`chunk-LSXUKR6W.js`) — it inspects the
+   API's `QuotaFailure.violations[].quotaId` and returns `TerminalQuotaError`
+   specifically when `quotaId.includes("PerDay") || quotaId.includes("Daily")`.
+   This is the API server's own classification, not a CLI guess — Google's
+   `generativelanguage.googleapis.com/generate_content_free_tier_requests`
+   metric genuinely caps free-tier keys at 20 requests/day for this model.
+2. **Confirmed the key itself is good and has real quota on other models** —
+   direct `curl` to `v1beta/models/gemini-2.5-flash:generateContent` with the
+   same key returned a clean `200` with `"text": "Pong."` and
+   `"modelVersion": "gemini-2.5-flash"`. The key is valid; only the specific
+   `gemini-3.5-flash` free-tier daily bucket is exhausted.
+3. **Confirmed the CLI cannot be steered away from `gemini-3.5-flash`** —
+   tried `--model gemini-2.5-flash`, `--model gemini-2.0-flash`, and
+   `GEMINI_MODEL=gemini-2.5-flash` env override; all still dispatched to
+   `gemini-3.5-flash` and hit the same daily cap. `--debug` output revealed why
+   — a CLI-internal inconsistency in `0.45.2`'s model router:
+   ```
+   [Routing] Selected model: gemini-3.5-flash (Source: agent-router/override, Latency: 0ms)
+       [Routing] Reasoning: Routing bypassed by forced model directive. Using: gemini-2.5-flash
+   ```
+   The override strategy *acknowledges* the forced-model directive
+   (`gemini-2.5-flash`) in its reasoning string but the `Selected model` field —
+   and the actual dispatched API call — still says/uses `gemini-3.5-flash`. This
+   is a bug/quirk in how `OverrideStrategy`/`CompositeStrategy` resolve the final
+   model in this build; it cannot be worked around via any CLI flag or env var
+   exposed to me.
+4. **Confirmed it's not a brief throttle that clears with patience** — spaced
+   retries 70s/100s/180s apart; one (the very first "ping") succeeded, all
+   subsequent ones failed with the same `PerDay`-classified error and `503
+   UNAVAILABLE` ("This model is currently experiencing high demand") on the
+   internal `NumericalClassifierStrategy.route` pre-flight call that fires on
+   *every* prompt before the main turn — meaning each attempt (success or
+   failure) consumes from the same 20/day bucket, and that bucket reads as
+   already near-exhausted from the very first call onward (consistent with the
+   key having had prior usage today before being handed to me, or the bucket
+   being shared/low to begin with on a free-tier key).
+5. **This is the same failure class Ticket 24 documented** (`TerminalQuotaError:
+   capacity exhausted`) — recorded there as proof that *a working credential
+   existed* (you only see this error after successful auth). Ticket 24 → prior
+   session → this session: the pattern repeats — auth succeeds, then the
+   free-tier daily allotment for the model the CLI silently always uses
+   (`gemini-3.5-flash`) runs out almost immediately. This strongly suggests the
+   free tier's 20-requests/day cap on this specific model is simply too tight
+   for any meaningful CLI session (the CLI burns 1+ classifier calls per user
+   turn even before the "real" model call), independent of which API key is
+   supplied — **a structural mismatch between this CLI build's routing behavior
+   and the free API tier**, not a one-off credential problem.
+
+**What I captured in lieu of the full live mutation+refusal-transcript proof
+(the same honest-substitute spirit as the prior session, now updated):**
+- The durable, persisted, in-character authenticated turn (`Bonjour Kev! Ready
+  when you are.`, JSONL session transcript above) — proof the *auth* layer
+  Kevin's key was meant to fix is now genuinely closed.
+- Re-confirmed `gemini mcp list` → `✓ hud: ... Connected` with the working
+  credential and `tools.core` config in place — registry-level MCP-still-works
+  proof, now backed by a working (not just configured) auth path.
+- The exact `TerminalQuotaError`/`PerDay`-classification source-code proof
+  (above) showing *why* no amount of additional waiting/model-flag-juggling
+  within this session will produce the mutation+refusal transcripts — it is a
+  hard daily cap on the API side, re-confirmed via `classifyGoogleError`'s
+  `quotaId.includes("PerDay")` branch, not a guess.
+
+**Recommendation for the operator** (this is now the actionable, specific
+follow-up — replacing the prior "provision a GEMINI_API_KEY" recommendation,
+which Kevin has now done):
+1. Either wait for the daily quota to reset (Google resets free-tier daily
+   quotas on a rolling 24h/UTC-day boundary — outside any session's control) and
+   re-run the same verification in a fresh session the next day, **or**
+2. Provision a paid-tier / billing-enabled API key (the
+   `generate_content_free_tier_requests` metric and its 20/day cap are
+   specifically a *free-tier* restriction — a billed project would not hit it),
+   **or**
+3. Accept the `Bonjour Kev!` authenticated-turn proof + the registry-level
+   MCP-connection proof + the source-level Policy-Engine/denial-format proof
+   (already on file from the prior session) as sufficient to close this ticket
+   without the full mutation+refusal-transcript triple for Gemini specifically —
+   Claude Code and OpenCode both have complete triples; Gemini's *config* is
+   complete, research-honest, loads/parses cleanly, and is now proven to
+   authenticate and connect to MCP for real, which is strictly more than was
+   provable before this session.
+
+**Files changed this session:**
+- `/srv/hud/secrets/.env` — runtime artifact, **not in versioned sources**
+  (mirrors how `DATABASE_URL`/`NEXTAUTH_*`/`HUD_ALLOW_SIGNUP` already live there;
+  this file is `.gitignore`d / never committed — confirmed `git status` shows no
+  change to any tracked path for this edit). Added one line:
+  `GEMINI_API_KEY=<value, referenced here by name only per the operator's
+  secret-handling rule — never written to any plan/ file>`.
+- `/srv/hud/.bashrc` — runtime artifact, **not in versioned sources** (this is
+  `hud`'s personal interactive-shell rcfile, analogous to the `hud`-owned
+  `~/.claude/settings.json` Ticket 32 documented as a live-system change outside
+  the repo). Added the guarded `set -a; . /srv/hud/secrets/.env; set +a` loader
+  block shown above.
+- No changes to `apps/web/agents/emily/**` or any other versioned-source path —
+  the Gemini permission/policy config from the prior session is untouched and
+  still verified loading cleanly (`gemini mcp list` shows `Connected`, zero
+  warnings).
+- **0 commits** — there is nothing to commit; both edits are to `hud`'s personal
+  runtime dotfiles/secrets outside the git working tree (verified: `git status`
+  shows no new changes after this session's edits).
+
+**Status rationale (`review`, unchanged from prior session — for a different,
+now-more-specific reason):** the prior session's blocker (no working Gemini
+credential) is **resolved** — auth genuinely works now, durably proven. A
+*different* environment constraint (free-tier daily quota on the model this CLI
+build always dispatches to, regardless of override flags) replaced it before the
+remaining proof (8-tool listing via model call, mutation+`audit_log` row,
+refusal transcript) could be captured. This is, again, "can I prove it live
+*today*, with *this* key" — not "does the technical control work" (the control
+is unchanged from the prior session: fully implemented, loads cleanly, and the
+Policy Engine source-level denial-format proof already on file stands). I'm
+keeping `review` rather than `blocked` because the *config* is complete and
+correct and two of three CLIs are fully proven — flagging for the operator to
+choose among the three options above (wait for reset / upgrade key tier / accept
+partial-Gemini-proof-as-sufficient) rather than guessing which they'd prefer.
+
+**Commit status — BLOCKED on the same `.git/objects` permission wall Ticket 32
+hit (recurred fresh this session):** `git add` succeeded (the ticket-file edit
+is staged — `git status` shows `M` in the index, `git diff --cached --stat`
+confirms 200 insertions captured), but `git commit` fails at the tree-build
+stage:
+```
+error: insufficient permission for adding an object to repository database .git/objects
+error: Error building trees
+```
+Diagnosed precisely: `git hash-object -w --stdin` succeeds (blob writes work
+fine — that's how the file staged), and `.git/objects` itself plus most shard
+dirs are `755 hud:hud`. But 7 shard directories are still `755 root:root`
+(no group/other write bit): `d2`, `3a`, `d4`, `89`, `f0`, `47`, `d9`. The new
+commit's **tree object** for `plan/tasks/` (or an ancestor tree/commit object)
+hashes into one of these root-owned shards, and `hud` cannot write there —
+exactly the "probabilistic by hash" failure mode Ticket 32 documented and that
+Kevin (root) fixed for that session via `chown -R hud:hud /srv/hud/app/.git/objects`.
+That fix was evidently not durable / a subsequent `git` operation (running as
+`root` for some other task) recreated some shard dirs as `root:root`.
+
+**Nothing is lost** — the staged change sits safely in the index
+(`git status` confirms `M ` for the ticket file, `git diff --cached` shows the
+full 200-line Notes addition intact). An operator with root needs to re-run
+`chown -R hud:hud /srv/hud/app/.git/objects` (or `/srv/hud/app/.git` broadly,
+per Ticket 32's fix) and then either `git commit` directly (the staged content
+is ready) or ask me to re-run the commit in a follow-up session — the drafted
+message is the one in this session's commit attempt (see git reflog / the
+attempted-but-failed commit's message buffer is not retained by git on
+failure, so reproducing it here for the record):
+
+```
+docs(ticket-33): provision GEMINI_API_KEY, close auth gap, surface new quota gap
+
+Provisioned GEMINI_API_KEY into the hud user's runtime environment via the
+existing /srv/hud/secrets/.env pattern (same file as DATABASE_URL/NEXTAUTH_*/
+HUD_ALLOW_SIGNUP), plus a new guarded loader in /srv/hud/.bashrc — the missing
+piece, since EnvironmentFile= only reaches the systemd-managed hud-web service,
+not interactive agent-CLI shell sessions (the agent-hud wrapper layer that
+would have carried this was retired by Ticket 32).
+
+Result: the auth gap from the prior session is genuinely closed — `gemini -p
+"ping"` now authenticates and returns a durable, persisted, in-character
+response ("Bonjour Kev! Ready when you are.", JSONL session transcript on
+disk), and `gemini mcp list` reconfirms the hud MCP server connects cleanly
+with the new env in place.
+
+A different environment blocker then surfaced: the supplied API key's
+free-tier daily quota (generate_content_free_tier_requests, 20/day on
+gemini-3.5-flash, the model this CLI build always dispatches every prompt
+through via an internal pre-flight classifier regardless of --model/
+GEMINI_MODEL overrides) is exhausted, blocking the remaining live
+mutation+audit-row and refusal-transcript proof for Gemini. Documented the
+investigation and three options for the operator (wait for daily reset,
+provision a billed-tier key, or accept the now-stronger partial proof as
+sufficient).
+
+No versioned-source files changed besides the ticket doc itself.
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+```
 
 **Schema research (exact, version-verified, not guessed):**
 
