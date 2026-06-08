@@ -178,7 +178,6 @@ real account (`kevinyaton@gmail.com`) was untouched throughout
 - `apps/web/app/(auth)/login/_LoginForm.tsx`
 - `apps/web/app/api/auth/login/route.ts`
 
-**Commit:** see `git log` for `fix(auth): lower lockout threshold to 3
-attempts, always show counter` (this ticket's changes were committed
-together with this Notes/status update).
+**Commit:** `2a61b2f` — `fix(auth): lower lockout threshold to 3, always
+show attempts counter`
 
