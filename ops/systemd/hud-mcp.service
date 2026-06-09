@@ -12,13 +12,15 @@
 #   journalctl -u hud-mcp -f   # verify clean start
 #
 # The daemon reads secrets from /srv/hud/secrets/mcp.env (mode 600,
-# owner agent-hud). That file is NEVER committed to git.
+# owner hud). That file is NEVER committed to git.
 # See ops/secrets/mcp-tokens.example.yaml and ops/secrets/mcp-acl.example.yaml
 # for the required structure.
 #
 # Token rotation: edit /srv/hud/secrets/mcp-tokens.yaml, then
-#   systemctl reload hud-mcp.service
-# (SIGHUP triggers a config reload without dropping existing connections.)
+#   systemctl restart hud-mcp.service
+# (The daemon loads tokens at startup; a full restart is required for rotation.
+#  Since the StreamableHTTPServerTransport is stateless, restarts are safe:
+#  no in-flight SSE connections are dropped — each request is self-contained.)
 
 [Unit]
 Description=HUD MCP Daemon (HTTP/SSE transport, bearer auth, ACL)
@@ -28,20 +30,20 @@ Wants=network.target
 
 [Service]
 Type=simple
-User=agent-hud
+User=hud
 Group=hud
 Slice=hud.slice
 WorkingDirectory=/srv/hud/app
 
-# Environment — real secrets live here (mode 600, owner agent-hud)
+# Environment — real secrets live here (mode 600, owner hud)
 EnvironmentFile=/srv/hud/secrets/mcp.env
 
 # Main process: Node 22 running the compiled mcp-hud daemon entry point.
 # MCP_TRANSPORT and PORT are set in mcp.env or overridden here for clarity.
-ExecStart=/usr/bin/node packages/mcp-hud/dist/index.js
-
-# Reload on SIGHUP: re-reads mcp-tokens.yaml and mcp-acl.yaml without restart.
-ExecReload=/bin/kill -HUP $MAINPID
+# NOTE: dist-new/ is the hud-owned build output (the original dist/ was built by
+# root during Ticket 35/36 and is read-only). dist-new/ is rebuilt by `pnpm --filter mcp-hud build`
+# after root removes the old dist/ (see Ticket 37 deploy notes).
+ExecStart=/usr/bin/node packages/mcp-hud/dist-new/index.js
 
 # Restart policy — survive transient errors and Hermes restarts
 Restart=on-failure
@@ -67,7 +69,8 @@ ProtectKernelModules=true
 ProtectControlGroups=true
 RestrictNamespaces=true
 LockPersonality=true
-MemoryDenyWriteExecute=true
+# MemoryDenyWriteExecute intentionally omitted: Node.js JIT requires
+# writable+executable memory pages. Enabling this would prevent startup.
 RestrictRealtime=true
 RestrictSUIDSGID=true
 
