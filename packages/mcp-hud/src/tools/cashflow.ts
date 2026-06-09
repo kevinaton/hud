@@ -23,6 +23,7 @@ import type { AuditAction, Category, Transaction } from '@hud/db';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { and, desc, eq, gte, lt, sql } from 'drizzle-orm';
 import { z } from 'zod';
+import { getHttpRequestContext } from '../http/context.js';
 import { type DrizzleTx, db as defaultDb } from '../lib/db.js';
 
 // ---------------------------------------------------------------------------
@@ -50,6 +51,8 @@ function ok(data: unknown): ToolResponse {
 // Writes one audit_log row. MUST be called inside the same Drizzle
 // transaction as the underlying mutation.
 // ---------------------------------------------------------------------------
+const VERSION = '0.1.0';
+
 function writeAudit(
   tx: DrizzleTx,
   entry: {
@@ -61,6 +64,17 @@ function writeAudit(
     payload?: Record<string, unknown>;
   },
 ): void {
+  // When running in HTTP mode, enrich the audit row with network context
+  const httpCtx = getHttpRequestContext();
+  const ipAddress = httpCtx?.ipAddress ?? 'local';
+  const userAgent = httpCtx?.userAgent ?? `mcp-hud/${VERSION}`;
+
+  // Include mcp_request_id in payload when present (HTTP mode only)
+  let payloadData = entry.payload ?? null;
+  if (httpCtx?.mcpRequestId) {
+    payloadData = { ...(payloadData ?? {}), mcp_request_id: httpCtx.mcpRequestId };
+  }
+
   tx.insert(auditLog)
     .values({
       userId: entry.userId,
@@ -68,9 +82,9 @@ function writeAudit(
       action: entry.action,
       entity: entry.entity,
       entityId: entry.entityId,
-      payloadJson: entry.payload ? JSON.stringify(entry.payload) : null,
-      ipAddress: 'local',
-      userAgent: 'mcp-hud/0.1.0',
+      payloadJson: payloadData ? JSON.stringify(payloadData) : null,
+      ipAddress,
+      userAgent,
     })
     .run();
 }
@@ -587,11 +601,23 @@ export async function handleCreateCategory(rawInput: unknown, ctx: ToolCtx): Pro
 // ---------------------------------------------------------------------------
 
 function resolveCtxFromEnv(db: CashflowDb): ToolCtx {
-  // biome-ignore lint/complexity/useLiteralKeys: env var lookup
-  const actorEnv = process.env['HUD_AGENT_ACTOR'];
-  // biome-ignore lint/complexity/useLiteralKeys: env var lookup
-  const cliEnv = process.env['HUD_AGENT_CLI'];
-  const actor = actorEnv && cliEnv ? `${actorEnv}/${cliEnv}` : actorEnv ? actorEnv : null;
+  // HTTP mode: identity comes from the bearer-token-resolved context stored in
+  // AsyncLocalStorage by the HTTP auth middleware. This takes priority over
+  // the process.env path used in stdio mode.
+  const httpCtx = getHttpRequestContext();
+  let actor: string | null;
+
+  if (httpCtx) {
+    // HTTP mode — use the platform identity from the bearer token
+    actor = httpCtx.identity;
+  } else {
+    // Stdio mode — compose actor from env vars set by the emily wrapper
+    // biome-ignore lint/complexity/useLiteralKeys: env var lookup
+    const actorEnv = process.env['HUD_AGENT_ACTOR'];
+    // biome-ignore lint/complexity/useLiteralKeys: env var lookup
+    const cliEnv = process.env['HUD_AGENT_CLI'];
+    actor = actorEnv && cliEnv ? `${actorEnv}/${cliEnv}` : actorEnv ? actorEnv : null;
+  }
 
   // biome-ignore lint/complexity/useLiteralKeys: env var lookup
   const ownerEnv = process.env['HUD_OWNER_USER_ID'];
