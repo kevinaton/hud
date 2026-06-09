@@ -1,0 +1,82 @@
+# Hermes Agent — docker-compose.yml
+#
+# Managed by: scripts/setup-hermes.sh (copies to /srv/hermes/docker/)
+# Started by: Ticket 45 (not here)
+#
+# Image pinning (OQ-6):
+#   Image is pinned to a sha256 digest, NOT :latest, to guarantee
+#   reproducible deploys and prevent silent breaking changes.
+#   Update procedure — see plan/reference/hermes-ops.md § Updating the image.
+#
+# Networking (OQ-2 — bridge mode default):
+#   network_mode: bridge is used for container isolation.
+#   The MCP daemon (hud-mcp.service) is reachable from inside the container
+#   via the host's Tailscale interface (100.72.129.67), which tailscale serve
+#   exposes at https://hud-mcp.tailnet/. extra_hosts maps the alias.
+#
+#   Fallback to host networking: if the Tailscale probe in setup-hermes.sh
+#   fails, update network_mode to "host" and remove the ports + extra_hosts
+#   sections. Document the change in hermes-ops.md. See setup-hermes.sh for
+#   the automated probe logic.
+#
+# Security:
+#   Ports are bound to 127.0.0.1 only — cloudflared tunnel handles ingress.
+#   API_SERVER_KEY is set in /srv/hermes/data/.env (mode 0600, never in git).
+#   AppArmor profile hermes-agent is applied via security_opt.
+
+services:
+  hermes:
+    image: nousresearch/hermes-agent@sha256:585729a29e59e15373d84d59eaacf84b2526eeeaf71b20e1c6d18d7cbac92afc
+    container_name: hermes
+    restart: unless-stopped
+
+    # Bridge networking — see OQ-2 comment above.
+    # extra_hosts maps hud-mcp.tailnet → Hetzner tailscale IP so the container
+    # can reach the MCP daemon via https://hud-mcp.tailnet/mcp.
+    extra_hosts:
+      - "hud-mcp.tailnet:100.72.129.67"
+
+    environment:
+      # Run as agent-hermes (UID 2013 on host — see provisioning note in Ticket 40)
+      PUID: "2013"
+      PGID: "2013"
+      # Gateway API (OpenAI-compatible, bearer-auth)
+      API_SERVER_ENABLED: "true"
+      API_SERVER_HOST: "0.0.0.0"   # inside container only; host-side bound to 127.0.0.1
+      # Dashboard
+      HERMES_DASHBOARD: "1"
+      # MCP endpoint — reaches hud-mcp.service via Tailscale
+      # Must match a valid bearer token in /srv/hud/secrets/mcp-tokens.yaml
+      MCP_SERVER_URL: "https://hud-mcp.tailnet/mcp"
+
+    env_file:
+      # Secrets loaded from /srv/hermes/data/.env (mode 0600, never in git).
+      # Required keys: API_SERVER_KEY
+      # See plan/reference/hermes-ops.md for full key list.
+      - /srv/hermes/data/.env
+
+    volumes:
+      - /srv/hermes/data:/opt/data
+
+    ports:
+      # Loopback-only — cloudflared tunnel proxies both ports externally.
+      - "127.0.0.1:8642:8642"   # Gateway API (hermes-api.kevinaton.com)
+      - "127.0.0.1:9119:9119"   # Dashboard  (hermes.kevinaton.com)
+
+    # AppArmor profile — second isolation layer after rootless Docker UID mapping.
+    # Profile installed at: /etc/apparmor.d/hermes-agent
+    security_opt:
+      - apparmor:hermes-agent
+
+    # Resource limits (hermes.slice provides cgroup-level caps as a backstop).
+    # Playwright/Chromium is memory-hungry — 4G is intentional.
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+
+    logging:
+      driver: journald
+      options:
+        tag: hermes
