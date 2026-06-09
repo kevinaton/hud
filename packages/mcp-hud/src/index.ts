@@ -32,6 +32,7 @@ import { registerTools } from './tools/index.js';
 // HTTP transport type imports (for type-checking; modules loaded lazily in HTTP mode)
 import type { AclStore } from './http/acl.js';
 import type { TokenStore } from './http/auth.js';
+import type { RateLimiter } from './http/rate-limit.js';
 
 const VERSION = '0.1.0';
 
@@ -71,6 +72,21 @@ async function main(): Promise<void> {
     await server.connect(transport);
     process.stderr.write('[mcp-hud] connected via stdio, ready for tool calls\n');
   }
+}
+
+/**
+ * Builds a RateLimiter and applies per-identity overrides from the loaded ACL store.
+ * Each identity in the ACL that has a `rateLimit` field gets its buckets pre-configured.
+ */
+async function buildRateLimiter(aclStore: AclStore): Promise<RateLimiter> {
+  const { RateLimiter: RL } = await import('./http/rate-limit.js');
+  const limiter: RateLimiter = new RL();
+  for (const [identity, entry] of Object.entries(aclStore.identities)) {
+    if (entry.rateLimit) {
+      limiter.configure(identity, entry.rateLimit);
+    }
+  }
+  return limiter;
 }
 
 async function startHttpMode(server: McpServer): Promise<void> {
@@ -114,12 +130,15 @@ async function startHttpMode(server: McpServer): Promise<void> {
     devMode = true;
   }
 
+  const rateLimiter = await buildRateLimiter(aclStore);
+
   await startHttpServer(server, {
     port: MCP_HTTP_PORT,
     host: '127.0.0.1', // always loopback; tailscale serve handles external
     devMode,
     tokenStore,
     aclStore,
+    rateLimiter,
   });
 
   process.stderr.write('[mcp-hud] HTTP/SSE ready. Press Ctrl-C to stop.\n');

@@ -15,10 +15,19 @@ export interface TokensFile {
   tokens: TokenEntry[];
 }
 
+/** Per-identity rate limit overrides (all fields optional; unset = global default). */
+export interface RateLimitOverride {
+  writesPerMin?: number;
+  readsPerMin?: number;
+  burst?: number;
+}
+
 /** One ACL entry (per identity) from mcp-acl.yaml. */
 export interface AclEntry {
   allow?: string[];
   deny?: string[];
+  /** Optional per-identity rate limit overrides. Unset = global defaults (60w/600r/burst 10). */
+  rateLimit?: RateLimitOverride;
 }
 
 /** Parsed mcp-acl.yaml structure. */

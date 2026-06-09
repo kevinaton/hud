@@ -4,7 +4,9 @@
  * Wraps the MCP SDK StreamableHTTPServerTransport with:
  *   1. Bearer token authentication (argon2id verify against mcp-tokens.yaml)
  *   2. ACL enforcement (mcp-acl.yaml) — deny-by-default, deny wins over allow
- *   3. Per-call audit logging via AsyncLocalStorage (tool handlers pick up identity)
+ *   3. Per-identity token-bucket rate limiting (60 writes/min, 600 reads/min, burst 10)
+ *   4. Per-call audit logging via AsyncLocalStorage (tool handlers pick up identity)
+ *   5. Structured metric log line per call: mcp.request.count{identity, tool, status}
  *
  * Identity from the bearer token is injected into httpRequestStorage so that
  * the tool handlers' resolveCtxFromEnv() reads it instead of HUD_AGENT_ACTOR.
@@ -24,14 +26,50 @@ import { checkAcl } from './acl.js';
 import type { TokenStore } from './auth.js';
 import { verifyBearer } from './auth.js';
 import { httpRequestStorage } from './context.js';
+import { RateLimiter } from './rate-limit.js';
 
 export type { AclStore, TokenStore };
+export type { RateLimiter };
 
 const VERSION = '0.1.0';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Emits a structured metric log line per call.
+ * Format: [mcp-hud] mcp.request.count identity=<id> tool=<tool|-> status=<code>
+ * Scrape-friendly: one line per request, parseable by log aggregators.
+ */
+function emitMetric(identity: string, tool: string | null, status: number): void {
+  const toolLabel = tool ?? '-';
+  process.stderr.write(
+    `[mcp-hud] mcp.request.count identity=${identity} tool=${toolLabel} status=${status}\n`,
+  );
+}
+
+/**
+ * Emits a Sentry-style breadcrumb for 4xx/5xx responses.
+ * Writes a structured JSON line to stderr (wire to Sentry SDK if DSN configured).
+ */
+function emitBreadcrumb(
+  identity: string,
+  tool: string | null,
+  status: number,
+  message: string,
+  mcpRequestId: string,
+): void {
+  if (status < 400) return;
+  const crumb = {
+    level: status >= 500 ? 'error' : 'warning',
+    category: 'mcp.request',
+    message,
+    data: { identity, tool: tool ?? '-', status, mcpRequestId },
+    timestamp: new Date().toISOString(),
+  };
+  process.stderr.write(`[mcp-hud] breadcrumb ${JSON.stringify(crumb)}\n`);
+}
 
 /** Sends a plain JSON error response. */
 function sendError(res: ServerResponse, status: number, code: string, message: string): void {
@@ -99,6 +137,8 @@ export interface HttpServerConfig {
   tokenStore: TokenStore;
   /** ACL store for per-identity tool access control. */
   aclStore: AclStore;
+  /** Token-bucket rate limiter (shared, stateful, one instance per daemon). */
+  rateLimiter: RateLimiter;
 }
 
 // ---------------------------------------------------------------------------
@@ -106,7 +146,9 @@ export interface HttpServerConfig {
 // ---------------------------------------------------------------------------
 
 /** Result of the auth+ACL pre-check step. */
-type PreCheckResult = { ok: true; identity: string; parsedBody: unknown } | { ok: false };
+type PreCheckResult =
+  | { ok: true; identity: string; toolName: string | null; parsedBody: unknown }
+  | { ok: false };
 
 /** Runs auth + body parsing + ACL for a POST /mcp request. */
 async function handlePostPrecheck(
@@ -152,7 +194,7 @@ async function handlePostPrecheck(
     }
   }
 
-  return { ok: true, identity, parsedBody };
+  return { ok: true, identity, toolName, parsedBody };
 }
 
 /** Runs auth for a non-POST (GET/DELETE/etc.) request. */
@@ -191,7 +233,7 @@ export async function startHttpServer(
   mcpServer: McpServer,
   config: HttpServerConfig,
 ): Promise<{ stop: () => Promise<void> }> {
-  const { port, host, devMode, tokenStore, aclStore } = config;
+  const { port, host, devMode, tokenStore, aclStore, rateLimiter } = config;
 
   // Stateless transport — omitting sessionIdGenerator activates stateless mode.
   // Cast to Transport to satisfy exactOptionalPropertyTypes: the SDK concrete
@@ -227,7 +269,25 @@ export async function startHttpServer(
       );
       if (!pre.ok) return;
 
-      const ctx = { identity: pre.identity, ipAddress, mcpRequestId, userAgent };
+      const { identity, toolName } = pre;
+
+      // Rate limiting — after auth + ACL, before dispatching to transport.
+      const rlResult = rateLimiter.consume(identity, toolName);
+      if (!rlResult.allowed) {
+        const retryAfter = String(rlResult.retryAfterSec);
+        res.setHeader('Retry-After', retryAfter);
+        sendError(res, 429, 'rate_limited', 'Too many requests');
+        emitMetric(identity, toolName, 429);
+        emitBreadcrumb(identity, toolName, 429, 'rate_limited', mcpRequestId);
+        process.stderr.write(
+          `[mcp-hud] 429 rate_limited identity=${identity} tool=${toolName ?? '-'} retryAfter=${retryAfter}s reqId=${mcpRequestId}\n`,
+        );
+        return;
+      }
+
+      emitMetric(identity, toolName, 200);
+
+      const ctx = { identity, ipAddress, mcpRequestId, userAgent };
       await httpRequestStorage.run(ctx, () =>
         transport.handleRequest(req as unknown as McpReqWithAuth, res, pre.parsedBody),
       );
@@ -237,7 +297,22 @@ export async function startHttpServer(
     const pre = await handleNonPostPrecheck(req, res, tokenStore, devMode, ipAddress, mcpRequestId);
     if (!pre.ok) return;
 
-    const ctx = { identity: pre.identity, ipAddress, mcpRequestId, userAgent };
+    const { identity } = pre;
+
+    // Non-POST (GET/DELETE for session management) — count as read, no ACL check needed.
+    const rlResult = rateLimiter.consume(identity, null);
+    if (!rlResult.allowed) {
+      const retryAfter = String(rlResult.retryAfterSec);
+      res.setHeader('Retry-After', retryAfter);
+      sendError(res, 429, 'rate_limited', 'Too many requests');
+      emitMetric(identity, null, 429);
+      emitBreadcrumb(identity, null, 429, 'rate_limited', mcpRequestId);
+      return;
+    }
+
+    emitMetric(identity, null, 200);
+
+    const ctx = { identity, ipAddress, mcpRequestId, userAgent };
     await httpRequestStorage.run(ctx, () =>
       transport.handleRequest(req as unknown as McpReqWithAuth, res),
     );
