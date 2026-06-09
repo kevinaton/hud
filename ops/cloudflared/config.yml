@@ -1,14 +1,36 @@
-# Cloudflare Tunnel config — committed in MVP, deployed in Phase 1
-# Phase 1 provisioning: cloudflared tunnel create hud-tunnel
-#   Outputs the tunnel UUID — replace <TUNNEL_ID> below.
+# Cloudflare Tunnel config — committed in repo, live copy at /etc/cloudflared/config.yml
 #
-# Validate after provisioning: cloudflared tunnel ingress validate --config ops/cloudflared/config.yml
+# Tunnel ID: 48c469f3-d73c-4eff-ae8c-a7787e72ab9a
+# Validate: cloudflared tunnel ingress validate --config ops/cloudflared/config.yml
+#
+# Traffic path for all hostnames:
+#   Browser → Cloudflare edge → cloudflared tunnel → localhost:<port>
+#   Caddy is NOT in the path. CF Access is configured per-hostname in the
+#   Cloudflare Zero Trust dashboard (Access → Applications).
+#
+# CF Access policy:
+#   hud.kevinaton.com        ON  — ZT application, MFA required
+#   hermes.kevinaton.com     ON  — ZT application, same policy
+#   hermes-api.kevinaton.com OFF — bearer auth (API_SERVER_KEY) + CF WAF rate-limit
+#                                  See deviation note in Ticket 41.
 
-tunnel: <TUNNEL_ID>
-credentials-file: /srv/hud/secrets/.cloudflared/<TUNNEL_ID>.json
+tunnel: 48c469f3-d73c-4eff-ae8c-a7787e72ab9a
+credentials-file: /root/.cloudflared/48c469f3-d73c-4eff-ae8c-a7787e72ab9a.json
 
 ingress:
+  # HUD web app (Next.js)
   - hostname: hud.kevinaton.com
     service: http://localhost:3000
-  # Catch-all: any unmatched request returns 404
+
+  # Hermes dashboard — CF Access ON
+  # 502 until Hermes container starts (Ticket 45)
+  - hostname: hermes.kevinaton.com
+    service: http://localhost:9119
+
+  # Hermes gateway API — CF Access OFF (bearer auth compensates)
+  # 502 until Hermes container starts (Ticket 45)
+  - hostname: hermes-api.kevinaton.com
+    service: http://localhost:8642
+
+  # Catch-all: any unmatched hostname returns 404
   - service: http_status:404
