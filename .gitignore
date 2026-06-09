@@ -8,6 +8,7 @@ apps/web/out/
 # Build outputs
 dist/
 build/
+*.tsbuildinfo
 
 # Database (local dev only)
 data/
