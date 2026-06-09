@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(sqlite3*)",
+      "Bash(* sqlite3 *)",
+      "Bash(psql*)",
+      "Bash(* psql *)",
+      "Bash(mysql*)",
+      "Bash(* mysql *)",
+      "Bash(* hud.db*)",
+      "Read(//srv/hud/data/hud.db*)",
+      "Write(//srv/hud/data/hud.db*)",
+      "Edit(//srv/hud/data/hud.db*)"
+    ]
+  }
+}

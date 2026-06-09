@@ -79,9 +79,9 @@ describe('checkLockout', () => {
 
   it('returns { locked: true, lockedUntil } when locked_until is in the future', () => {
     const userId = createTestUser();
-    const futureDate = new Date(Date.now() + 15 * 60_000).toISOString();
+    const futureDate = new Date(Date.now() + LOCKOUT_DURATION_MINUTES * 60_000).toISOString();
     sqlite.exec(
-      `UPDATE users SET locked_until = '${futureDate}', failed_attempts = 5 WHERE id = ${userId}`,
+      `UPDATE users SET locked_until = '${futureDate}', failed_attempts = ${LOCKOUT_THRESHOLD} WHERE id = ${userId}`,
     );
     const result = checkLockout(userId);
     expect(result.locked).toBe(true);
@@ -115,7 +115,7 @@ describe('recordFailedAttempt', () => {
     const beforeLock = checkLockout(userId);
     expect(beforeLock.locked).toBe(false);
 
-    // 5th attempt triggers lockout
+    // Final attempt (the LOCKOUT_THRESHOLD-th) triggers lockout
     const count = withTx((tx) => recordFailedAttempt(tx, userId));
     expect(count).toBe(LOCKOUT_THRESHOLD);
 
@@ -153,8 +153,8 @@ describe('clearLockout', () => {
 });
 
 describe('lockout threshold constants', () => {
-  it('LOCKOUT_THRESHOLD is 5', () => {
-    expect(LOCKOUT_THRESHOLD).toBe(5);
+  it('LOCKOUT_THRESHOLD is 3', () => {
+    expect(LOCKOUT_THRESHOLD).toBe(3);
   });
 
   it('LOCKOUT_DURATION_MINUTES is 15', () => {

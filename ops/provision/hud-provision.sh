@@ -21,8 +21,6 @@ HUD_USER="hud"
 HUD_UID=2001
 PORTFOLIO_USER="portfolio"
 PORTFOLIO_UID=2002
-AGENT_HUD_USER="agent-hud"
-AGENT_HUD_UID=2011
 AGENT_PORTFOLIO_USER="agent-portfolio"
 AGENT_PORTFOLIO_UID=2012
 
@@ -103,22 +101,6 @@ else
     --system \
     "${PORTFOLIO_USER}"
   step_created "user ${PORTFOLIO_USER} (uid=${PORTFOLIO_UID}, gid=${PORTFOLIO_UID})"
-fi
-
-# agent-hud (UID 2011, group=hud)
-if id "${AGENT_HUD_USER}" &>/dev/null; then
-  step_skipped "user ${AGENT_HUD_USER} (uid=${AGENT_HUD_UID})"
-else
-  useradd \
-    --uid "${AGENT_HUD_UID}" \
-    --gid "${HUD_UID}" \
-    --comment "HUD AI agents" \
-    --home-dir "/srv/hud" \
-    --shell "/bin/bash" \
-    --no-create-home \
-    --system \
-    "${AGENT_HUD_USER}"
-  step_created "user ${AGENT_HUD_USER} (uid=${AGENT_HUD_UID}, gid=${HUD_UID})"
 fi
 
 # agent-portfolio (UID 2012, group=portfolio, nologin)
@@ -243,46 +225,10 @@ systemctl daemon-reload
 step_updated "systemctl daemon-reload"
 
 # ---------------------------------------------------------------------------
-# Section 6: Sudoers entry
+# Section 6: Apt repo setup and package installation
 # ---------------------------------------------------------------------------
 echo ""
-echo "=== SECTION 6: Sudoers Entry ==="
-
-SUDOERS_FILE="/etc/sudoers.d/hud-operator"
-SUDOERS_CONTENT="kevin ALL=(agent-hud) NOPASSWD: /opt/agents/bin/*"
-
-if [[ -f "${SUDOERS_FILE}" ]] && grep -qF "${SUDOERS_CONTENT}" "${SUDOERS_FILE}"; then
-  step_skipped "sudoers ${SUDOERS_FILE}"
-else
-  sudoers_tmpfile="$(mktemp)"
-  echo "${SUDOERS_CONTENT}" >"${sudoers_tmpfile}"
-  chmod 0440 "${sudoers_tmpfile}"
-
-  # Validate before installing
-  if visudo -c -f "${sudoers_tmpfile}" &>/dev/null; then
-    cp "${sudoers_tmpfile}" "${SUDOERS_FILE}"
-    chmod 0440 "${SUDOERS_FILE}"
-    chown root:root "${SUDOERS_FILE}"
-    rm -f "${sudoers_tmpfile}"
-    step_created "sudoers ${SUDOERS_FILE}"
-  else
-    rm -f "${sudoers_tmpfile}"
-    echo "ERROR: sudoers validation failed — not writing ${SUDOERS_FILE}" >&2
-    exit 1
-  fi
-fi
-
-# Validate the installed file is still syntactically clean
-if ! visudo -c -f "${SUDOERS_FILE}" &>/dev/null; then
-  echo "ERROR: existing ${SUDOERS_FILE} fails visudo -c check" >&2
-  exit 1
-fi
-
-# ---------------------------------------------------------------------------
-# Section 7: Apt repo setup and package installation
-# ---------------------------------------------------------------------------
-echo ""
-echo "=== SECTION 7: Apt Repos and Package Installation ==="
+echo "=== SECTION 6: Apt Repos and Package Installation ==="
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -380,10 +326,10 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Section 8: Artifact copy
+# Section 7: Artifact copy
 # ---------------------------------------------------------------------------
 echo ""
-echo "=== SECTION 8: Artifact Copy ==="
+echo "=== SECTION 7: Artifact Copy ==="
 
 # Copy all files from ops/provision/bin/ → /opt/agents/bin/
 SRC_BIN="${SCRIPT_DIR}/bin"
@@ -435,7 +381,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Section 9: Final summary
+# Section 8: Final summary
 # ---------------------------------------------------------------------------
 echo ""
 echo "==================================================================="
@@ -447,12 +393,11 @@ echo ""
 echo "  Key paths:"
 echo "    /srv/hud/                    — HUD tenant root (750 hud:hud)"
 echo "    /srv/portfolio/              — Portfolio tenant root (750 portfolio:portfolio)"
-echo "    /opt/agents/bin/             — Shared agent CLI wrappers"
+echo "    /opt/agents/bin/             — Shared discovery scripts (hud-where, hud-status, ...)"
 echo "    /etc/hud/tenants/            — Tenant manifests (YAML)"
 echo "    /etc/systemd/system/hud.slice"
 echo "    /etc/systemd/system/portfolio.slice"
 echo "    /etc/systemd/system/agents.slice"
-echo "    /etc/sudoers.d/hud-operator  — kevin → agent-hud via /opt/agents/bin/*"
 echo ""
 echo "  Runtimes installed:"
 echo "    Node 22 LTS (via NodeSource apt repo)"

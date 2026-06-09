@@ -1,10 +1,23 @@
 {
+  "tools": {
+    "core": [
+      "read_file",
+      "list_directory",
+      "glob",
+      "grep_search",
+      "ripgrep",
+      "read_mcp_resource",
+      "list_mcp_resources",
+      "update_topic",
+      "ask_user"
+    ]
+  },
   "mcpServers": {
     "hud": {
       "command": "node",
-      "args": ["/Users/kevinaton/Documents/Project/HUD/packages/mcp-hud/dist/index.js"],
+      "args": ["/srv/hud/app/packages/mcp-hud/dist/index.js"],
       "env": {
-        "DATABASE_URL": "/Users/kevinaton/Documents/Project/HUD/data/hud.db",
+        "DATABASE_URL": "/srv/hud/data/hud.db",
         "HUD_AGENT_ACTOR": "agent:emily",
         "HUD_AGENT_NAME": "emily",
         "HUD_AGENT_CLI": "gemini"

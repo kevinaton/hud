@@ -1,14 +1,35 @@
 {
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "bash": {
+      "*": "allow",
+      "sqlite3*": "deny",
+      "*sqlite3*": "deny",
+      "psql*": "deny",
+      "*psql*": "deny",
+      "mysql*": "deny",
+      "*mysql*": "deny",
+      "*hud.db*": "deny"
+    },
+    "read": {
+      "*": "allow",
+      "/srv/hud/data/hud.db*": "deny"
+    },
+    "edit": {
+      "*": "allow",
+      "/srv/hud/data/hud.db*": "deny"
+    }
+  },
   "mcp": {
-    "servers": {
-      "hud": {
-        "command": "node",
-        "args": ["/srv/hud/app/packages/mcp-hud/dist/index.js"],
-        "env": {
-          "HUD_AGENT_ACTOR": "agent:emily",
-          "HUD_AGENT_NAME": "emily",
-          "HUD_AGENT_CLI": "opencode"
-        }
+    "hud": {
+      "type": "local",
+      "command": ["node", "/srv/hud/app/packages/mcp-hud/dist/index.js"],
+      "enabled": true,
+      "environment": {
+        "DATABASE_URL": "/srv/hud/data/hud.db",
+        "HUD_AGENT_ACTOR": "agent:emily",
+        "HUD_AGENT_NAME": "emily",
+        "HUD_AGENT_CLI": "opencode"
       }
     }
   }

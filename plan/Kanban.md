@@ -6,16 +6,23 @@ kanban-plugin: board
 
 ## Todo
 
-- [ ] [[Ticket 19 Add HUD Favicon]]
-- [ ] [[Ticket 20 Fix Cloudflare Insights CSP Violation]]
-- [ ] [[Ticket 21 Fix Login Attempt Counter Decrement]]
-
-
 ## In Progress
 
+- [ ] [[Ticket 33 Add Native CLI Permission Guardrails to Stop Emily Bypassing the MCP Server]]
 
 ## Done
 
+- [x] [[Ticket 26 Install Claude and OpenCode CLIs Globally Matching Gemini Setup]]
+- [x] [[Ticket 32 Commit and Reconcile Provisioning Sources After Retiring agent-hud]]
+- [x] [[Ticket 30 Fix Missing remainingAttempts on Short-Password Login Validation Path]]
+- [x] [[Ticket 28 Fix agent-hud Read Access to Cashflow Database Directory]]
+- [x] [[Ticket 31 Change Lockout to 3 Attempts and Always Show Remaining-Attempts Counter]]
+- [x] [[Ticket 29 Fix Login Page ChunkLoadError from Stale Static Asset References]]
+- [x] [[Ticket 27 Provision agent-hud XDG Runtime Subtree and Wire Wrapper Env Vars]]
+- [x] [[Ticket 25 Fix OpenCode MCP Config Schema Mismatch for Emily]]
+- [x] [[Ticket 23 Retune Emilys Persona Voice to Ecstatic Light-of-the-Office Energy]]
+- [x] [[Ticket 24 Fix Emily MCP Config Path Drift and Clean Up Stray Test Artifacts]]
+- [x] [[Ticket 22 Rebuild and Restart Web App to Ship Pending Auth Fixes]]
 - [x] [[Ticket 19 Add HUD Favicon]]
 - [x] [[Ticket 20 Fix Cloudflare Insights CSP Violation]]
 - [x] [[Ticket 21 Fix Login Attempt Counter Decrement]]

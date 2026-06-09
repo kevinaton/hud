@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-# agent-gemini — run the Gemini CLI as agent-hud
-# Operator's shell stays as kevin; the agent process runs under agent-hud UID.
-# Deployed to /opt/agents/bin/agent-gemini by hud-provision.sh
-set -euo pipefail
-
-exec sudo -u agent-hud -E gemini "$@"

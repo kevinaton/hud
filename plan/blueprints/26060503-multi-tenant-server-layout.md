@@ -513,6 +513,8 @@ graph TB
 
 ## Open Questions — Resolved 2026-06-05
 
+> **Follow-up 2026-06-07:** Where `agent-hud`'s own CLI runtime state (XDG config/cache/data/state) lives — given `HOME=/srv/hud` shared with the `hud`-owned tenant root — is decided in [[plan/blueprints/adr/ADR-26060701-agent-hud-xdg-runtime|ADR-26060701]]: a dedicated `agent-hud`-owned `/srv/hud/agent-runtime/` subtree (`700 agent-hud:hud`) with redirected XDG env vars, provisioned at L0. Adds one server-map row; does not change the `750 hud:hud` tenant-root invariant in §2.
+
 - **OQ-1. Update `HUD.md` strategy?**
   - **Decision:** No. Portfolio stays "Plan A: Cloudflare Pages / separate hosting" in the strategy doc. This blueprint pre-structures the Hetzner server so Portfolio **can** be added later as Plan B without re-paving. `HUD.md` Phase 5 wording stays as-is.
 - **OQ-2. Where is the Portfolio repo today?**
