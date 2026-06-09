@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # -----------------------------------------------------------------------
+  # Typecheck, lint, and build
+  # -----------------------------------------------------------------------
+  build:
+    name: Typecheck + Lint + Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+
+  # -----------------------------------------------------------------------
+  # Unit tests
+  # -----------------------------------------------------------------------
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm test:run
+
+  # -----------------------------------------------------------------------
+  # MCP config schema validation
+  # Validates mcp-tokens.example.yaml and mcp-acl.example.yaml against their
+  # JSON Schema definitions. Catches schema drift before it reaches the server.
+  # -----------------------------------------------------------------------
+  validate-mcp-config:
+    name: Validate MCP Config Schemas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate example files against schemas
+        run: pnpm validate:mcp-config
+
+      - name: Verify known-bad fixture is rejected (tokens)
+        run: |
+          if ./node_modules/.bin/tsx scripts/validate-mcp-config.ts \
+              --tokens ops/secrets/fixtures/bad-tokens.yaml \
+              --acl ops/secrets/mcp-acl.example.yaml; then
+            echo "ERROR: bad-tokens.yaml should have been rejected but was accepted"
+            exit 1
+          else
+            echo "OK: bad-tokens.yaml correctly rejected"
+          fi
+
+      - name: Verify known-bad fixture is rejected (acl)
+        run: |
+          if ./node_modules/.bin/tsx scripts/validate-mcp-config.ts \
+              --tokens ops/secrets/mcp-tokens.example.yaml \
+              --acl ops/secrets/fixtures/bad-acl.yaml; then
+            echo "ERROR: bad-acl.yaml should have been rejected but was accepted"
+            exit 1
+          else
+            echo "OK: bad-acl.yaml correctly rejected"
+          fi

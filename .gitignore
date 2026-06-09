@@ -63,3 +63,8 @@ apps/web/lib/db/index.js.map
 # Obsidian workspace state
 .obsidian/workspace.json
 .obsidian/canvas.json
+
+# MCP secrets — real files live on the server only, never in git.
+# Example files (*.example.yaml) and test fixtures are committed.
+ops/secrets/mcp-tokens.yaml
+ops/secrets/mcp-acl.yaml

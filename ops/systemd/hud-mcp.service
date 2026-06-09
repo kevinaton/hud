@@ -1,0 +1,75 @@
+# hud-mcp.service — HUD MCP daemon (HTTP/SSE, bearer auth, ACL)
+#
+# IMPORTANT: This unit runs the long-lived mcp-hud HTTP/SSE daemon.
+# It is NOT a replacement for Emily's per-session stdio MCP — that path
+# continues to work unaffected. This unit serves external callers
+# (Hermes gateway, Hermes MacBook) over Tailscale on port 7610.
+#
+# Deploy steps (run as root on the Hetzner server):
+#   cp ops/systemd/hud-mcp.service /etc/systemd/system/hud-mcp.service
+#   systemctl daemon-reload
+#   systemctl enable --now hud-mcp.service
+#   journalctl -u hud-mcp -f   # verify clean start
+#
+# The daemon reads secrets from /srv/hud/secrets/mcp.env (mode 600,
+# owner agent-hud). That file is NEVER committed to git.
+# See ops/secrets/mcp-tokens.example.yaml and ops/secrets/mcp-acl.example.yaml
+# for the required structure.
+#
+# Token rotation: edit /srv/hud/secrets/mcp-tokens.yaml, then
+#   systemctl reload hud-mcp.service
+# (SIGHUP triggers a config reload without dropping existing connections.)
+
+[Unit]
+Description=HUD MCP Daemon (HTTP/SSE transport, bearer auth, ACL)
+Documentation=https://github.com/kevinaton/hud
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=agent-hud
+Group=hud
+Slice=hud.slice
+WorkingDirectory=/srv/hud/app
+
+# Environment — real secrets live here (mode 600, owner agent-hud)
+EnvironmentFile=/srv/hud/secrets/mcp.env
+
+# Main process: Node 22 running the compiled mcp-hud daemon entry point.
+# MCP_TRANSPORT and PORT are set in mcp.env or overridden here for clarity.
+ExecStart=/usr/bin/node packages/mcp-hud/dist/index.js
+
+# Reload on SIGHUP: re-reads mcp-tokens.yaml and mcp-acl.yaml without restart.
+ExecReload=/bin/kill -HUP $MAINPID
+
+# Restart policy — survive transient errors and Hermes restarts
+Restart=on-failure
+RestartSec=5s
+StartLimitIntervalSec=120s
+StartLimitBurst=10
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hud-mcp
+
+# Hardening — matches hud-web.service pattern; ReadWritePaths limited to data
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/srv/hud/data
+
+# Additional hardening
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

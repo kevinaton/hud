@@ -1,0 +1,103 @@
+# mcp-acl.schema.yaml
+# JSON Schema (Draft 2020-12) for /srv/hud/secrets/mcp-acl.yaml
+#
+# The ACL file lives on the server only (mode 600, owner agent-hud).
+# It is NEVER committed to git. Committed example: ops/secrets/mcp-acl.example.yaml
+#
+# Authorization semantics:
+#   - Unknown identity → deny all (fail-closed)
+#   - Empty allow list → deny all
+#   - "*" in allow list → allow everything not explicitly denied
+#   - Deny wins over allow on conflict (deny-by-default at every level)
+#   - Tool names may be globs: "vault.*", "cashflow.*", "*"
+#
+# Validate with: pnpm validate:mcp-config
+# Or directly:   tsx scripts/validate-mcp-config.ts \
+#                  --tokens ops/secrets/mcp-tokens.example.yaml \
+#                  --acl    ops/secrets/mcp-acl.example.yaml
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://github.com/kevinaton/hud/ops/schemas/mcp-acl.schema.yaml"
+title: MCP ACL
+description: >
+  Per-identity tool access control list for the hud-mcp HTTP/SSE daemon.
+  Each identity maps to an allow list and optional deny list of tool names (or globs).
+  The identity key must match the identity field in mcp-tokens.yaml.
+type: object
+required:
+  - identities
+additionalProperties: false
+properties:
+  identities:
+    type: object
+    description: >
+      Map of identity string → access rules.
+      Keys must match the pattern used in mcp-tokens.yaml identity fields.
+    minProperties: 1
+    additionalProperties:
+      $ref: "#/$defs/identityRules"
+    propertyNames:
+      description: >
+        Identity string. Same convention as mcp-tokens.yaml:
+        "agent:<persona>/<cli>" for internal HUD personas,
+        "platform:<name>" for external platforms.
+      pattern: "^(platform:[a-z0-9][a-z0-9-]*|agent:[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*|agent:[a-z0-9][a-z0-9-]*)$"
+      minLength: 5
+      maxLength: 100
+
+$defs:
+  toolNameOrGlob:
+    type: string
+    description: >
+      A tool name (e.g. "cashflow.add", "cashflow.createCategory") or glob
+      (e.g. "cashflow.*", "*", "vault.*").
+      Tool names follow the pattern "<namespace>.<operation>" using alphanumeric characters
+      (camelCase operations are supported). Glob wildcard "*" may appear as the full value
+      or as the final segment after a dot.
+    pattern: "^\\*$|^[a-zA-Z][a-zA-Z0-9]*(\\.[a-zA-Z][a-zA-Z0-9]*)*(\\.\\*)?$"
+    minLength: 1
+    maxLength: 100
+
+  identityRules:
+    type: object
+    required:
+      - allow
+    additionalProperties: false
+    properties:
+      allow:
+        type: array
+        description: >
+          List of tool names or globs this identity is allowed to call.
+          Use ["*"] to allow all tools (internal personas only).
+          Empty list means deny all — equivalent to no access.
+        items:
+          $ref: "#/$defs/toolNameOrGlob"
+        minItems: 0
+        uniqueItems: true
+      deny:
+        type: array
+        description: >
+          List of tool names or globs explicitly denied for this identity.
+          Deny wins over allow on conflict. Useful for explicitly documenting
+          what an identity is NOT allowed to do even if allow includes a wildcard.
+        items:
+          $ref: "#/$defs/toolNameOrGlob"
+        minItems: 0
+        uniqueItems: true
+      rateLimit:
+        type: object
+        description: >
+          Optional per-identity rate limit overrides. If absent, daemon defaults apply
+          (60 writes/min, 600 reads/min). Added in Phase B3.
+        additionalProperties: false
+        properties:
+          writesPerMinute:
+            type: integer
+            description: Max write-category tool calls per minute for this identity.
+            minimum: 1
+            maximum: 10000
+          readsPerMinute:
+            type: integer
+            description: Max read-category tool calls per minute for this identity.
+            minimum: 1
+            maximum: 100000

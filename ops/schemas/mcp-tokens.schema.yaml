@@ -1,0 +1,68 @@
+# mcp-tokens.schema.yaml
+# JSON Schema (Draft 2020-12) for /srv/hud/secrets/mcp-tokens.yaml
+#
+# The token store file lives on the server only (mode 600, owner agent-hud).
+# It is NEVER committed to git. Committed example: ops/secrets/mcp-tokens.example.yaml
+#
+# Validate with: pnpm validate:mcp-config
+# Or directly:   tsx scripts/validate-mcp-config.ts \
+#                  --tokens ops/secrets/mcp-tokens.example.yaml \
+#                  --acl    ops/secrets/mcp-acl.example.yaml
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://github.com/kevinaton/hud/ops/schemas/mcp-tokens.schema.yaml"
+title: MCP Token Store
+description: >
+  Stores per-device/per-identity bearer token hashes for the hud-mcp HTTP/SSE daemon.
+  Tokens are opaque 32-byte random hex values. Only the argon2id hash is stored here;
+  the plaintext token lives in the caller's environment (e.g. /srv/hermes/data/.env).
+type: object
+required:
+  - tokens
+additionalProperties: false
+properties:
+  tokens:
+    type: array
+    description: One entry per identity (device or platform instance).
+    minItems: 1
+    items:
+      type: object
+      required:
+        - identity
+        - token_hash
+        - issued
+      additionalProperties: false
+      properties:
+        identity:
+          type: string
+          description: >
+            Unique identity string for this token. Must match an entry in mcp-acl.yaml.
+            Convention: platform:<name> for external platforms.
+            Examples: platform:hermes-gateway, platform:hermes-macbook-a
+          pattern: "^(platform:[a-z0-9][a-z0-9-]*|agent:[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*)$"
+          minLength: 10
+          maxLength: 100
+        token_hash:
+          type: string
+          description: >
+            argon2id hash of the bearer token. Format produced by @node-rs/argon2:
+            "$argon2id$v=19$m=...,t=...,p=...$<salt>$<hash>"
+            Never store the plaintext token here.
+          pattern: "^\\$argon2id\\$"
+          minLength: 80
+        issued:
+          type: string
+          description: ISO 8601 date (YYYY-MM-DD) when this token was generated.
+          pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+          examples:
+            - "2026-06-09"
+        expires:
+          type: string
+          description: >
+            Optional ISO 8601 date (YYYY-MM-DD) when this token expires.
+            The daemon rejects tokens past this date. Recommended cadence: 90 days.
+          pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        notes:
+          type: string
+          description: Human-readable description of what this token is for.
+          maxLength: 500
