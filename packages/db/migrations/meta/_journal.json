@@ -22,6 +22,13 @@
       "when": 1780798150931,
       "tag": "0002_glorious_lady_ursula",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1749427200000,
+      "tag": "0003_extend_audit_actor_platform",
+      "breakpoints": true
     }
   ]
 }

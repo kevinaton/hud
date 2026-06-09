@@ -92,7 +92,7 @@ export const auditLog = sqliteTable(
   {
     id: integer('id').primaryKey(),
     userId: integer('user_id').references(() => users.id),
-    actor: text('actor').notNull(), // 'user' | 'anon' | 'system' | 'agent:*'
+    actor: text('actor').notNull(), // 'user' | 'anon' | 'system' | 'agent:*' | 'platform:*'
     action: text('action').notNull(), // see AuditAction type
     entity: text('entity').notNull(), // 'transaction' | 'category' | 'user' | 'session'
     entityId: text('entity_id'),
@@ -105,10 +105,11 @@ export const auditLog = sqliteTable(
     index('idx_audit_user_time').on(table.userId, table.createdAt),
     // Prefix-based constraint: adding a new persona/CLI is data-only, no migration needed.
     // 'anon' covers pre-auth events (login attempts, signup); 'user' covers browser sessions;
-    // 'system' covers migrations/seeders; 'agent:<persona>/<cli>' covers agent tool calls.
+    // 'system' covers migrations/seeders; 'agent:<persona>/<cli>' covers HUD-internal agent tool calls;
+    // 'platform:<name>' covers foreign platforms calling the MCP daemon (e.g. 'platform:hermes-gateway').
     check(
       'chk_audit_actor',
-      sql`actor = 'user' OR actor = 'anon' OR actor = 'system' OR actor LIKE 'agent:%/%'`,
+      sql`actor = 'user' OR actor = 'anon' OR actor = 'system' OR actor LIKE 'agent:%/%' OR actor LIKE 'platform:_%'`,
     ),
   ],
 );

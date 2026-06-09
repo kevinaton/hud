@@ -31,7 +31,12 @@ import type { AuditAction } from '@hud/db';
 // ---------------------------------------------------------------------------
 // Actor: who performed the action
 // ---------------------------------------------------------------------------
-export type AuditActor = 'user' | 'anon' | 'system' | `agent:${string}`;
+export type AuditActor =
+  | 'user'
+  | 'anon'
+  | 'system'
+  | `agent:${string}`
+  | `platform:${string}`;
 
 // ---------------------------------------------------------------------------
 // AuditEntry: the parameters for writeAuditLog

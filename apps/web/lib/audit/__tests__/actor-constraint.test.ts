@@ -3,11 +3,12 @@
  *
  * Verifies that the audit_log.actor CHECK constraint is correctly enforced by SQLite.
  *
- * Allowed patterns (per migration 0002_glorious_lady_ursula.sql):
+ * Allowed patterns (per migration 0003_extend_audit_actor_platform.sql):
  *   - 'user'                  — browser session
  *   - 'anon'                  — pre-auth events (login attempt, signup)
  *   - 'system'                — migrations, seeders, CLI scripts
- *   - 'agent:<persona>/<cli>' — agent tool calls (prefix-based; new personas/CLIs need no migration)
+ *   - 'agent:<persona>/<cli>' — HUD-internal agent tool calls (prefix-based; new personas/CLIs need no migration)
+ *   - 'platform:<name>'       — foreign platform calling the MCP daemon (e.g. 'platform:hermes-gateway')
  *
  * Rejected: any value that doesn't match the above patterns.
  */
@@ -16,7 +17,7 @@ import Database from 'better-sqlite3';
 import { describe, expect, it } from 'vitest';
 
 // ---------------------------------------------------------------------------
-// Build an in-memory SQLite DB with the same CHECK constraint as the migration
+// Build an in-memory SQLite DB with the same CHECK constraint as migration 0003
 // ---------------------------------------------------------------------------
 function buildDb(): Database.Database {
   const db = new Database(':memory:');
@@ -34,7 +35,7 @@ function buildDb(): Database.Database {
       user_agent TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       CONSTRAINT chk_audit_actor CHECK(
-        actor = 'user' OR actor = 'anon' OR actor = 'system' OR actor LIKE 'agent:%/%'
+        actor = 'user' OR actor = 'anon' OR actor = 'system' OR actor LIKE 'agent:%/%' OR actor LIKE 'platform:_%'
       )
     );
   `);
@@ -98,6 +99,25 @@ describe('audit_log actor CHECK constraint — valid actors accepted', () => {
     expect(() => insertAuditRow(db, 'agent:telegram-emily/gemini')).not.toThrow();
     db.close();
   });
+
+  // platform:<name> — new tier (migration 0003), for foreign platforms calling the MCP daemon
+  it("accepts 'platform:hermes-gateway'", () => {
+    const db = buildDb();
+    expect(() => insertAuditRow(db, 'platform:hermes-gateway')).not.toThrow();
+    db.close();
+  });
+
+  it("accepts 'platform:hermes-macbook-a'", () => {
+    const db = buildDb();
+    expect(() => insertAuditRow(db, 'platform:hermes-macbook-a')).not.toThrow();
+    db.close();
+  });
+
+  it("accepts future platform pattern 'platform:any-future-system'", () => {
+    const db = buildDb();
+    expect(() => insertAuditRow(db, 'platform:any-future-system')).not.toThrow();
+    db.close();
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -139,6 +159,27 @@ describe('audit_log actor CHECK constraint — invalid actors rejected', () => {
     const db = buildDb();
     // Does not start with 'agent:' — LIKE 'agent:%/%' requires the literal 'agent:'
     expect(() => insertAuditRow(db, 'agent-emily/gemini')).toThrow(/CHECK constraint failed/i);
+    db.close();
+  });
+
+  // platform: edge cases
+  it("rejects 'platform:' (empty suffix after colon)", () => {
+    const db = buildDb();
+    // LIKE 'platform:_%' — the underscore requires exactly one character, then %
+    // matches zero or more. So 'platform:' (nothing after the colon) is correctly rejected.
+    expect(() => insertAuditRow(db, 'platform:')).toThrow(/CHECK constraint failed/i);
+    db.close();
+  });
+
+  it("rejects 'platforms:hermes' (wrong prefix — extra 's')", () => {
+    const db = buildDb();
+    expect(() => insertAuditRow(db, 'platforms:hermes')).toThrow(/CHECK constraint failed/i);
+    db.close();
+  });
+
+  it("rejects 'platform' (no colon, no suffix)", () => {
+    const db = buildDb();
+    expect(() => insertAuditRow(db, 'platform')).toThrow(/CHECK constraint failed/i);
     db.close();
   });
 });
