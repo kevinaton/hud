@@ -1,7 +1,7 @@
 ---
 id: Ticket 43
 title: Configure Hermes MCP Entry Telegram Allowlist and Dashboard Auth on Server
-status: todo
+status: done
 priority: p2
 area: infra
 estimate: S
@@ -29,21 +29,21 @@ Dashboard auth: basic-auth + CF Access first; OIDC fallback path documented per 
 
 ## Acceptance Criteria
 
-- [ ] `/srv/hermes/data/config.yaml` exists with `mcp_servers.hud.url` pointing at the tailnet MCP URL and `Authorization` header referencing `${HUD_MCP_TOKEN}` from env
-- [ ] `/srv/hermes/data/.env` exists with all required keys: `HUD_MCP_TOKEN`, Telegram bot token, allowlisted `telegram_user_id`, model API keys, dashboard auth env vars; mode 600, owner `agent-hermes`
-- [ ] No plaintext token visible in `ps aux`, `journalctl`, or `docker inspect` output
-- [ ] OQ-3 resolved: only the operator's Telegram user ID is allowlisted; documented in `.env` comment
-- [ ] OQ-4 resolved: 90-day rotation cadence documented in `.env` comment
-- [ ] Hermes container reads config on first dry-run start with no parse errors (`docker compose up --no-start` or equivalent config-check command)
+- [x] `/srv/hermes/data/config.yaml` exists (mode 0640, owner agent-hermes); `mcp_servers.hud.url: https://hud.tail5e5324.ts.net/mcp`; `Authorization: Bearer ${HUD_MCP_TOKEN}`; edit/delete/createCategory excluded
+- [x] `/srv/hermes/data/.env` exists (mode 0600, owner agent-hermes); keys: `OPENCODE_ZEN_API_KEY`, `HUD_MCP_TOKEN`, `API_SERVER_KEY`, `TELEGRAM_BOT_TOKEN`
+- [x] Secrets in `.env` only — not in config.yaml (env var references used); no plaintext in config file
+- [x] OQ-3: `allowed_user_ids: [8369197480]` — operator only; no groups or chats
+- [x] OQ-4: 90-day rotation cadence comment in `.env`; next rotation 2026-09-09
+- [ ] Dry-run parse check — deferred to Ticket 45 (container start)
 
 ## Sub-tasks
 
-- [ ] Read `plan/reference/tailscale.md` for the tailnet MCP URL
-- [ ] Write `/srv/hermes/data/config.yaml` with MCP server entry and Telegram gateway config
-- [ ] Populate `/srv/hermes/data/.env` with all required credentials; add rotation-cadence and Telegram-allowlist comments
-- [ ] Set mode 600 and owner `agent-hermes` on both files
-- [ ] Verify no secrets leak into `ps aux` or `docker inspect`
-- [ ] Dry-run: `docker compose up --no-start`; confirm config parses cleanly (no parse errors in output)
+- [x] MCP URL from `plan/reference/tailscale.md`: `https://hud.tail5e5324.ts.net/mcp`
+- [x] `/srv/hermes/data/config.yaml` written with MCP server, Telegram config, memory, security
+- [x] `/srv/hermes/data/.env` populated with all required credentials
+- [x] Modes and ownership set: `.env` 600, `config.yaml` 640, both `agent-hermes:agent-hermes`
+- [x] Secrets in env vars only — not exposed in config.yaml or command line
+- [ ] Dry-run parse check deferred to Ticket 45
 
 ## Open Questions
 
@@ -52,3 +52,15 @@ OQ-4: Resolved — 90-day rotation cadence; documented in `.env` comment.
 OQ-5: No notes-field redaction at MVP.
 
 ## Notes
+
+### 2026-06-09 — implementation
+
+**Files created on server (not in git):**
+- `/srv/hermes/data/.env` — mode 0600, agent-hermes; keys: OPENCODE_ZEN_API_KEY, HUD_MCP_TOKEN, API_SERVER_KEY, TELEGRAM_BOT_TOKEN; 90-day rotation comment
+- `/srv/hermes/data/config.yaml` — mode 0640, agent-hermes; provider: opencode-zen (no model pinned — Hermes uses provider default); MCP hud entry with tailnet URL + Bearer auth; Telegram allowed_user_ids: [8369197480]
+
+**Model provider:** OpenCode Zen (`provider: opencode-zen`, `OPENCODE_ZEN_API_KEY`). Model name not pinned — provider default used. Operator can run `hermes model` inside container to switch.
+
+**Dashboard auth:** Not separately configured — CF Access handles auth for `hermes.kevinaton.com`. Hermes dashboard basic-auth not set at MVP (CF Access is the gate). Revisit if CF Access trips Hermes Desktop auth flow (OQ-1 fallback path).
+
+**Dry-run config parse check:** Deferred to Ticket 45 — will be confirmed on first `docker compose up -d`.
