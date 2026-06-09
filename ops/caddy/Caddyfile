@@ -2,8 +2,88 @@
 # Based on plan/reference/caddy.md
 # Validate locally: caddy validate --config ops/caddy/Caddyfile
 
+# ---------------------------------------------------------------------------
+# HUD Web App
+# ---------------------------------------------------------------------------
+# CF Access: ON (Cloudflare Zero Trust application, MFA required)
+# Upstream:  hud-web.service → Next.js on :3000
+# ---------------------------------------------------------------------------
+
 hud.kevinaton.com {
 	reverse_proxy localhost:3000
+
+	encode gzip zstd
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	log {
+		output stderr
+		format json
+	}
+}
+
+# ---------------------------------------------------------------------------
+# Hermes Dashboard
+# ---------------------------------------------------------------------------
+# CF Access: ON (Cloudflare Zero Trust application, same policy as hud.*)
+# Upstream:  hermes Docker container → dashboard on :9119
+# Note:      Container not yet running (Ticket 45). Caddy returns 502 until
+#            the container is started. This is expected and not a config error.
+# ---------------------------------------------------------------------------
+
+hermes.kevinaton.com {
+	reverse_proxy 127.0.0.1:9119
+
+	encode gzip zstd
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	log {
+		output stderr
+		format json
+	}
+}
+
+# ---------------------------------------------------------------------------
+# Hermes Gateway API
+# ---------------------------------------------------------------------------
+# CF Access: OFF — DOCUMENTED DEVIATION
+#
+# Why off: Hermes Desktop (Electron) remote-backend mode sends proprietary
+# Authorization headers that Cloudflare Access strips before forwarding.
+# Enabling CF Access on this endpoint breaks Hermes Desktop's auth flow.
+#
+# Compensating controls in place (defence in depth):
+#   1. API_SERVER_KEY bearer auth enforced by Hermes container on every request
+#   2. Cloudflare WAF rate-limiting on hermes-api.kevinaton.com (configure in
+#      CF dashboard: Security → WAF → Rate Limiting Rules, 100 req/min/IP)
+#   3. No HUD data exposed directly — only Hermes' own session/memory state
+#
+# Remediation trigger: when Hermes upstream fixes CF Access header passthrough
+# (track: https://github.com/NousResearch/hermes), re-enable CF Access and
+# remove this comment block.
+#
+# Upstream:  hermes Docker container → OpenAI-compatible gateway on :8642
+# Note:      Container not yet running (Ticket 45). Caddy returns 502 until
+#            the container is started. This is expected and not a config error.
+# ---------------------------------------------------------------------------
+
+hermes-api.kevinaton.com {
+	reverse_proxy 127.0.0.1:8642
 
 	encode gzip zstd
 
