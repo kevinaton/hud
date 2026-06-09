@@ -1,12 +1,12 @@
 ---
 id: Ticket 33
 title: Add Native CLI Permission Guardrails to Stop Emily Bypassing the MCP Server
-status: review
+status: done
 priority: p2
 area: infra
 estimate: M
 created: 2026-06-08
-updated: 2026-06-08
+updated: 2026-06-09
 depends-on: ["[[Ticket 32 Commit and Reconcile Provisioning Sources After Retiring agent-hud]]"]
 blocks: []
 blueprint: "[[plan/blueprints/26060701-hud-agent-runtime-emily]]"

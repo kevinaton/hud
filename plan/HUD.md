@@ -5,7 +5,7 @@ role: index
 status: living
 author: architect
 created: 2026-06-04
-updated: 2026-06-07
+updated: 2026-06-10
 tags: [moc, index, hud, strategy]
 ---
 
@@ -32,19 +32,24 @@ A single-server personal HUD (Hetzner Ubuntu) that combines an agentic second br
 
 ### Layer 1 — Gateways
 - **SSH + CLI** — primary, day-one interface. Operator `cd`s into `/srv/hud/agents/<persona>/` and runs `gemini` / `claude` / `opencode` — persona auto-loads, MCP auto-connects. See [[26060701-hud-agent-runtime-emily]].
-- **Telegram bot** — remote command interface. **Deferred to Phase 4** (was Phase 1). Bridge will reuse the same persona + MCP server; no new business-logic path.
+- **Telegram** — provided via Hermes platform from Phase 2. Operator-facing persona on Telegram + Hermes Desktop is **Andrea** (Hermes' counterpart to Emily on HUD). Andrea/Hermes calls HUD via `mcp-hud` over Tailscale with a restricted ACL (add+read only at MVP). Emily remains SSH-only — the original "Telegram bridge for Emily" is superseded by this design. See [[26060901-hermes-distributed-tenant-and-mcp-bridge]].
 - **HUD** — read-only at MVP; chat panel added in Phase 4.
 - **Portfolio** — co-located on the same box per [[26060503-multi-tenant-server-layout]] (revises original "out of scope")
 
 ### Layer 2 — Multi-Agent Runtime
+
+**HUD-internal agents** (inside HUD's trust boundary):
 - Claude CLI / Gemini CLI / Opencode CLI as interchangeable model backends — Emily (the first persona) runs identically on all three. See [[26060701-hud-agent-runtime-emily]].
 - Rate-limit-aware routing: cheap model first (Gemini free), escalate to Claude when needed
 - Shared skills, shared vault, shared database across all agents — persona is a swappable file, not a code branch
 - See [[26060504-mvp-agent-strategy]]
 
+**External agent platforms** (outside HUD's trust boundary):
+- Third-party agent systems (Hermes Agent today, with the **Andrea** persona) running in their own tenant slices. Reach HUD only through `mcp-hud` daemon mode with per-identity bearer tokens and tool allowlists. `audit_log.actor='platform:<name>'`. See [[26060901-hermes-distributed-tenant-and-mcp-bridge]].
+
 ### Layer 3 — Tools
 - **Skills** — versioned in git, hot-reloadable. Runtime skills (agent behavior) live in `apps/web/agents/<persona>/skills/`; build-time skills (Builder agent guidance) live in `.claude/skills/`.
-- **MCP servers** — `packages/mcp-hud` is the unified HUD MCP server with tool namespaces per domain (`cashflow.*` at MVP; `vault.*`, `calendar.*` added in later phases). One server, many namespaces. See [[26060701-hud-agent-runtime-emily]].
+- **MCP servers** — `packages/mcp-hud` is the unified HUD MCP server with tool namespaces per domain (`cashflow.*` at MVP; `vault.*`, `calendar.*` added in later phases). One server, many namespaces. Runs in two modes: **stdio** (per-session, for in-process callers like Emily — Phase 1) and **HTTP/SSE daemon** (long-running, for cross-tenant callers like Hermes/Andrea via Tailscale — Phase 2). Same code, same lib, same audit; transport differs. See [[26060701-hud-agent-runtime-emily]] and [[26060901-hermes-distributed-tenant-and-mcp-bridge]].
 - **Scripts / CLIs / APIs** — executables agents can call
 - **Orchestration** — agent-native loops and schedules (Claude `/loop`, `schedule` skill)
 - **Redis** — cache, job queue, pub/sub
@@ -74,6 +79,7 @@ A single-server personal HUD (Hetzner Ubuntu) that combines an agentic second br
 | Server | Hetzner CCX13, Ubuntu LTS | [[26060503-multi-tenant-server-layout]] |
 | Ingress | Caddy | [[caddy]] |
 | Edge | Cloudflare Tunnel + Access | — |
+| Mesh network (server ↔ devices) | Tailscale | [[26060901-hermes-distributed-tenant-and-mcp-bridge]] *(Phase 2; `tailscale.md` reference lands with B2 ticket)* |
 | Process supervision | systemd (infra), agents handle own loops | [[26060503-multi-tenant-server-layout]] |
 | Database | SQLite + Litestream | [[SQlite]] |
 | Vault sync | Syncthing | [[Obsidian vault management]] · [[ADR-26060501-vault-client-model]] |
@@ -88,11 +94,12 @@ A single-server personal HUD (Hetzner Ubuntu) that combines an agentic second br
 | Phase             | Scope                                                                  | Status      | Anchor blueprint |
 | ----------------- | ---------------------------------------------------------------------- | ----------- | ---------------- |
 | **0 — MVP**       | Foundation + Auth + Cashflow page (local-first, cloud-ready)           | 🔲 Building | [[26060502-mvp-foundation-cashflow]] |
-| **1 — Deploy + First Agent** | Hetzner deploy (Caddy / cloudflared / CF Access / Litestream) + Emily persona on Gemini/Claude/Opencode + `mcp-hud` cashflow tools | 🔲 Planned  | [[26060503-multi-tenant-server-layout]] · [[26060701-hud-agent-runtime-emily]] |
-| **2 — Knowledge** | Research + Notes + Vault + Syncthing → MacBook (Obsidian); `vault.*` MCP namespace added to `mcp-hud`             | 🔲 Planned  | [[ADR-26060501-vault-client-model]] · [[ADR-26060602-build-vault-separation]] |
-| **3 — Workflow**  | Kanban module, scheduled agent routines, additional MCP namespaces (`calendar.*`, `schedule.*`)    | 🔲 Planned  | [[26060504-mvp-agent-strategy]] · [[26060701-hud-agent-runtime-emily]] |
-| **4 — Telegram + Web Chat**  | Telegram bridge (reuses Emily persona + `mcp-hud`) + dashboard chat panel + agent-api service                                | 🔲 Planned  | [[26060701-hud-agent-runtime-emily]] (Telegram boundary section) |
-| **5 — Public**    | Portfolio guest agent (Nexus tab + portfolio-agent sandbox)            | 🔲 Planned  | [[26060503-multi-tenant-server-layout]] · [[ADR-26060501-vault-client-model]] |
+| **1 — Deploy + First Agent** | Hetzner deploy (Caddy / cloudflared / CF Access / Litestream) + Emily persona on Gemini/Claude/Opencode + `mcp-hud` cashflow tools (stdio mode) | 🔲 Planned  | [[26060503-multi-tenant-server-layout]] · [[26060701-hud-agent-runtime-emily]] |
+| **2 — Hermes Integration** | Tailscale mesh, `mcp-hud` daemon mode (HTTP/SSE), Hermes tenant + Docker, Andrea persona on Telegram (iPhone) + Hermes Desktop (MacBook #1), per-identity MCP ACL, `platform:<name>` audit tier | 🔲 Planned  | [[26060901-hermes-distributed-tenant-and-mcp-bridge]] |
+| **3 — Knowledge** | Research + Notes + Vault + Syncthing → MacBook (Obsidian); `vault.*` MCP namespace added to `mcp-hud` (callable by both Emily and Andrea via daemon) | 🔲 Planned  | [[ADR-26060501-vault-client-model]] · [[ADR-26060602-build-vault-separation]] |
+| **4 — Workflow**  | Kanban module, scheduled agent routines, additional MCP namespaces (`calendar.*`, `schedule.*`)    | 🔲 Planned  | [[26060504-mvp-agent-strategy]] · [[26060701-hud-agent-runtime-emily]] |
+| **5 — Web Chat**  | HUD dashboard chat panel + agent-api service. Telegram-for-Emily dropped (superseded by Andrea/Hermes from Phase 2) | 🔲 Planned  | [[26060701-hud-agent-runtime-emily]] (web-chat sections only) |
+| **6 — Public**    | Portfolio guest agent (Nexus tab + portfolio-agent sandbox)            | 🔲 Planned  | [[26060503-multi-tenant-server-layout]] · [[ADR-26060501-vault-client-model]] |
 
 ## MVP — Foundation + Cashflow (Phase 0)
 
@@ -144,9 +151,10 @@ A single-server personal HUD (Hetzner Ubuntu) that combines an agentic second br
 ## Blueprints — Active Phase Anchors
 
 - [[26060502-mvp-foundation-cashflow]] — **Phase 0 anchor.** MVP scaffold + Cashflow page + design system.
-- [[26060503-multi-tenant-server-layout]] — Phase 1 anchor (server layout). HUD + Portfolio tenancy, agent navigation, AppArmor hardening plan.
-- [[26060701-hud-agent-runtime-emily]] — **Phase 1 partner anchor (agent runtime).** Emily persona on Gemini/Claude/Opencode + `packages/mcp-hud` cashflow MCP server. Telegram boundary documented for Phase 4.
-- [[26060504-mvp-agent-strategy]] — Phase 3 precursor. Agent runtime, model routing, skill loading.
+- [[26060503-multi-tenant-server-layout]] — Phase 1 anchor (server layout). HUD + Portfolio + Hermes tenancy, agent navigation, AppArmor hardening plan.
+- [[26060701-hud-agent-runtime-emily]] — **Phase 1 partner anchor (agent runtime).** Emily persona on Gemini/Claude/Opencode + `packages/mcp-hud` cashflow MCP server (stdio mode).
+- [[26060901-hermes-distributed-tenant-and-mcp-bridge]] — **Phase 2 anchor.** Hermes tenant + Andrea persona + `mcp-hud` daemon mode + Tailscale mesh + per-identity MCP ACL. Brings Telegram and Hermes Desktop online.
+- [[26060504-mvp-agent-strategy]] — Phase 4 precursor. Agent runtime, model routing, skill loading.
 - [[26060601-dev-mode-perf-audit]] — Phase 0 supporting. Dev-mode perf quick wins (informs Ticket 09).
 
 ## Blueprints — Deferred / Superseded

@@ -6,12 +6,31 @@ kanban-plugin: board
 
 ## Todo
 
-## In Progress
+- [ ] [[Ticket 34 Extend audit_log Actor CHECK Constraint to Allow platform Prefix]]
+- [ ] [[Ticket 35 Add HTTP SSE Daemon Mode to mcp-hud with Bearer Auth and ACL]]
+- [ ] [[Ticket 36 Author hud-mcp.service Systemd Unit and ACL Token YAML Schemas]]
+- [ ] [[Ticket 37 Deploy hud-mcp Daemon to Hetzner]]
+- [ ] [[Ticket 38 Install Tailscale on Hetzner and Configure tailscale serve for MCP]]
+- [ ] [[Ticket 39 Add Per-Identity Rate Limiter and Observability to mcp-hud]]
+- [ ] [[Ticket 40 Provision Hermes Tenant with User Slice AppArmor and Rootless Docker]]
+- [ ] [[Ticket 41 Add Caddy Entries for hermes and hermes-api Subdomains]]
+- [ ] [[Ticket 42 Author Hermes docker-compose and Provisioning Script]]
+- [ ] [[Ticket 43 Configure Hermes MCP Entry Telegram Allowlist and Dashboard Auth on Server]]
+- [ ] [[Ticket 44 Write Andrea Persona and hud-cashflow-policy Skill for Hermes]]
+- [ ] [[Ticket 45 Start Hermes Container and Bring Telegram Gateway Live]]
+- [ ] [[Ticket 46 Verify End-to-End cashflow.add via Telegram and Hermes Desktop]]
+- [ ] [[Ticket 47 Onboard MacBook to Tailnet with Local Hermes Install and MCP Config]]
+- [ ] [[Ticket 48 Write Token Rotation Runbook Update Canvas and Add Production Monitors]]
 
-- [ ] [[Ticket 33 Add Native CLI Permission Guardrails to Stop Emily Bypassing the MCP Server]]
+## In Progress
 
 ## Done
 
+- [x] [[Ticket 36 Author hud-mcp.service Systemd Unit and ACL Token YAML Schemas]]
+- [x] [[Ticket 44 Write Andrea Persona and hud-cashflow-policy Skill for Hermes]]
+- [x] [[Ticket 35 Add HTTP SSE Daemon Mode to mcp-hud with Bearer Auth and ACL]]
+- [x] [[Ticket 34 Extend audit_log Actor CHECK Constraint to Allow platform Prefix]]
+- [x] [[Ticket 33 Add Native CLI Permission Guardrails to Stop Emily Bypassing the MCP Server]]
 - [x] [[Ticket 26 Install Claude and OpenCode CLIs Globally Matching Gemini Setup]]
 - [x] [[Ticket 32 Commit and Reconcile Provisioning Sources After Retiring agent-hud]]
 - [x] [[Ticket 30 Fix Missing remainingAttempts on Short-Password Login Validation Path]]
