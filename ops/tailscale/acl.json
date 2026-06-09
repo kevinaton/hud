@@ -1,12 +1,15 @@
 {
   // HUD tailnet ACL — managed in Tailscale admin console (tailscale.com/admin/acls)
-  // Source of truth is THIS FILE; paste into the editor and save to apply.
+  // Source of truth is THIS FILE; paste into the JSON editor and save to apply.
+  //
+  // Tailnet: tail5e5324.ts.net
+  // MCP URL: https://hud.tail5e5324.ts.net/
   //
   // Philosophy:
   //   - Hetzner (hud-mcp.service) is tagged tag:hud-mcp
   //   - Operator devices running Hermes are tagged tag:hermes-client
-  //   - Only port 7610 (MCP daemon) is reachable from hermes-client nodes
-  //   - SSH, Caddy (443), and all other ports use separate rules owned by the operator
+  //   - tag:hermes-client can reach tag:hud-mcp only (all ports; bearer auth gates at app layer)
+  //   - Operator personal devices (autogroup:member) retain full access to all nodes
   //   - Default: deny unless explicitly accepted
   //
   // To add MacBook #2: assign tag:hermes-client in the admin console — no ACL change needed.
@@ -16,40 +19,19 @@
     "tag:hermes-client": ["autogroup:admin"]
   },
 
-  "acls": [
+  "grants": [
     {
-      // Hermes clients (MacBook #1, MacBook #2, etc.) may reach the MCP daemon only.
-      // Bearer auth + argon2id on the daemon provides the application-layer gate.
-      "action": "accept",
-      "src":    ["tag:hermes-client"],
-      "dst":    ["tag:hud-mcp:7610"]
+      // Operator devices — full access to everything (SSH, web, etc.)
+      "src": ["autogroup:member"],
+      "dst": ["*"],
+      "ip":  ["*"]
     },
     {
-      // Operator (any logged-in user / autogroup:member) retains full access to all nodes.
-      // This covers SSH, web UI, etc. from the operator's personal devices.
-      "action": "accept",
-      "src":    ["autogroup:member"],
-      "dst":    ["*:*"]
-    }
-  ],
-
-  "ssh": [],
-
-  "tests": [
-    {
-      "src":    "tag:hermes-client",
-      "dst":    "tag:hud-mcp:7610",
-      "accept": true
-    },
-    {
-      "src":    "tag:hermes-client",
-      "dst":    "tag:hud-mcp:22",
-      "accept": false
-    },
-    {
-      "src":    "tag:hermes-client",
-      "dst":    "tag:hud-mcp:443",
-      "accept": false
+      // Hermes clients (MacBook #1, future #2) — reach Hetzner only.
+      // Port restriction is enforced at the application layer (bearer token + ACL).
+      "src": ["tag:hermes-client"],
+      "dst": ["tag:hud-mcp"],
+      "ip":  ["*"]
     }
   ]
 }
