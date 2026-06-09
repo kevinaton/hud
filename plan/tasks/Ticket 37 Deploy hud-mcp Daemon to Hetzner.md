@@ -1,7 +1,7 @@
 ---
 id: Ticket 37
 title: Deploy hud-mcp Daemon to Hetzner
-status: review
+status: done
 priority: p2
 area: infra
 estimate: S
@@ -27,9 +27,9 @@ This is server-only work (SSH session). The operator generates tokens here; they
 ## Acceptance Criteria
 
 - [x] `/srv/hud/secrets/mcp-tokens.yaml` and `mcp-acl.yaml` created, mode 600, owner `hud`; argon2id-hashed tokens for `platform:hermes-gateway`, `platform:hermes-macbook-a`, plus one rotation spare
-- [ ] `hud-mcp.service` installed via `cp ops/systemd/hud-mcp.service /etc/systemd/system/`; `daemon-reload`; `enable --now` — **REQUIRES ROOT** (see Notes)
-- [ ] `systemctl status hud-mcp.service` → `active (running)` — **REQUIRES ROOT**
-- [ ] `journalctl -u hud-mcp -n 50` is clean (no errors) — **REQUIRES ROOT**
+- [x] `hud-mcp.service` installed via `cp ops/systemd/hud-mcp.service /etc/systemd/system/`; `daemon-reload`; `enable --now`
+- [x] `systemctl status hud-mcp.service` → `active (running)` (CGroup: hud.slice/hud-mcp.service, PID 111412)
+- [x] `journalctl -u hud-mcp -n 50` is clean (no errors)
 - [x] `curl -H 'Authorization: Bearer <real-token>' http://127.0.0.1:7610/mcp/...` → 200 from the Hetzner host (verified manually, see Notes)
 - [x] Bad token → 401; good token + disallowed tool → 403
 - [x] `audit_log` contains a row with `actor='platform:hermes-gateway'` and `mcp_request_id` populated after the probe
@@ -41,7 +41,7 @@ This is server-only work (SSH session). The operator generates tokens here; they
 - [x] Generate three tokens (gateway, macbook-a, spare) using argon2id; write `mcp-tokens.yaml`
 - [x] Write `mcp-acl.yaml` with identities from blueprint §5 (hermes-gateway and hermes-macbook-a allow/deny lists)
 - [x] Set mode 600 and owner `hud` on both files (and `mcp.env`)
-- [ ] Install unit: `cp ops/systemd/hud-mcp.service /etc/systemd/system/`; `systemctl daemon-reload`; `systemctl enable --now hud-mcp.service` — **REQUIRES ROOT**
+- [x] Install unit: `cp ops/systemd/hud-mcp.service /etc/systemd/system/`; `systemctl daemon-reload`; `systemctl enable --now hud-mcp.service`
 - [x] Probe: curl with good token → 200; curl with bad token → 401; curl disallowed tool → 403
 - [x] Verify `audit_log` row has `mcp_request_id` populated
 - [x] Regression: Emily stdio MCP still returns results
@@ -138,4 +138,4 @@ curl -s -w "\nHTTP %{http_code}\n" \
 
 **Commits:** 1 (`fix(deploy): prep hud-mcp.service and pnpm config for Ticket 37 deployment`)
 
-**Status:** `review` — all AC verified functionally; 3 AC items pending root action (systemd install + service-level probes). Setting to `review` so operator can execute the root steps and close.
+**Status:** `done` — operator ran the 3 root commands; service confirmed active (running) in hud.slice, PID 111412, 81.8M RSS. All AC closed.
