@@ -1,0 +1,83 @@
+# AppArmor profile for Hermes Docker containers (rootless, under agent-hermes UID).
+#
+# Applied via docker run --security-opt apparmor=hermes-agent
+# or via docker-compose.yml security_opt: [apparmor:hermes-agent]
+#
+# Install:
+#   sudo cp ops/apparmor/hermes-agent /etc/apparmor.d/hermes-agent
+#   sudo apparmor_parser -r /etc/apparmor.d/hermes-agent
+#
+# Verify:
+#   sudo aa-status | grep hermes-agent
+
+#include <tunables/global>
+
+profile hermes-agent flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+
+  # -------------------------------------------------------------------------
+  # Capabilities — minimal set for a non-privileged container process
+  # -------------------------------------------------------------------------
+  capability net_bind_service,
+  capability setuid,
+  capability setgid,
+
+  # -------------------------------------------------------------------------
+  # Allow reads under /srv/hermes/ (own tenant data)
+  # -------------------------------------------------------------------------
+  /srv/hermes/              r,
+  /srv/hermes/**            rwlk,
+
+  # -------------------------------------------------------------------------
+  # Allow standard system files needed for any process
+  # -------------------------------------------------------------------------
+  /proc/**                  r,
+  /sys/fs/cgroup/**         r,
+  /etc/                     r,
+  /etc/hosts                r,
+  /etc/resolv.conf          r,
+  /etc/nsswitch.conf        r,
+  /etc/passwd               r,
+  /etc/group                r,
+  /etc/ld.so.cache          r,
+  /etc/ld.so.conf           r,
+  /etc/ld.so.conf.d/        r,
+  /etc/ld.so.conf.d/**      r,
+  /etc/locale.gen           r,
+  /etc/localtime            r,
+  /usr/**                   r,
+  /lib/**                   r,
+  /lib64/**                 r,
+  /tmp/**                   rwlk,
+  /var/tmp/**               rwlk,
+  /run/                     r,
+  /dev/null                 rw,
+  /dev/zero                 r,
+  /dev/random               r,
+  /dev/urandom              r,
+  /dev/tty                  rw,
+
+  # -------------------------------------------------------------------------
+  # Network — allow all (bearer token + tailscale provide app-layer controls)
+  # -------------------------------------------------------------------------
+  network inet stream,
+  network inet dgram,
+  network inet6 stream,
+  network inet6 dgram,
+
+  # -------------------------------------------------------------------------
+  # DENY — explicit denies for cross-tenant reads
+  # These fire BEFORE the implicit deny-all at profile end, giving log entries.
+  # -------------------------------------------------------------------------
+  deny /srv/hud/**          r,
+  deny /srv/portfolio/**    r,
+  deny /root/**             r,
+  deny /home/**             r,
+  deny /etc/sudoers         r,
+  deny /etc/sudoers.d/**    r,
+  deny /etc/shadow          r,
+  deny /proc/*/mem          rw,
+  deny /proc/sysrq-trigger  rw,
+  deny /proc/sys/kernel/**  w,
+}

@@ -1,0 +1,10 @@
+[Unit]
+Description=Hermes agent tenant resource slice
+Documentation=https://github.com/kevinaton/hud
+Before=slices.target
+
+[Slice]
+# Playwright/Chromium is hungry — intentionally higher cap than agents.slice.
+CPUQuota=60%
+MemoryMax=4G
+TasksMax=512
