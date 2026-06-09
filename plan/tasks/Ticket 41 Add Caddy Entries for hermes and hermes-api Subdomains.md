@@ -1,7 +1,7 @@
 ---
 id: Ticket 41
 title: Add Caddy Entries for hermes and hermes-api Subdomains
-status: todo
+status: done
 priority: p2
 area: infra
 estimate: S
@@ -28,25 +28,37 @@ OQ-1 (Tailscale Funnel vs Caddy for dashboard): default to Caddy + CF Access fir
 
 ## Acceptance Criteria
 
-- [ ] `ops/caddy/Caddyfile` has a `hermes.kevinaton.com` block proxying to `127.0.0.1:9119` with CF Access enabled (consistent with the existing HUD site pattern)
-- [ ] `ops/caddy/Caddyfile` has a `hermes-api.kevinaton.com` block proxying to `127.0.0.1:8642` with CF Access explicitly off; a comment block explains the deviation, security compensating controls, and remediation trigger
-- [ ] `caddy validate` passes locally
-- [ ] Server: `git pull`; `caddy validate`; `systemctl reload caddy`; both subdomains return a Caddy-routed response (502/503 acceptable if Hermes is not yet running; DNS error is not acceptable)
-- [ ] Deviation comment block is committed and visible in code review
+- [x] `ops/cloudflared/config.yml` has `hermes.kevinaton.com → localhost:9119` (CF Access ON via ZT dashboard)
+- [x] `ops/cloudflared/config.yml` has `hermes-api.kevinaton.com → localhost:8642` (CF Access OFF; deviation documented in config comment)
+- [x] Config validated — `systemctl restart cloudflared` succeeded
+- [x] Both subdomains return HTTP 521 (tunnel live, backend not yet running — expected; Ticket 45 starts the container)
+- [x] Deviation comment committed and visible in `ops/cloudflared/config.yml`
 
 ## Sub-tasks
 
 **Local:**
-- [ ] Add `hermes.kevinaton.com` server block to `ops/caddy/Caddyfile`
-- [ ] Add `hermes-api.kevinaton.com` server block with CF Access off and deviation comment block
-- [ ] Run `caddy validate` locally; confirm clean
+- [x] Add `hermes.kevinaton.com` and `hermes-api.kevinaton.com` to `ops/cloudflared/config.yml` (Caddy not in traffic path — tunnel routes directly to container ports, consistent with hud.kevinaton.com)
+- [x] Fill in real tunnel ID (48c469f3-d73c-4eff-ae8c-a7787e72ab9a)
+- [x] Caddyfile reverted — hermes blocks removed (dead code; tunnel bypasses Caddy)
 
 **Server:**
-- [ ] `git pull`; `caddy validate`; `systemctl reload caddy`
-- [ ] Verify both subdomains return a Caddy-routed response (curl or browser check)
+- [x] `cp ops/cloudflared/config.yml /etc/cloudflared/config.yml`; `systemctl restart cloudflared`
+- [x] `curl https://hermes.kevinaton.com` → HTTP 521 ✓; `curl https://hermes-api.kevinaton.com` → HTTP 521 ✓
 
 ## Open Questions
 
 OQ-1: Default to Caddy + CF Access for dashboard. If CF Access trips Hermes Desktop auth flow → fall back to Hermes OIDC-only mode (option 2 per Hermes docs); document fallback in the comment block.
 
 ## Notes
+
+### 2026-06-09 — implementation
+
+**Architecture deviation from ticket:** Ticket assumed A records + Caddy. Actual deployed architecture uses Cloudflare Tunnel (consistent with `hud.kevinaton.com`). Caddy is running on the server but is not in the traffic path. Updated `ops/cloudflared/config.yml` instead of Caddyfile.
+
+**Files changed:**
+- `ops/cloudflared/config.yml` — real tunnel ID filled in; `hermes.kevinaton.com → :9119` and `hermes-api.kevinaton.com → :8642` added; CF Access deviation documented in comments
+- `ops/caddy/Caddyfile` — hermes blocks reverted; NOTE comment added explaining Caddy is not in the active traffic path
+
+**Verification:** Both subdomains return HTTP 521 (Cloudflare "Web Server Is Down") — tunnel routing is live; 521 is correct since Hermes container not yet started (Ticket 45).
+
+**Commits:** 2 (`feat(caddy): add hermes blocks` — subsequently reverted; `feat(cloudflared): add hermes subdomains to tunnel config`)
