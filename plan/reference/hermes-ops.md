@@ -25,6 +25,26 @@ Docker image: `nousresearch/hermes-agent` (rootless Docker under `agent-hermes`)
 
 ---
 
+## Model configuration
+
+The default model for `opencode-zen` provider is `kimi-k2.5` (disabled).
+Set the correct model in `/srv/hermes/data/config.yaml`:
+
+```yaml
+provider: opencode-zen
+model: opencode-zen/big-pickle
+```
+
+To update without editing the file directly:
+```bash
+hermes config set model opencode-zen/big-pickle
+# or via docker exec:
+DOCKER_HOST=unix:///run/user/2013/docker.sock \
+  docker exec -it hermes hermes config set model opencode-zen/big-pickle
+```
+
+---
+
 ## Secrets — /srv/hermes/data/.env
 
 Mode 0600, owner `agent-hermes`. Never committed to git.
