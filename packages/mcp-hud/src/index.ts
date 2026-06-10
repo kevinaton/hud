@@ -56,18 +56,13 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const server = new McpServer({
-    name: 'mcp-hud',
-    version: VERSION,
-  });
-
-  registerTools(server);
-
   if (MCP_TRANSPORT === 'http') {
-    await startHttpMode(server);
+    await startHttpMode();
   } else {
     // stdio mode — original path, completely unchanged
     process.stderr.write(`[mcp-hud] starting v${VERSION} actor=${getActorString()}\n`);
+    const server = new McpServer({ name: 'mcp-hud', version: VERSION });
+    registerTools(server);
     const transport = new StdioServerTransport();
     await server.connect(transport);
     process.stderr.write('[mcp-hud] connected via stdio, ready for tool calls\n');
@@ -89,7 +84,7 @@ async function buildRateLimiter(aclStore: AclStore): Promise<RateLimiter> {
   return limiter;
 }
 
-async function startHttpMode(server: McpServer): Promise<void> {
+async function startHttpMode(): Promise<void> {
   const { loadTokenStore, buildDevTokenStore } = await import('./http/auth.js');
   const { loadAclStore, buildDevAclStore } = await import('./http/acl.js');
   const { startHttpServer } = await import('./http/server.js');
@@ -132,13 +127,24 @@ async function startHttpMode(server: McpServer): Promise<void> {
 
   const rateLimiter = await buildRateLimiter(aclStore);
 
-  await startHttpServer(server, {
+  // Factory: creates a fresh McpServer with tools registered for each HTTP request.
+  // StreamableHTTPServerTransport in stateless mode cannot be reused across requests;
+  // pairing a new transport with a new server per request is the correct pattern.
+  // The DB singleton and rateLimiter are shared via module scope / closure.
+  const createMcpServer = () => {
+    const s = new McpServer({ name: 'mcp-hud', version: VERSION });
+    registerTools(s);
+    return s;
+  };
+
+  await startHttpServer({
     port: MCP_HTTP_PORT,
     host: '127.0.0.1', // always loopback; tailscale serve handles external
     devMode,
     tokenStore,
     aclStore,
     rateLimiter,
+    createMcpServer,
   });
 
   process.stderr.write('[mcp-hud] HTTP/SSE ready. Press Ctrl-C to stop.\n');

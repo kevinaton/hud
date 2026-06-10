@@ -17,7 +17,7 @@
  */
 
 import { type IncomingMessage, type ServerResponse, createServer } from 'node:http';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 import { uuidv7 } from 'uuidv7';
@@ -139,6 +139,15 @@ export interface HttpServerConfig {
   aclStore: AclStore;
   /** Token-bucket rate limiter (shared, stateful, one instance per daemon). */
   rateLimiter: RateLimiter;
+  /**
+   * Factory called once per HTTP request to produce a fresh McpServer instance.
+   *
+   * StreamableHTTPServerTransport in stateless mode (no sessionIdGenerator) can
+   * only handle ONE request per transport instance — the SDK throws on reuse.
+   * Pairing a fresh transport with a fresh server per request is the correct
+   * stateless pattern; the DB singleton and rate-limiter are shared separately.
+   */
+  createMcpServer: () => McpServer;
 }
 
 // ---------------------------------------------------------------------------
@@ -230,19 +239,9 @@ async function handleNonPostPrecheck(
  * Returns a stop function that closes the HTTP listener.
  */
 export async function startHttpServer(
-  mcpServer: McpServer,
   config: HttpServerConfig,
 ): Promise<{ stop: () => Promise<void> }> {
-  const { port, host, devMode, tokenStore, aclStore, rateLimiter } = config;
-
-  // Stateless transport — omitting sessionIdGenerator activates stateless mode.
-  // Cast to Transport to satisfy exactOptionalPropertyTypes: the SDK concrete
-  // class exposes onclose as '(() => void) | undefined' rather than the
-  // optional-property form required by the Transport interface.
-  const transport = new StreamableHTTPServerTransport({}) as unknown as Transport &
-    StreamableHTTPServerTransport;
-
-  await mcpServer.connect(transport as Transport);
+  const { port, host, devMode, tokenStore, aclStore, rateLimiter, createMcpServer } = config;
 
   const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
     const url = req.url ?? '/';
@@ -287,6 +286,19 @@ export async function startHttpServer(
 
       emitMetric(identity, toolName, 200);
 
+      // Fresh server + transport per request — stateless mode requirement.
+      // StreamableHTTPServerTransport throws on reuse; pairing with a fresh
+      // McpServer ensures clean state. DB singleton and rate-limiter are shared.
+      const freshServer = createMcpServer();
+      // Cast to satisfy exactOptionalPropertyTypes: SDK concrete class exposes
+      // onclose as '(() => void) | undefined' not the optional-property form.
+      const transport = new StreamableHTTPServerTransport({}) as unknown as Transport &
+        StreamableHTTPServerTransport;
+      res.on('finish', () => {
+        freshServer.close().catch(() => {});
+      });
+      await freshServer.connect(transport as Transport);
+
       const ctx = { identity, ipAddress, mcpRequestId, userAgent };
       await httpRequestStorage.run(ctx, () =>
         transport.handleRequest(req as unknown as McpReqWithAuth, res, pre.parsedBody),
@@ -311,6 +323,15 @@ export async function startHttpServer(
     }
 
     emitMetric(identity, null, 200);
+
+    // Fresh server + transport for GET/DELETE (SSE stream requests).
+    const freshServer = createMcpServer();
+    const transport = new StreamableHTTPServerTransport({}) as unknown as Transport &
+      StreamableHTTPServerTransport;
+    res.on('finish', () => {
+      freshServer.close().catch(() => {});
+    });
+    await freshServer.connect(transport as Transport);
 
     const ctx = { identity, ipAddress, mcpRequestId, userAgent };
     await httpRequestStorage.run(ctx, () =>
