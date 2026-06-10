@@ -39,7 +39,7 @@ services:
     # extra_hosts maps hud-mcp.tailnet → Hetzner tailscale IP so the container
     # can reach the MCP daemon via https://hud-mcp.tailnet/mcp.
     extra_hosts:
-      - "hud-mcp.tailnet:100.72.129.67"
+      - "hud.tail5e5324.ts.net:100.72.129.67"
 
     environment:
       # Run as agent-hermes (UID 2013 on host — see provisioning note in Ticket 40)

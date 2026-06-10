@@ -154,10 +154,10 @@ Never run `:latest` in production — digest pinning is non-negotiable.
 
 **Current mode: bridge** (default per blueprint §4).
 
-The container uses bridge networking with `extra_hosts: hud-mcp.tailnet:100.72.129.67`.
-This maps the alias `hud-mcp.tailnet` to the host's Tailscale IP inside the container,
-allowing Hermes to reach the MCP daemon at `https://hud-mcp.tailnet/mcp` via
-`tailscale serve` on the host.
+The container uses bridge networking with `extra_hosts: hud.tail5e5324.ts.net:100.72.129.67`.
+This maps the Tailscale FQDN to the host's Tailscale IP inside the container,
+allowing Hermes to reach the MCP daemon at `https://hud.tail5e5324.ts.net/mcp` via
+`tailscale serve` on the host. The hostname must match the TLS cert issued by Tailscale.
 
 The probe in `scripts/setup-hermes.sh` Step 4 verifies this path is working before
 container start. If the probe fails:
