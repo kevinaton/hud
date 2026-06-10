@@ -53,6 +53,12 @@ services:
       # MCP endpoint — reaches hud-mcp.service via Tailscale
       # Must match a valid bearer token in /srv/hud/secrets/mcp-tokens.yaml
       MCP_SERVER_URL: "https://hud-mcp.tailnet/mcp"
+      # Dashboard auth — CF Access provides the outer auth gate (hermes.kevinaton.com).
+      # HERMES_DASHBOARD_INSECURE=1 allows dashboard to bind 0.0.0.0 inside the
+      # container without requiring a Nous OAuth plugin. Safe because:
+      #   1. Port is bound to 127.0.0.1 on the host (ports section below)
+      #   2. CF Access enforces SSO + MFA before cloudflared forwards the request
+      HERMES_DASHBOARD_INSECURE: "1"
 
     env_file:
       # Secrets loaded from /srv/hermes/data/.env (mode 0600, never in git).
