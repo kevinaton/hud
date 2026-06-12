@@ -107,8 +107,8 @@ export function AppNavDrawer() {
         aria-modal="true"
         aria-label="Navigation"
         inert={!open ? ('' as unknown as boolean) : undefined}
-        style={{ transform: open ? 'translateX(0)' : 'translateX(-100%)', width: '60vw' }}
-        className="fixed left-0 top-0 z-[70] h-dvh bg-background transition-transform duration-200 ease-out"
+        style={{ transform: open ? 'translateX(0)' : 'translateX(-100%)', width: '60vw', height: '100dvh' }}
+        className="fixed left-0 top-0 z-[70] bg-background transition-transform duration-200 ease-out"
       >
         {/* HUD wordmark */}
         <div className="flex h-[100px] items-end justify-center pb-5 border-b border-border">
