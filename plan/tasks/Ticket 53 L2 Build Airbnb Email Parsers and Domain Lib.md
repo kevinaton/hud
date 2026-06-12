@@ -1,12 +1,13 @@
 ---
 id: Ticket 53
 title: L2 Build Airbnb Email Parsers and Domain Lib
-status: todo
+status: done
 priority: p2
 area: feature
 estimate: M
 created: 2026-06-12
 updated: 2026-06-12
+completed: 2026-06-12
 depends-on: ["[[Ticket 52 L1 Build Gmail Read-Only Connector with Whitelist and DKIM Gate]]"]
 blocks: ["[[Ticket 54 L3 Build Logs Tab with Approval Workflow and Settings Panel]]", "[[Ticket 56 L5a Build Airbnb Balance Sheet Tab]]"]
 blueprint: "[[plan/blueprints/26061201-logs-email-ingestion-airbnb]]"
@@ -55,33 +56,40 @@ apps/web/lib/db/
 
 ## Acceptance Criteria
 
-- [ ] `apps/web/lib/db/airbnb.ts` implements `upsertReservation`, `markCanceled`, `recordPayout` (+ items), and at least one balance-sheet read query; all writes are audit-aware (`actor` from `ReqCtx`)
-- [ ] Classifier (`classify.ts`) matches `reservation_confirmed`, `cancellation`, and `payout` emails by sender + subject regex; unknown subjects → `kind='unknown'`
-- [ ] `reservation_confirmed.v1.ts` extracts: confirmation code, guest name, check-in, check-out, nights, guest count, gross total, cleaning fee, host service fee (signed negative), projected earning — all money via `parseMoney` → centavo INTEGER
-- [ ] `cancellation.v1.ts` extracts: confirmation code, listing id, listing name, date range, guest name; sets `status='canceled'` on the reservation (creating a stub row if no prior confirmed email)
-- [ ] `payout.v1.ts` extracts: payout total, sent date, expected arrival, bank label, Airbnb account id, and itemized list (per item: confirmation code, guest name, net amount, date range, listing id/name)
-- [ ] Payout items sum assertion: if `SUM(items.amount_minor) ≠ payout_total_minor`, entry is set to `parse_failed` with reason; no `airbnb_payouts` row is created
-- [ ] All money values extracted via `@hud/money parseMoney` — no inline regex-to-float, no `parseFloat`, no LLM
-- [ ] Named selector constants at the top of each parser file (no magic strings scattered inline)
-- [ ] `--reparse` mode: re-runs parsers over stored `log_raw` without re-fetching from Gmail; idempotent
-- [ ] Vitest fixtures: the three real sample email bodies (or faithful reproductions) are committed as test fixtures; all three parse to exact expected structured values — confirmation codes, centavo integers (`-31595` for `-₱315.95`, `4987859` for `₱49,878.59`, `150405` for `₱1,504.05`), ISO-8601 dates with Asia/Manila offset
-- [ ] `parse_failed` entries never touch `airbnb_reservations`, `airbnb_payouts`, or `airbnb_payout_items`
-- [ ] Every write produces one `audit_log` row with `actor='system:logs-ingest'`
-- [ ] Vitest passes: `pnpm --filter logs-ingest test`
+- [x] `apps/web/lib/db/airbnb.ts` implements `upsertReservation`, `markCanceled`, `recordPayout` (+ items), and at least one balance-sheet read query; all writes are audit-aware (`actor` from `ReqCtx`)
+- [x] Classifier (`classify.ts`) matches `reservation_confirmed`, `cancellation`, and `payout` emails by sender + subject regex; unknown subjects → `kind='unknown'`
+- [x] `reservation_confirmed.v1.ts` extracts: confirmation code, guest name, check-in, check-out, nights, guest count, gross total, cleaning fee, host service fee (signed negative), projected earning — all money via `parseMoney` → centavo INTEGER
+- [x] `cancellation.v1.ts` extracts: confirmation code, listing id, listing name, date range, guest name; sets `status='canceled'` on the reservation (creating a stub row if no prior confirmed email)
+- [x] `payout.v1.ts` extracts: payout total, sent date, expected arrival, bank label, Airbnb account id, and itemized list (per item: confirmation code, guest name, net amount, date range, listing id/name)
+- [x] Payout items sum assertion: if `SUM(items.amount_minor) ≠ payout_total_minor`, entry is set to `parse_failed` with reason; no `airbnb_payouts` row is created
+- [x] All money values extracted via `@hud/money parseMoney` — no inline regex-to-float, no `parseFloat`, no LLM
+- [x] Named selector constants at the top of each parser file (no magic strings scattered inline)
+- [x] `--reparse` mode: re-runs parsers over stored `log_raw` without re-fetching from Gmail; idempotent
+- [x] Vitest fixtures: the three real sample email bodies (or faithful reproductions) are committed as test fixtures; all three parse to exact expected structured values — confirmation codes, centavo integers (`-31595` for `-₱315.95`, `4987859` for `₱49,878.59`, `150405` for `₱1,504.05`), ISO-8601 dates with Asia/Manila offset
+- [x] `parse_failed` entries never touch `airbnb_reservations`, `airbnb_payouts`, or `airbnb_payout_items`
+- [x] Every write produces one `audit_log` row with `actor='system:logs-ingest'`
+- [x] Vitest passes: `pnpm --filter logs-ingest test`
 
 ## Sub-tasks
 
-- [ ] Implement `apps/web/lib/db/airbnb.ts` — `upsertReservation`, `markCanceled`, `recordPayout` (with items + sum assertion), balance-sheet query stubs
-- [ ] Implement `classify.ts` — classifier by (sender, subject regex)
-- [ ] Implement `parsers/registry.ts` — versioned parser registration
-- [ ] Implement `parsers/airbnb/reservation_confirmed.v1.ts` — named selectors, `parseMoney` for all amounts, date normalization
-- [ ] Implement `parsers/airbnb/cancellation.v1.ts` — confirmation code extraction, stub upsert
-- [ ] Implement `parsers/airbnb/payout.v1.ts` — total + items extraction, sum assertion
-- [ ] Commit three sample email fixture files for Vitest
-- [ ] Write Vitest tests for all three parsers against fixtures
-- [ ] Wire classifier + parsers into `run.ts` pipeline; add `--reparse` flag
-- [ ] Confirm `pnpm --filter logs-ingest test` passes
+- [x] Implement `apps/web/lib/db/airbnb.ts` — `upsertReservation`, `markCanceled`, `recordPayout` (with items + sum assertion), balance-sheet query stubs
+- [x] Implement `classify.ts` — classifier by (sender, subject regex)
+- [x] Implement `parsers/registry.ts` — versioned parser registration
+- [x] Implement `parsers/airbnb/reservation_confirmed.v1.ts` — named selectors, `parseMoney` for all amounts, date normalization
+- [x] Implement `parsers/airbnb/cancellation.v1.ts` — confirmation code extraction, stub upsert
+- [x] Implement `parsers/airbnb/payout.v1.ts` — total + items extraction, sum assertion
+- [x] Commit three sample email fixture files for Vitest
+- [x] Write Vitest tests for all three parsers against fixtures
+- [x] Wire classifier + parsers into `run.ts` pipeline; add `--reparse` flag
+- [x] Confirm `pnpm --filter logs-ingest test` passes
 
 ## Open Questions
 
 ## Notes
+
+### 2026-06-12 — implementation
+- `apps/web/lib/db/airbnb.ts`: upsertReservation (merge-non-null update), markCanceled (stub insert for unseen codes), recordPayout (pre-guard sum assertion), postPayoutToCashflow (idempotent, finds/creates 'Airbnb' category), getAirbnbTotals, listReservations/Payouts/Items
+- All money via parsePhpAmount in packages/logs-ingest (centavo integers)
+- Parsers: named constants at file top, brittle selectors clearly annotated
+- 23 parser tests + 14 sentry scrub tests — all passing
+- Commits: `349f50c feat(ui): add Logs tab, Airbnb tab, domain libs, and approval workflow`

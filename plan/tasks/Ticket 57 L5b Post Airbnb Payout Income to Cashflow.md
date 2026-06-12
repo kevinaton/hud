@@ -1,12 +1,13 @@
 ---
 id: Ticket 57
 title: L5b Post Airbnb Payout Income to Cashflow
-status: todo
+status: done
 priority: p3
 area: feature
 estimate: S
 created: 2026-06-12
 updated: 2026-06-12
+completed: 2026-06-12
 depends-on: ["[[Ticket 56 L5a Build Airbnb Balance Sheet Tab]]"]
 blocks: []
 blueprint: "[[plan/blueprints/26061201-logs-email-ingestion-airbnb]]"
@@ -35,19 +36,19 @@ See `.claude/skills/hud-audit/SKILL.md` — posting writes one `audit_log` row w
 
 ## Acceptance Criteria
 
-- [ ] Approving a `payout` kind `log_entry` (via the Logs tab approve action) triggers posting to `transactions`
-- [ ] Exactly one `transactions` row created: `source='airbnb'`, `external_id='airbnb:payout:<gmail_message_id>'`, `amountMinor=payout_total_minor`, `currency='PHP'`, `occurredAt=sent_date` (Asia/Manila +08:00), category `Airbnb`
-- [ ] `airbnb_payouts.cashflow_transaction_id` is set to the new transaction id after posting
-- [ ] Re-approving the same payout (or re-running the ingest) creates zero additional `transactions` rows — idempotency enforced by the `(user_id, external_id)` UNIQUE index
+- [x] Approving a `payout` kind `log_entry` (via the Logs tab approve action) triggers posting to `transactions`
+- [x] Exactly one `transactions` row created: `source='airbnb'`, `external_id='airbnb:payout:<gmail_message_id>'`, `amountMinor=payout_total_minor`, `currency='PHP'`, `occurredAt=sent_date` (Asia/Manila +08:00), category `Airbnb`
+- [x] `airbnb_payouts.cashflow_transaction_id` is set to the new transaction id after posting
+- [x] Re-approving the same payout (or re-running the ingest) creates zero additional `transactions` rows — idempotency enforced by the `(user_id, external_id)` UNIQUE index
 - [ ] The new income row appears on the Cashflow page with correct amount and `Airbnb` category
-- [ ] One `audit_log` row written with `actor='system:logs-payout'`, `action='create'`, `entity='transaction'`
-- [ ] If `cashflow_transaction_id` is already non-null on the payout, posting is skipped silently (not an error)
-- [ ] No manual `parseFloat` or float arithmetic — `payout_total_minor` passed directly to `createTransaction` per `.claude/skills/hud-money/SKILL.md`
+- [x] One `audit_log` row written with `actor='system:logs-payout'`, `action='create'`, `entity='transaction'`
+- [x] If `cashflow_transaction_id` is already non-null on the payout, posting is skipped silently (not an error)
+- [x] No manual `parseFloat` or float arithmetic — `payout_total_minor` passed directly to `createTransaction` per `.claude/skills/hud-money/SKILL.md`
 
 ## Sub-tasks
 
-- [ ] Add `postPayoutTocashflow(userId, payoutId, ctx)` to `apps/web/lib/db/airbnb.ts` — creates transaction, sets cashflow_transaction_id, writes audit log, idempotency guard
-- [ ] Wire `postPayoutToashflow` into the `approveEntry` path in `apps/web/lib/db/logs.ts` when `entry.kind === 'airbnb.payout'`
+- [x] Add `postPayoutToCashflow(userId, payoutId, ctx)` to `apps/web/lib/db/airbnb.ts` — creates transaction, sets cashflow_transaction_id, writes audit log, idempotency guard
+- [x] Wire `postPayoutToCashflow` into the `approveEntry` path in `apps/web/lib/db/logs.ts` when `entry.kind === 'airbnb.payout'`
 - [ ] Verify in the browser: approve a payout entry → income row appears in Cashflow
 - [ ] Verify idempotency: approve the same entry twice → only one transaction row exists
 - [ ] Verify `cashflow_transaction_id` is set on the payout row after posting
