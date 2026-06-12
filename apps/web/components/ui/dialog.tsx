@@ -38,7 +38,16 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed inset-0 z-50 m-auto grid h-fit w-[calc(100%-2rem)] max-w-lg gap-4 border bg-background p-6 shadow-lg duration-200 max-h-[90dvh] overflow-y-auto data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]',
+        // Safari-mobile-safe positioning: explicit left/right gutters (no auto-margin
+        // centering, which iOS Safari mishandles with h-fit). mx-auto + max-w-lg
+        // centers horizontally on wider viewports.
+        // Safari-mobile-safe positioning: explicit left/right gutters and a single
+        // vertical translate. NOTE: no `animate-in` here — tailwindcss-animate's
+        // keyframe overrides `transform`, which would clobber the -translate-y-1/2
+        // and the modal would render off-center. The overlay's fade is enough.
+        'fixed left-4 right-4 top-1/2 -translate-y-1/2 z-50',
+        'mx-auto max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto',
+        'grid gap-4 border bg-background p-6 shadow-lg',
         className,
       )}
       {...props}
