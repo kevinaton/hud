@@ -226,6 +226,92 @@ export function getPriorPeriod(year: number, month: number): { year: number; mon
 }
 
 // ---------------------------------------------------------------------------
+// getAggregationsByRange
+//
+// Returns net / gross / expense for an arbitrary date range expressed as
+// pre-computed ISO-8601 strings (inclusive from, exclusive to).
+//
+// Matches the SQL of getMonthlyAggregations but accepts ISO bounds directly,
+// so the caller (resolveFilterRange) owns all date-range logic.
+// ---------------------------------------------------------------------------
+export function getAggregationsByRange(
+  userId: number,
+  from: string,
+  to: string,
+): MonthlyAggregations {
+  const row = db
+    .select({
+      net: sql<number>`COALESCE(SUM(${transactions.amountMinor}), 0)`,
+      gross: sql<number>`COALESCE(SUM(CASE WHEN ${transactions.amountMinor} > 0 THEN ${transactions.amountMinor} ELSE 0 END), 0)`,
+      expense: sql<number>`COALESCE(SUM(CASE WHEN ${transactions.amountMinor} < 0 THEN -${transactions.amountMinor} ELSE 0 END), 0)`,
+    })
+    .from(transactions)
+    .where(
+      and(
+        eq(transactions.userId, userId),
+        gte(transactions.occurredAt, from),
+        lt(transactions.occurredAt, to),
+      ),
+    )
+    .get();
+
+  if (!row) {
+    return { net: 0, gross: 0, expense: 0 };
+  }
+
+  return {
+    net: Math.trunc(Number(row.net)),
+    gross: Math.trunc(Number(row.gross)),
+    expense: Math.trunc(Number(row.expense)),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// listTransactionsByRange
+//
+// Returns all transactions in [from, to) sorted by occurred_at DESC,
+// joined with category name. Accepts pre-computed ISO-8601 string bounds.
+// ---------------------------------------------------------------------------
+export function listTransactionsByRange(
+  userId: number,
+  from: string,
+  to: string,
+): TransactionWithCategory[] {
+  const rows = db
+    .select({
+      id: transactions.id,
+      userId: transactions.userId,
+      item: transactions.item,
+      amountMinor: transactions.amountMinor,
+      currency: transactions.currency,
+      occurredAt: transactions.occurredAt,
+      categoryId: transactions.categoryId,
+      notes: transactions.notes,
+      source: transactions.source,
+      externalId: transactions.externalId,
+      createdAt: transactions.createdAt,
+      updatedAt: transactions.updatedAt,
+      categoryName: categories.name,
+    })
+    .from(transactions)
+    .leftJoin(categories, eq(transactions.categoryId, categories.id))
+    .where(
+      and(
+        eq(transactions.userId, userId),
+        gte(transactions.occurredAt, from),
+        lt(transactions.occurredAt, to),
+      ),
+    )
+    .orderBy(desc(transactions.occurredAt))
+    .all();
+
+  return rows.map((r) => ({
+    ...r,
+    categoryName: r.categoryName ?? null,
+  }));
+}
+
+// ---------------------------------------------------------------------------
 // createTransaction
 //
 // Inserts a new transaction and writes exactly one audit_log row in the same

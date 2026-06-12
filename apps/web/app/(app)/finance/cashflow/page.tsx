@@ -9,12 +9,17 @@
  *   Sub-cards row: Gross | Expense (each with delta badge)
  *   HazardStripe divider
  *   TRANSACTIONS header + [+] placeholder button
+ *   Filter chips (CashflowFilterBar — client)
  *   Scrollable TransactionRow list
  *
  * All aggregations are computed server-side on each request — no external cache,
  * no client-side fetching. Direct SQLite read via Drizzle.
  *
- * Period: current calendar month in Asia/Manila timezone (UTC+8).
+ * Filter state lives in URL search params:
+ *   ?filter=this-month | ?filter=30d | ?filter=90d
+ *   ?filter=custom&from=YYYY-MM-DD&to=YYYY-MM-DD
+ *
+ * resolveFilterRange() maps search params → pre-computed ISO bounds + label.
  * Delta: (current - prior) / |prior|. Zero prior → shows "—".
  */
 
@@ -24,14 +29,9 @@ import { HazardStripe } from '@/components/hud/HazardStripe';
 import { Money } from '@/components/hud/Money';
 import { TabBar } from '@/components/hud/TabBar';
 import { requireSession } from '@/lib/auth/index';
+import { resolveFilterRange } from '@/lib/cashflow-filter';
 import { listCategories } from '@/lib/db/categories';
-import {
-  calcDelta,
-  getCurrentPeriod,
-  getMonthlyAggregations,
-  getPriorPeriod,
-  listTransactions,
-} from '@/lib/db/transactions';
+import { calcDelta, getAggregationsByRange, listTransactionsByRange } from '@/lib/db/transactions';
 import { cn } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
@@ -43,53 +43,45 @@ const TABS = [
   { label: 'Report', href: '/finance/cashflow/report' },
 ];
 
-/** Month names for the period label — hardcoded, locale-independent. */
-const MONTH_NAMES = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-] as const;
-
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
-export default async function CashflowPage() {
+export default async function CashflowPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   // Auth — requireSession() is called in (app)/layout.tsx but we need userId here.
   // Calling it again is safe (it only extends TTL once per request via sliding window).
   const ctx = await requireSession();
   const { userId } = ctx;
 
-  // Current and prior period
-  const { year, month } = getCurrentPeriod();
-  const { year: priorYear, month: priorMonth } = getPriorPeriod(year, month);
+  // Resolve date range from URL search params (or default to this-month)
+  const resolvedParams = await searchParams;
+  const {
+    from,
+    to,
+    priorFrom,
+    priorTo,
+    label: periodLabel,
+    mode: activeFilter,
+  } = resolveFilterRange(resolvedParams);
 
   // Aggregations (server-side, synchronous SQLite reads)
-  const current = getMonthlyAggregations(userId, year, month);
-  const prior = getMonthlyAggregations(userId, priorYear, priorMonth);
+  const current = getAggregationsByRange(userId, from, to);
+  const prior = getAggregationsByRange(userId, priorFrom, priorTo);
 
   // Delta calculations — null = zero-prior edge case → display "—"
   const netDelta = calcDelta(current.net, prior.net);
   const grossDelta = calcDelta(current.gross, prior.gross);
   const expenseDelta = calcDelta(current.expense, prior.expense);
 
-  // Transaction list for current month
-  const txRows = listTransactions(userId, year, month);
+  // Transaction list for the active range
+  const txRows = listTransactionsByRange(userId, from, to);
 
   // Categories for the add-transaction modal combobox
   const categoryList = listCategories(userId);
-
-  // Period label (e.g. "June 2026")
-  const periodLabel = `${MONTH_NAMES[month - 1]} ${year}`;
 
   return (
     <div className="relative flex flex-col flex-1 bg-background">
@@ -215,6 +207,7 @@ export default async function CashflowPage() {
               category: tx.categoryName ?? undefined,
               notes: tx.notes ?? null,
             }))}
+            activeFilter={activeFilter}
           />
         </div>
       </div>

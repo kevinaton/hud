@@ -23,6 +23,7 @@
  * Per hud-ui skill: no inline hex, no box-shadow, 2px radius.
  */
 
+import { CashflowFilterBar } from '@/components/hud/CashflowFilterBar';
 import { TransactionModal } from '@/components/hud/TransactionModal';
 import type { TransactionForEdit } from '@/components/hud/TransactionModal';
 import { TransactionRow } from '@/components/hud/TransactionRow';
@@ -39,14 +40,19 @@ export interface TransactionRowData extends TransactionDisplay {
   notes?: string | null;
 }
 
+type FilterMode = 'this-month' | '30d' | '90d' | 'custom';
+
 interface CashflowTransactionSectionProps {
   categories: Category[];
   transactions: TransactionRowData[];
+  /** The active filter mode resolved server-side, passed through for the filter bar. */
+  activeFilter: FilterMode;
 }
 
 export function CashflowTransactionSection({
   categories,
   transactions,
+  activeFilter,
 }: CashflowTransactionSectionProps) {
   const [open, setOpen] = React.useState(false);
   const [editingTx, setEditingTx] = React.useState<TransactionForEdit | undefined>(undefined);
@@ -102,6 +108,11 @@ export function CashflowTransactionSection({
       </div>
 
       {/* ---------------------------------------------------------------- */}
+      {/* Filter chips — "This month" | "30 days" | "90 days" | "Custom"  */}
+      {/* ---------------------------------------------------------------- */}
+      <CashflowFilterBar activeFilter={activeFilter} />
+
+      {/* ---------------------------------------------------------------- */}
       {/* Transaction list                                                 */}
       {/* ---------------------------------------------------------------- */}
       <div className="flex flex-col flex-1 pb-8 border border-border">
@@ -111,7 +122,7 @@ export function CashflowTransactionSection({
               className="font-body text-muted uppercase"
               style={{ fontSize: '12px', letterSpacing: '0.18em' }}
             >
-              No transactions this month
+              No transactions for this period
             </p>
           </div>
         ) : (
