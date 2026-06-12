@@ -18,8 +18,8 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-User=agent-hud
-Group=agent-hud
+User=hud
+Group=hud
 
 # cgroup slice shared by all agent workloads
 Slice=hud.slice
@@ -30,10 +30,10 @@ WorkingDirectory=/srv/hud/app
 EnvironmentFile=/srv/hud/secrets/logs-gmail.env
 
 # DATABASE_URL must point to the HUD SQLite file
-EnvironmentFile=/srv/hud/secrets/.env
+EnvironmentFile=/srv/hud/secrets/mcp.env
 
 # Node.js binary installed at /usr/local/bin/node by provision script
-ExecStart=/usr/local/bin/node --loader tsx/esm packages/logs-ingest/src/run.ts
+ExecStart=/usr/bin/node --import tsx/esm packages/logs-ingest/src/run.ts
 
 # Restart policy: do not restart on failure (timer is the scheduler)
 Restart=no

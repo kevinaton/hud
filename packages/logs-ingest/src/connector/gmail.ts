@@ -93,10 +93,15 @@ export function checkDkim(authResultsHeader: string | undefined, domain: string)
     // Must be 'pass'
     if (!trimmed.startsWith('dkim=pass')) continue;
 
-    // Must reference the expected domain
-    // Accept: header.i=@airbnb.com OR d=airbnb.com
+    // Must reference the expected domain or any subdomain of it.
+    // Airbnb sends via email.airbnb.com (SendGrid), so header.i=@email.airbnb.com
+    // Accept: @airbnb.com  OR  @<sub>.airbnb.com  OR  d=airbnb.com
     const domainLower = domain.toLowerCase();
-    if (trimmed.includes(`@${domainLower}`) || trimmed.includes(`d=${domainLower}`)) {
+    if (
+      trimmed.includes(`@${domainLower}`) ||
+      trimmed.includes(`.${domainLower}`) ||
+      trimmed.includes(`d=${domainLower}`)
+    ) {
       return true;
     }
   }
