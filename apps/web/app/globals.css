@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 :root {
   /* surfaces */
   --background: oklch(0% 0 0); /* #000 pure black canvas */
@@ -38,6 +40,16 @@
   /* geometry */
   --radius: 2px; /* sharp corners */
   --hazard: 45deg; /* hazard stripe angle */
+
+  /* shadcn sidebar — mapped to HUD dark tokens (dark-only app, no light overrides needed) */
+  --sidebar: oklch(9% 0.008 240);             /* bg-surface */
+  --sidebar-foreground: oklch(92% 0.005 240); /* foreground */
+  --sidebar-primary: oklch(72% 0.118 210);    /* accent (cyan) */
+  --sidebar-primary-foreground: oklch(9% 0.008 240); /* accent-fg */
+  --sidebar-accent: oklch(12% 0.009 240);     /* surface-2 (hover bg) */
+  --sidebar-accent-foreground: oklch(92% 0.005 240); /* foreground */
+  --sidebar-border: oklch(22.785% 0.01229 248.419);  /* border */
+  --sidebar-ring: oklch(72% 0.118 210);       /* accent (focus ring) */
 }
 
 @theme inline {
@@ -69,6 +81,14 @@
   --font-display: var(--font-orbitron);
   --font-body: var(--font-oxanium);
   --radius: var(--radius);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
 }
 
 html,

@@ -13,10 +13,10 @@
  * Active state is derived from usePathname — no prop needed.
  */
 
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { AppNavDrawer } from './AppNavDrawer';
 import { AvatarDisplay } from './AvatarDisplay';
 
 const TOP_NAV = [
@@ -34,15 +34,16 @@ interface HudHeaderProps {
 export function HudHeader({ avatarPath, displayName, email }: HudHeaderProps) {
   const pathname = usePathname();
 
-  const sectionLabel =
-    TOP_NAV.find((n) => pathname.startsWith(n.match))?.label ?? 'HUD';
+  const sectionLabel = TOP_NAV.find((n) => pathname.startsWith(n.match))?.label ?? 'HUD';
 
   return (
     <header className="sticky top-0 z-50 h-14 bg-background border-b border-border">
       <div className="relative flex h-full items-center">
-
-        {/* ── Hamburger drawer — button inside is md:hidden, drawer panel always in DOM ── */}
-        <AppNavDrawer currentPath={pathname} />
+        {/* ── Hamburger — mobile only, triggers shadcn Sidebar Sheet ── */}
+        <SidebarTrigger
+          aria-label="Open navigation"
+          className="md:hidden h-14 w-14 rounded-none text-foreground hover:bg-transparent hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        />
 
         {/* ── Desktop: HUD wordmark ── */}
         <Link
@@ -56,10 +57,7 @@ export function HudHeader({ avatarPath, displayName, email }: HudHeaderProps) {
         </Link>
 
         {/* ── Desktop: main nav ── */}
-        <nav
-          aria-label="Main navigation"
-          className="hidden md:flex items-center h-full ml-2"
-        >
+        <nav aria-label="Main navigation" className="hidden md:flex items-center h-full ml-2">
           {TOP_NAV.map((item) => {
             const isActive = pathname.startsWith(item.match);
             return (
@@ -87,9 +85,7 @@ export function HudHeader({ avatarPath, displayName, email }: HudHeaderProps) {
 
         {/* ── Mobile: section title (centered) ── */}
         <div className="md:hidden absolute inset-x-0 flex justify-center pointer-events-none">
-          <span className="font-body text-[16px] font-medium text-foreground">
-            {sectionLabel}
-          </span>
+          <span className="font-body text-[16px] font-medium text-foreground">{sectionLabel}</span>
         </div>
 
         {/* ── Avatar: right side, all screens ── */}
@@ -107,7 +103,6 @@ export function HudHeader({ avatarPath, displayName, email }: HudHeaderProps) {
             />
           </Link>
         </div>
-
       </div>
     </header>
   );
