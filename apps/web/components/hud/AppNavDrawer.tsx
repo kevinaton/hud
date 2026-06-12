@@ -95,17 +95,15 @@ export function AppNavDrawer({ currentPath }: AppNavDrawerProps) {
       )}
 
       {/* Drawer panel — above overlay (z-[70]) so it slides over everything */}
+      {/* transform via inline style — Tailwind v4 won't generate conditional cn() classes */}
       <div
         id="app-nav-drawer"
         ref={drawerRef}
         role="dialog"
         aria-modal="true"
         aria-label="Navigation"
-        className={cn(
-          'fixed left-0 top-0 z-[70] h-full w-64 bg-surface border-r border-border',
-          'transition-transform duration-200',
-          open ? 'translate-x-0' : '-translate-x-full',
-        )}
+        style={{ transform: open ? 'translateX(0)' : 'translateX(-100%)' }}
+        className="fixed left-0 top-0 z-[70] h-full w-64 bg-surface border-r border-border transition-transform duration-200"
       >
         {/* Drawer header */}
         <div className="flex h-14 items-center border-b border-border px-4">
