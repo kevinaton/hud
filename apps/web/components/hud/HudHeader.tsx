@@ -13,10 +13,10 @@
  * Active state is derived from usePathname — no prop needed.
  */
 
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { AppNavDrawer } from './AppNavDrawer';
 import { AvatarDisplay } from './AvatarDisplay';
 
 const TOP_NAV = [
@@ -39,11 +39,8 @@ export function HudHeader({ avatarPath, displayName, email }: HudHeaderProps) {
   return (
     <header className="sticky top-0 z-50 h-14 bg-background border-b border-border">
       <div className="relative flex h-full items-center">
-        {/* ── Hamburger — mobile only, triggers shadcn Sidebar Sheet ── */}
-        <SidebarTrigger
-          aria-label="Open navigation"
-          className="md:hidden h-14 w-14 rounded-none text-foreground hover:bg-transparent hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-        />
+        {/* ── Hamburger + drawer — mobile only ── */}
+        <AppNavDrawer />
 
         {/* ── Desktop: HUD wordmark ── */}
         <Link

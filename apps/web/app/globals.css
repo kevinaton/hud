@@ -12,7 +12,7 @@
   --surface: oklch(9% 0.008 240); /* #0A0E12 card */
   --surface-2: oklch(12% 0.009 240); /* #11151A elevated card */
   --border: oklch(22.785% 0.01229 248.419); /* #262C33 thin lines */
-  --grid: oklch(23.33% 0.01745 237.739); /* faint cross overlay (used at 0.6 alpha) */
+  --grid: oklch(31.042% 0.0078 240.229); /* faint cross overlay (used at 0.6 alpha) */
 
   /* text */
   --foreground: oklch(92% 0.005 240); /* #E6E8EB primary text */
@@ -116,6 +116,16 @@ input[type="number"],
 input[type="time"] {
   appearance: none;
   -webkit-appearance: none;
+}
+
+/* Fix: browser autofill forces white bg — override with inset box-shadow trick */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 9999px var(--background) inset !important;
+  -webkit-text-fill-color: var(--foreground) !important;
+  caret-color: var(--foreground);
 }
 
 /* Fix: native date input calendar picker icon — invert to match light foreground on dark bg */

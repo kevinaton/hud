@@ -9,7 +9,7 @@ interface GridOverlayProps {
   cell?: number;
 }
 
-export function GridOverlay({ cell = 32 }: GridOverlayProps) {
+export function GridOverlay({ cell = 36 }: GridOverlayProps) {
   const id = 'hud-grid-pattern';
 
   return (
@@ -24,7 +24,8 @@ export function GridOverlay({ cell = 32 }: GridOverlayProps) {
           <path
             d={`M ${cell} 0 L 0 0 0 ${cell}`}
             fill="none"
-            stroke="hsl(var(--grid) / 0.6)"
+            stroke="var(--grid)"
+            strokeOpacity="0.6"
             strokeWidth="1"
           />
         </pattern>

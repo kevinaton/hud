@@ -25,7 +25,7 @@ export default async function AirbnbLayout({
         className="sticky top-0 z-50 flex h-14 items-center bg-background border-b border-border"
         style={{ height: '56px' }}
       >
-        <AppNavDrawer currentPath="/airbnb" />
+        <AppNavDrawer />
 
         <div className="absolute inset-x-0 flex justify-center pointer-events-none">
           <span className="font-body text-foreground" style={{ fontSize: '16px', fontWeight: 500 }}>

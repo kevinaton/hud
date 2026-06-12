@@ -1,40 +1,30 @@
 'use client';
 
 /**
- * AppNavDrawer — slide-in navigation drawer.
+ * AppNavDrawer — mobile navigation drawer.
  *
- * Shows Finance / Logs / Airbnb top-level sections.
- * Triggered by the hamburger button in section layouts.
+ * Slides in from the left at 60vw. The remainder of the screen shows
+ * the page content blurred + dimmed behind a backdrop overlay.
  *
- * Uses a simple fixed overlay + slide panel — no shadcn Sheet dependency.
- * Per hud-ui skill: bg-surface, border-border, sharp 2px radius, no shadows.
+ * Contains its own hamburger trigger (md:hidden).
+ * 3 flat nav items: Finance | Logs | Nexus.
+ * Active item: full-row accent (cyan) background.
  */
 
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const NAV_ITEMS = [
-  {
-    label: 'FINANCE',
-    href: '/finance/cashflow',
-    match: '/finance',
-    children: [
-      { label: 'Cashflow', href: '/finance/cashflow' },
-      { label: 'Airbnb', href: '/finance/airbnb' },
-      { label: 'Reports', href: '/finance/reports' },
-    ],
-  },
-  { label: 'LOGS', href: '/logs', match: '/logs', children: [] },
-  { label: 'NEXUS', href: '/nexus', match: '/nexus', children: [] },
-];
+  { label: 'Finance', href: '/finance/cashflow', match: '/finance' },
+  { label: 'Logs', href: '/logs', match: '/logs' },
+  { label: 'Nexus', href: '/nexus', match: '/nexus' },
+] as const;
 
-interface AppNavDrawerProps {
-  currentPath?: string;
-}
-
-export function AppNavDrawer({ currentPath }: AppNavDrawerProps) {
+export function AppNavDrawer() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
   const drawerRef = useRef<HTMLDivElement>(null);
 
   const close = useCallback(() => setOpen(false), []);
@@ -51,11 +41,7 @@ export function AppNavDrawer({ currentPath }: AppNavDrawerProps) {
 
   // Lock body scroll when open
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    document.body.style.overflow = open ? 'hidden' : '';
     return () => {
       document.body.style.overflow = '';
     };
@@ -72,14 +58,7 @@ export function AppNavDrawer({ currentPath }: AppNavDrawerProps) {
         className="md:hidden flex h-14 w-14 items-center justify-center text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         onClick={() => setOpen(true)}
       >
-        <svg
-          aria-hidden="true"
-          width="20"
-          height="20"
-          viewBox="0 0 20 20"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
           <path
             d="M3 5H17M3 10H17M3 15H17"
             stroke="currentColor"
@@ -89,13 +68,16 @@ export function AppNavDrawer({ currentPath }: AppNavDrawerProps) {
         </svg>
       </button>
 
-      {/* Overlay — sits above header (z-60), only when open */}
-      {open && (
-        <div aria-hidden="true" className="fixed inset-0 z-[60] bg-background/80" onClick={close} />
-      )}
+      {/* Backdrop — blur + dim. Sits behind panel, covers full screen. */}
+      {/* Clicking it closes the drawer. */}
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 z-[60] backdrop-blur-md bg-background/50 transition-opacity duration-200"
+        style={{ opacity: open ? 1 : 0, pointerEvents: open ? 'auto' : 'none' }}
+        onClick={close}
+      />
 
-      {/* Drawer panel — above overlay (z-[70]) so it slides over everything */}
-      {/* transform via inline style — Tailwind v4 won't generate conditional cn() classes */}
+      {/* Drawer panel — solid, sits above backdrop */}
       <div
         id="app-nav-drawer"
         ref={drawerRef}
@@ -103,77 +85,40 @@ export function AppNavDrawer({ currentPath }: AppNavDrawerProps) {
         aria-modal="true"
         aria-label="Navigation"
         style={{ transform: open ? 'translateX(0)' : 'translateX(-100%)' }}
-        className="fixed left-0 top-0 z-[70] h-full w-64 bg-surface border-r border-border transition-transform duration-200"
+        className="fixed left-0 top-0 z-[70] h-full w-[60vw] bg-background transition-transform duration-200 ease-out"
       >
-        {/* Drawer header */}
-        <div className="flex h-14 items-center border-b border-border px-4">
-          <span className="font-display text-[13px] uppercase tracking-[0.2em] text-accent">
-            HUD
-          </span>
-          <button
-            type="button"
-            aria-label="Close navigation"
+        {/* HUD wordmark */}
+        <div className="flex h-[100px] items-end justify-center pb-5 border-b border-border">
+          <Link
+            href="/finance/cashflow"
             onClick={close}
-            className="ml-auto flex h-8 w-8 items-center justify-center text-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-[var(--radius)]"
+            className="font-display text-[26px] uppercase tracking-[0.3em] text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path
-                d="M3 3L13 13M13 3L3 13"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
+            HUD
+          </Link>
         </div>
 
-        {/* Nav links */}
-        <nav aria-label="Main navigation" className="py-2">
+        {/* Nav items */}
+        <nav aria-label="Main navigation">
           {NAV_ITEMS.map((item) => {
-            const isActive = currentPath?.startsWith(item.match);
+            const isActive = pathname.startsWith(item.match);
             return (
-              <div key={item.href}>
-                {/* Top-level item */}
-                <Link
-                  href={item.href}
-                  onClick={close}
-                  className={cn(
-                    'flex items-center px-4 py-3 font-body text-[14px] uppercase tracking-[0.1em]',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                    'transition-colors',
-                    isActive ? 'text-accent' : 'text-muted hover:text-foreground',
-                  )}
-                  aria-current={isActive ? 'page' : undefined}
-                >
-                  {isActive && <span aria-hidden="true" className="mr-2 h-4 w-0.5 bg-accent" />}
-                  {item.label}
-                </Link>
-
-                {/* Sub-items (always visible when parent is active) */}
-                {item.children.length > 0 && isActive && (
-                  <div className="pb-1">
-                    {item.children.map((child) => {
-                      const childActive = currentPath === child.href || currentPath?.startsWith(child.href + '/');
-                      return (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          onClick={close}
-                          className={cn(
-                            'flex items-center pl-8 pr-4 py-2 font-body text-[13px]',
-                            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                            'transition-colors',
-                            childActive ? 'text-accent' : 'text-muted hover:text-foreground',
-                          )}
-                          aria-current={childActive ? 'page' : undefined}
-                        >
-                          {child.label}
-                        </Link>
-                      );
-                    })}
-                  </div>
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={close}
+                aria-current={isActive ? 'page' : undefined}
+                className={cn(
+                  'flex w-full items-center justify-center py-6',
+                  'font-body text-[14px] font-semibold uppercase tracking-[0.15em]',
+                  'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent',
+                  isActive
+                    ? 'bg-accent text-foreground'
+                    : 'text-foreground hover:bg-surface',
                 )}
-              </div>
+              >
+                {item.label}
+              </Link>
             );
           })}
         </nav>
