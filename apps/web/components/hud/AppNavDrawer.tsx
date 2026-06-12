@@ -9,6 +9,11 @@
  * Contains its own hamburger trigger (md:hidden).
  * 3 flat nav items: Finance | Logs | Nexus.
  * Active item: full-row accent (cyan) background.
+ *
+ * Safari mobile fixes:
+ * - h-dvh instead of h-full (Safari doesn't resolve h-full on fixed elements)
+ * - WebkitBackdropFilter set via inline style (Tailwind class alone unreliable on Safari)
+ * - Scroll lock uses position:fixed on body (overflow:hidden doesn't work on iOS)
  */
 
 import { cn } from '@/lib/utils';
@@ -26,6 +31,7 @@ export function AppNavDrawer() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const drawerRef = useRef<HTMLDivElement>(null);
+  const scrollYRef = useRef(0);
 
   const close = useCallback(() => setOpen(false), []);
 
@@ -39,11 +45,23 @@ export function AppNavDrawer() {
     return () => document.removeEventListener('keydown', handler);
   }, [open, close]);
 
-  // Lock body scroll when open
+  // iOS-safe scroll lock — position:fixed preserves scroll position
   useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : '';
+    if (open) {
+      scrollYRef.current = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollYRef.current}px`;
+      document.body.style.width = '100%';
+    } else {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, scrollYRef.current);
+    }
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
     };
   }, [open]);
 
@@ -68,24 +86,29 @@ export function AppNavDrawer() {
         </svg>
       </button>
 
-      {/* Backdrop — blur + dim. Sits behind panel, covers full screen. */}
-      {/* Clicking it closes the drawer. */}
-      <div
-        aria-hidden="true"
-        className="fixed inset-0 z-[60] backdrop-blur-md bg-background/50 transition-opacity duration-200"
-        style={{ opacity: open ? 1 : 0, pointerEvents: open ? 'auto' : 'none' }}
-        onClick={close}
-      />
+      {/* Backdrop — blur + dim. Conditionally rendered so it's fully removed when closed. */}
+      {open && (
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 z-[60] bg-background/60"
+          style={{
+            WebkitBackdropFilter: 'blur(10px)',
+            backdropFilter: 'blur(10px)',
+          }}
+          onClick={close}
+        />
+      )}
 
-      {/* Drawer panel — solid, sits above backdrop */}
+      {/* Drawer panel — solid bg, sits above backdrop */}
       <div
         id="app-nav-drawer"
         ref={drawerRef}
         role="dialog"
         aria-modal="true"
         aria-label="Navigation"
-        style={{ transform: open ? 'translateX(0)' : 'translateX(-100%)' }}
-        className="fixed left-0 top-0 z-[70] h-full w-[60vw] bg-background transition-transform duration-200 ease-out"
+        inert={!open ? ('' as unknown as boolean) : undefined}
+        style={{ transform: open ? 'translateX(0)' : 'translateX(-100%)', width: '60vw' }}
+        className="fixed left-0 top-0 z-[70] h-dvh bg-background transition-transform duration-200 ease-out"
       >
         {/* HUD wordmark */}
         <div className="flex h-[100px] items-end justify-center pb-5 border-b border-border">
