@@ -69,9 +69,8 @@ export function CashflowDateRangeModal({ open, onOpenChange }: CashflowDateRange
         className={cn(
           'bg-surface border border-border',
           'rounded-[var(--radius)]',
-          // Override any shadow from the shadcn default
           'shadow-none',
-          'max-w-sm w-full',
+          'max-w-sm',
         )}
       >
         <DialogHeader>

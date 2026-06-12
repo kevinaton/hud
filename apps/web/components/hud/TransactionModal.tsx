@@ -358,7 +358,7 @@ export function TransactionModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          'max-w-md w-full',
+          'max-w-md',
           'bg-surface border-border',
           'rounded-[var(--radius)]',
           'shadow-none',
