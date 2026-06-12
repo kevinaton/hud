@@ -47,12 +47,16 @@ interface CashflowTransactionSectionProps {
   transactions: TransactionRowData[];
   /** The active filter mode resolved server-side, passed through for the filter bar. */
   activeFilter: FilterMode;
+  /** The resolved display label from the server (e.g. "June 2026", "Apr 1 – Jun 12, 2026").
+   *  Passed to CashflowFilterBar for correct first-paint label on custom ranges. */
+  activeFilterLabel: string;
 }
 
 export function CashflowTransactionSection({
   categories,
   transactions,
   activeFilter,
+  activeFilterLabel,
 }: CashflowTransactionSectionProps) {
   const [open, setOpen] = React.useState(false);
   const [editingTx, setEditingTx] = React.useState<TransactionForEdit | undefined>(undefined);
@@ -83,7 +87,7 @@ export function CashflowTransactionSection({
   return (
     <>
       {/* ---------------------------------------------------------------- */}
-      {/* Header row: "TRANSACTIONS" label + [+] button                    */}
+      {/* Header row: "TRANSACTIONS" label + [filter dropdown] + [+]       */}
       {/* ---------------------------------------------------------------- */}
       <div className="flex items-center justify-between py-4">
         <h2
@@ -92,25 +96,23 @@ export function CashflowTransactionSection({
         >
           Transactions
         </h2>
-        <button
-          type="button"
-          aria-label="Add transaction"
-          onClick={handleAddClick}
-          className={cn(
-            'flex h-7 w-7 items-center justify-center',
-            'bg-accent text-accent-fg font-display text-[16px] font-[500]',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-            'transition-opacity hover:opacity-80 active:opacity-70',
-          )}
-        >
-          +
-        </button>
+        <div className="flex items-center gap-2">
+          <CashflowFilterBar activeFilter={activeFilter} activeFilterLabel={activeFilterLabel} />
+          <button
+            type="button"
+            aria-label="Add transaction"
+            onClick={handleAddClick}
+            className={cn(
+              'flex h-7 w-7 items-center justify-center',
+              'bg-accent text-accent-fg font-display text-[16px] font-[500]',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+              'transition-opacity hover:opacity-80 active:opacity-70',
+            )}
+          >
+            +
+          </button>
+        </div>
       </div>
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Filter chips — "This month" | "30 days" | "90 days" | "Custom"  */}
-      {/* ---------------------------------------------------------------- */}
-      <CashflowFilterBar activeFilter={activeFilter} />
 
       {/* ---------------------------------------------------------------- */}
       {/* Transaction list                                                 */}

@@ -208,6 +208,7 @@ export default async function CashflowPage({
               notes: tx.notes ?? null,
             }))}
             activeFilter={activeFilter}
+            activeFilterLabel={periodLabel}
           />
         </div>
       </div>
