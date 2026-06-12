@@ -1,0 +1,26 @@
+From: automated@airbnb.com
+Subject: Reservation confirmed - John Smith arrives Jun 13
+
+Reservation confirmed
+
+Hi Kevin,
+
+John Smith will arrive at your place on Jun 13.
+
+Confirmation code: HMJ9JX4ZYZ
+
+Check-in: Sat, Jun 13, 2026
+Check-out: Sun, Jun 14, 2026
+
+1 night · 2 guests
+
+Guest paid:
+Total paid: ₱2,500.00
+Cleaning fee: ₱500.00
+
+Your payout:
+Airbnb service fee: -₱315.95
+You earn ₱1,504.05
+
+Thank you for hosting!
+Airbnb
