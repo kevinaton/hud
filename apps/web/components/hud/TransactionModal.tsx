@@ -450,7 +450,11 @@ export function TransactionModal({
                       {...field}
                       className={cn(
                         'rounded-[var(--radius)] border-border bg-transparent',
-                        'tabular text-foreground',
+                        'text-foreground appearance-none',
+                        // appearance-none strips iOS Safari native date chrome so h-10
+                        // is respected and the field stays the same height as other inputs.
+                        // [&::-webkit-date-and-time-value] keeps text left-aligned on iOS.
+                        '[&::-webkit-date-and-time-value]:text-left',
                         'focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                       )}
                     />
