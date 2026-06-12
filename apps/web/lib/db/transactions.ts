@@ -344,7 +344,7 @@ export interface ReqCtx {
   /** Authenticated user id. */
   userId: number;
   /** Actor string for audit_log. Always 'user' for browser sessions. */
-  actor: 'user' | 'anon' | 'system' | `agent:${string}`;
+  actor: 'user' | 'anon' | 'system' | `system:${string}` | `agent:${string}`;
   /** IP address from X-Forwarded-For or request.ip. */
   ipAddress?: string;
   /** User-Agent header. */

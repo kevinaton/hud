@@ -18,6 +18,9 @@ import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import * as schema from './schema.js';
 
+// Type alias for the DB instance — avoids depending on the inferred type
+type AnyDb = ReturnType<typeof drizzle>;
+
 // ---------------------------------------------------------------------------
 // Resolve DB path from env — paths relative to this file's location
 // ---------------------------------------------------------------------------
@@ -152,8 +155,53 @@ async function main() {
 
   // biome-ignore lint/suspicious/noConsole: seed is a CLI tool; console is intentional
   console.log('Transactions: 3 seeded (or already existed)');
+
+  // -------------------------------------------------------------------------
+  // Logs pipeline defaults
+  // -------------------------------------------------------------------------
+  await seedLogsDefaults(db, userId);
+
   // biome-ignore lint/suspicious/noConsole: seed is a CLI tool; console is intentional
   console.log('Seed complete.');
+}
+
+// ---------------------------------------------------------------------------
+// seedLogsDefaults — idempotent defaults for the logs pipeline
+//
+// These rows are required in BOTH dev and production for the ingest pipeline
+// to work. They're safe to insert multiple times (ON CONFLICT DO NOTHING).
+// ---------------------------------------------------------------------------
+async function seedLogsDefaults(db: AnyDb, userId: number): Promise<void> {
+  // Whitelist: automated@airbnb.com is the only whitelisted sender at launch
+  await db
+    .insert(schema.logWhitelist)
+    .values({
+      userId,
+      source: 'email',
+      sender: 'automated@airbnb.com',
+      enabled: 1,
+      note: 'Official Airbnb notification address',
+    })
+    .onConflictDoNothing({
+      target: [schema.logWhitelist.userId, schema.logWhitelist.source, schema.logWhitelist.sender],
+    })
+    .run();
+
+  // App setting: require manual approval before recording ingested entries
+  await db
+    .insert(schema.appSettings)
+    .values({
+      userId,
+      key: 'logs.approval_required',
+      value: 'true',
+    })
+    .onConflictDoNothing()
+    .run();
+
+  // biome-ignore lint/suspicious/noConsole: seed is a CLI tool; console is intentional
+  console.log(
+    'Logs defaults: whitelist row + approval_required setting seeded (or already existed)',
+  );
 }
 
 main().catch((err) => {

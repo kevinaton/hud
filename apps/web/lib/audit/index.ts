@@ -35,6 +35,7 @@ export type AuditActor =
   | 'user'
   | 'anon'
   | 'system'
+  | `system:${string}`
   | `agent:${string}`
   | `platform:${string}`;
 
@@ -49,7 +50,17 @@ export interface AuditEntry {
   /** Closed set of action verbs — see hud-audit skill. */
   action: AuditAction;
   /** The type of entity being acted on. */
-  entity: 'transaction' | 'category' | 'user' | 'session';
+  entity:
+    | 'transaction'
+    | 'category'
+    | 'user'
+    | 'session'
+    | 'log_entry'
+    | 'log_rule'
+    | 'log_whitelist'
+    | 'app_setting'
+    | 'airbnb_reservation'
+    | 'airbnb_payout';
   /** String ID of the affected entity row. Optional for bulk/pre-creation events. */
   entityId?: string;
   /**
