@@ -84,6 +84,16 @@ body {
   letter-spacing: 0.02em;
 }
 
+/* Normalize date/number/time inputs — strip native browser chrome so CSS h-10/padding applies
+   uniformly across all input types, including iOS Safari where appearance-none as a Tailwind
+   utility is not reliably generated. The native date picker popup still functions normally. */
+input[type="date"],
+input[type="number"],
+input[type="time"] {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
 /* Fix: native date input calendar picker icon — invert to match light foreground on dark bg */
 input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(1);
