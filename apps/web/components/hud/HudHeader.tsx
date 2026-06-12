@@ -41,10 +41,8 @@ export function HudHeader({ avatarPath, displayName, email }: HudHeaderProps) {
     <header className="sticky top-0 z-50 h-14 bg-background border-b border-border">
       <div className="relative flex h-full items-center">
 
-        {/* ── Mobile: hamburger drawer trigger ── */}
-        <div className="md:hidden">
-          <AppNavDrawer currentPath={pathname} />
-        </div>
+        {/* ── Hamburger drawer — button inside is md:hidden, drawer panel always in DOM ── */}
+        <AppNavDrawer currentPath={pathname} />
 
         {/* ── Desktop: HUD wordmark ── */}
         <Link

@@ -63,13 +63,13 @@ export function AppNavDrawer({ currentPath }: AppNavDrawerProps) {
 
   return (
     <>
-      {/* Hamburger trigger */}
+      {/* Hamburger trigger — mobile only */}
       <button
         type="button"
         aria-label="Open navigation"
         aria-expanded={open}
         aria-controls="app-nav-drawer"
-        className="flex h-14 w-14 items-center justify-center text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        className="md:hidden flex h-14 w-14 items-center justify-center text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         onClick={() => setOpen(true)}
       >
         <svg
@@ -89,12 +89,12 @@ export function AppNavDrawer({ currentPath }: AppNavDrawerProps) {
         </svg>
       </button>
 
-      {/* Overlay */}
+      {/* Overlay — sits above header (z-60), only when open */}
       {open && (
-        <div aria-hidden="true" className="fixed inset-0 z-40 bg-background/80" onClick={close} />
+        <div aria-hidden="true" className="fixed inset-0 z-[60] bg-background/80" onClick={close} />
       )}
 
-      {/* Drawer panel */}
+      {/* Drawer panel — above overlay (z-[70]) so it slides over everything */}
       <div
         id="app-nav-drawer"
         ref={drawerRef}
@@ -102,7 +102,7 @@ export function AppNavDrawer({ currentPath }: AppNavDrawerProps) {
         aria-modal="true"
         aria-label="Navigation"
         className={cn(
-          'fixed left-0 top-0 z-50 h-full w-64 bg-surface border-r border-border',
+          'fixed left-0 top-0 z-[70] h-full w-64 bg-surface border-r border-border',
           'transition-transform duration-200',
           open ? 'translate-x-0' : '-translate-x-full',
         )}
