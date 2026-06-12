@@ -43,9 +43,7 @@ export interface RateLimitConfig {
   burst: number;
 }
 
-export type RateLimitResult =
-  | { allowed: true }
-  | { allowed: false; retryAfterSec: number };
+export type RateLimitResult = { allowed: true } | { allowed: false; retryAfterSec: number };
 
 interface BucketState {
   tokens: number;
@@ -67,7 +65,12 @@ function isWriteTool(toolName: string | null): boolean {
   return WRITE_TOOLS.has(toolName);
 }
 
-function refillBucket(bucket: BucketState, ratePerSec: number, capacity: number, nowMs: number): void {
+function refillBucket(
+  bucket: BucketState,
+  ratePerSec: number,
+  capacity: number,
+  nowMs: number,
+): void {
   const elapsedSec = (nowMs - bucket.lastRefillMs) / 1000;
   bucket.tokens = Math.min(bucket.tokens + elapsedSec * ratePerSec, capacity);
   bucket.lastRefillMs = nowMs;
@@ -156,9 +159,7 @@ export class RateLimiter {
     const { config } = entry;
     const write = isWriteTool(toolName);
     const bucket = write ? entry.write : entry.read;
-    const ratePerSec = write
-      ? config.writesPerMin / 60
-      : config.readsPerMin / 60;
+    const ratePerSec = write ? config.writesPerMin / 60 : config.readsPerMin / 60;
 
     return consumeOne(bucket, ratePerSec, config.burst, nowMs);
   }

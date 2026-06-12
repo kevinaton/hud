@@ -59,9 +59,7 @@ describe('RateLimiter — bucket initialisation', () => {
 
   it('allows exactly burst-many requests without refill', () => {
     const limiter = new RateLimiter();
-    const results = Array.from({ length: DEFAULT_BURST }, () =>
-      limiter.consume('a', READ_TOOL, 0),
-    );
+    const results = Array.from({ length: DEFAULT_BURST }, () => limiter.consume('a', READ_TOOL, 0));
     expect(results.every((r) => r.allowed)).toBe(true);
   });
 });

@@ -27,7 +27,6 @@ import { CashflowTransactionSection } from '@/components/hud/CashflowTransaction
 import { GridOverlay } from '@/components/hud/GridOverlay';
 import { HazardStripe } from '@/components/hud/HazardStripe';
 import { Money } from '@/components/hud/Money';
-import { TabBar } from '@/components/hud/TabBar';
 import { requireSession } from '@/lib/auth/index';
 import { resolveFilterRange } from '@/lib/cashflow-filter';
 import { listCategories } from '@/lib/db/categories';
@@ -37,11 +36,6 @@ import { cn } from '@/lib/utils';
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-
-const TABS = [
-  { label: 'Cashflow', href: '/finance/cashflow' },
-  { label: 'Report', href: '/finance/cashflow/report' },
-];
 
 // ---------------------------------------------------------------------------
 // Page
@@ -88,9 +82,6 @@ export default async function CashflowPage({
       <GridOverlay />
 
       <div className="relative z-10 flex flex-col flex-1">
-        {/* Tab bar */}
-        <TabBar tabs={TABS} active="/finance/cashflow" />
-
         {/* Main content — padded container */}
         <div className="flex flex-col flex-1 p-4">
           <section className="border border-border">

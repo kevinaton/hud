@@ -13,7 +13,7 @@ import { usePathname } from 'next/navigation';
 const FINANCE_TABS = [
   { label: 'Cashflow', href: '/finance/cashflow' },
   { label: 'Airbnb', href: '/finance/airbnb' },
-  { label: 'Reports', href: '/finance/reports' },
+  { label: 'Reports', href: '/finance/cashflow/report' },
 ];
 
 export function FinanceSubTabs() {
