@@ -19,7 +19,8 @@
  *   - Apply disabled while invalid
  */
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { HudDialogContent } from '@/components/hud/HudDialogContent';
+import { Dialog, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
@@ -65,14 +66,7 @@ export function CashflowDateRangeModal({ open, onOpenChange }: CashflowDateRange
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className={cn(
-          'bg-surface border border-border',
-          'rounded-[var(--radius)]',
-          'shadow-none',
-          'max-w-sm',
-        )}
-      >
+      <HudDialogContent>
         <DialogHeader>
           <DialogTitle
             className="font-body text-foreground uppercase"
@@ -174,7 +168,7 @@ export function CashflowDateRangeModal({ open, onOpenChange }: CashflowDateRange
             </button>
           </div>
         </div>
-      </DialogContent>
+      </HudDialogContent>
     </Dialog>
   );
 }

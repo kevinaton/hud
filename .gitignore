@@ -54,8 +54,16 @@ apps/web/lib/db/index.js.map
 # Opencode session files
 .opencode/opencode-loop/
 
-# Local tool config
+# Local tool config — machine-specific, never committed
+.claude/settings.json
 .claude/settings.local.json
+.claude/statusline-command.sh
+.mcp.json
+# MCP config may appear in sub-packages too
+apps/web/.mcp.json
+packages/mcp-hud/.mcp.json
+# Build artefacts that land in non-standard dist dirs
+packages/mcp-hud/dist-new/
 
 # TypeScript incremental build cache
 *.tsbuildinfo

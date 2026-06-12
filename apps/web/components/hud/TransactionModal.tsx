@@ -31,8 +31,9 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 
 import { CategoryCombobox } from '@/components/hud/CategoryCombobox';
+import { HudDialogContent } from '@/components/hud/HudDialogContent';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -356,14 +357,7 @@ export function TransactionModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className={cn(
-          'max-w-md',
-          'bg-surface border-border',
-          'rounded-[var(--radius)]',
-          'shadow-none',
-        )}
-      >
+      <HudDialogContent>
         <DialogHeader>
           <DialogTitle
             className="font-body text-foreground uppercase tracking-[0.18em]"
@@ -580,7 +574,7 @@ export function TransactionModal({
             </div>
           </form>
         </Form>
-      </DialogContent>
+      </HudDialogContent>
     </Dialog>
   );
 }
