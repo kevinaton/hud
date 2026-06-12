@@ -63,7 +63,7 @@ export function CashflowDateRangeModal({ open, onOpenChange }: CashflowDateRange
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="rounded-[var(--radius)] border-border bg-transparent font-body [color-scheme:dark]"
+              className="rounded-[var(--radius)] border-border bg-transparent font-body text-foreground"
             />
           </div>
 
@@ -79,7 +79,7 @@ export function CashflowDateRangeModal({ open, onOpenChange }: CashflowDateRange
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="rounded-[var(--radius)] border-border bg-transparent font-body [color-scheme:dark]"
+              className="rounded-[var(--radius)] border-border bg-transparent font-body text-foreground"
             />
           </div>
 

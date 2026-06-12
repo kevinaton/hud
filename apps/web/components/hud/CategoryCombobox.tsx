@@ -110,12 +110,7 @@ export function CategoryCombobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </button>
       </PopoverTrigger>
-      <PopoverContent
-        className={cn(
-          'w-[var(--radix-popover-trigger-width)] p-0',
-          'rounded-[var(--radius)] border-border bg-surface',
-        )}
-      >
+      <PopoverContent className={cn('p-0', 'rounded-[var(--radius)] border-border bg-surface')}>
         <Command className="bg-transparent" shouldFilter={false}>
           <CommandInput
             placeholder="Search or type new category..."
