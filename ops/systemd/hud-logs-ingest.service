@@ -1,0 +1,59 @@
+# hud-logs-ingest.service
+#
+# One-shot ingest run — fetches new Airbnb emails from Gmail, verifies DKIM,
+# stores raw, classifies, parses, records, and updates the heartbeat.
+#
+# Triggered by hud-logs-ingest.timer every 15 minutes.
+# Runs as agent-hud inside hud.slice (cgroup-limited alongside other agents).
+#
+# Secrets:
+#   /srv/hud/secrets/logs-gmail.env — GMAIL_CREDENTIALS_PATH, GMAIL_USER_ID, LOGS_USER_ID
+#   Decrypted at deploy from sops/age encrypted YAML (see plan/reference/secrets.md).
+#   Mode 600, owner agent-hud. Never committed to git.
+
+[Unit]
+Description=HUD Logs Ingest — Airbnb Gmail reader (one-shot)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=agent-hud
+Group=agent-hud
+
+# cgroup slice shared by all agent workloads
+Slice=hud.slice
+
+WorkingDirectory=/srv/hud/app
+
+# Gmail OAuth credentials decrypted by deploy-time sops step
+EnvironmentFile=/srv/hud/secrets/logs-gmail.env
+
+# DATABASE_URL must point to the HUD SQLite file
+EnvironmentFile=/srv/hud/secrets/.env
+
+# Node.js binary installed at /usr/local/bin/node by provision script
+ExecStart=/usr/local/bin/node --loader tsx/esm packages/logs-ingest/src/run.ts
+
+# Restart policy: do not restart on failure (timer is the scheduler)
+Restart=no
+
+# Hardening — agent-hud only needs the data directory read-write
+ProtectSystem=strict
+ProtectHome=true
+NoNewPrivileges=true
+ReadWritePaths=/srv/hud/data
+PrivateTmp=true
+RestrictRealtime=true
+SystemCallFilter=@system-service
+LockPersonality=true
+MemoryDenyWriteExecute=false
+RestrictNamespaces=true
+PrivateUsers=false
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hud-logs-ingest
+
+[Install]
+WantedBy=multi-user.target

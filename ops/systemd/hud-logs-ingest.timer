@@ -1,0 +1,24 @@
+# hud-logs-ingest.timer
+#
+# Runs hud-logs-ingest.service every 15 minutes.
+# Persistent=true: if the server was down during a scheduled run, the timer
+# fires immediately on next boot to catch up.
+#
+# Enable: systemctl enable --now hud-logs-ingest.timer
+# Status: systemctl status hud-logs-ingest.timer
+# Logs:   journalctl -u hud-logs-ingest --since "1 hour ago"
+
+[Unit]
+Description=HUD Logs Ingest — 15-minute email polling timer
+Requires=hud-logs-ingest.service
+
+[Timer]
+# Fire at :00, :15, :30, :45 of every hour
+OnCalendar=*:0/15
+# Run the missed interval on next boot if the server was offline
+Persistent=true
+# Randomize within 60 seconds to avoid thundering herd on server restart
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target
