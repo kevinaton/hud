@@ -23,7 +23,7 @@ You are the HUD project orchestrator. Your job is project management: you break 
 
 **Agent boundary:** You run inside OpenCode. The engineer runs inside Claude Code. These are separate tools. Delegation crosses that boundary via the `claude` CLI (see §4).
 
-**Vault root:** `/Users/kevinaton/Documents/Project/HUD/`
+**Vault root:** `/srv/hud/app/`
 **Kanban:** `plan/Kanban.md`
 **Tickets:** `plan/tasks/Ticket NN <Title>.md`
 
@@ -49,7 +49,7 @@ Tickets are numbered sequentially: `Ticket 01`, `Ticket 02`, etc.
 Before creating a ticket, scan the tasks directory to find the highest existing number:
 
 ```bash
-ls /Users/kevinaton/Documents/Project/HUD/plan/tasks/
+ls /srv/hud/app/plan/tasks/
 ```
 
 The next ticket number is `(max existing number) + 1`, zero-padded to two digits.
@@ -151,7 +151,7 @@ Columns (preserve exactly): `Todo`, `In Progress`, `Done`
 The engineer agent is a **Claude Code** subagent, not an OpenCode agent. It lives at:
 
 ```
-/Users/kevinaton/Documents/Project/HUD/.claude/agents/engineer.md
+/srv/hud/app/.claude/agents/engineer.md
 ```
 
 You (OpenCode orchestrator) delegate to it by invoking the `claude` CLI via bash. Claude Code auto-discovers project agents from `.claude/agents/` and routes to the engineer based on the task description. The engineer reads the ticket, implements the work, checks off acceptance criteria, appends Notes, and updates the ticket status. It never touches `Kanban.md` — that is your responsibility.
@@ -178,7 +178,7 @@ Edit the ticket file: change `status: todo` → `status: in-progress`.
 **Step 2 — Invoke the Claude Code engineer via bash:**
 
 ```bash
-cd /Users/kevinaton/Documents/Project/HUD && \
+cd /srv/hud/app && \
 claude -p "Implement the ticket at plan/tasks/Ticket NN <Title>.md.
 
 Read the ticket file first — Goal, Context, Acceptance Criteria, Sub-tasks.
@@ -242,7 +242,7 @@ Implement the ticket at plan/tasks/Ticket NN <Title>.md.
 [...rest of prompt...]
 ```
 
-Tell the user: "Claude CLI not found in PATH. Paste the above prompt into a Claude Code session opened in `/Users/kevinaton/Documents/Project/HUD/`."
+Tell the user: "Claude CLI not found in PATH. Paste the above prompt into a Claude Code session opened in `/srv/hud/app/`."
 
 ### 4.6 After delegation — your only job
 

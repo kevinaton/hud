@@ -5,7 +5,7 @@ role: index
 status: living
 author: architect
 created: 2026-06-04
-updated: 2026-06-10
+updated: 2026-06-12
 tags: [moc, index, hud, strategy]
 ---
 
@@ -13,7 +13,31 @@ tags: [moc, index, hud, strategy]
 
 > **Start here.** This is the mother file for the HUD build. Everything — strategy, architecture, active phase, blueprints, ADRs, references, tasks, skills — connects from this page. If you open one file, open this one first.
 
-**Current phase:** **Phase 0 — MVP (Foundation + Cashflow)** — see [[26060502-mvp-foundation-cashflow]]
+## Architect Read-First
+
+> Orientation block for any AI agent (architect/orchestrator/engineer) opening the vault. Read this, then the read-order below. Kept terse on purpose — the full ledger is in the **# Index** section further down.
+
+**Canonical paths (this server — authoritative):**
+
+| What | Path |
+|---|---|
+| Repo root | `/srv/hud/app/` |
+| Vault root | `/srv/hud/app/plan/` |
+| Blueprints | `/srv/hud/app/plan/blueprints/` (ADRs in `adr/`) |
+| Reference | `/srv/hud/app/plan/reference/` |
+| Tickets | `/srv/hud/app/plan/tasks/` (orchestrator-owned) |
+| Build-time skills | `/srv/hud/app/.claude/skills/<name>/SKILL.md` |
+
+> ⚠️ **Path drift:** the agent/skill config files (`.claude/agents/*.md`, `.claude/skills/obsidian-vault/SKILL.md`, `.opencode/agent/*.md`) still cite the old macOS path `/Users/kevinaton/Documents/Project/HUD/`. The real location on this box is `/srv/hud/app/`. Trust this table, not those files, until they're corrected.
+
+**Read-order before designing/answering:**
+1. This block + the **# Index** section below
+2. [[Kanban]] — what's in flight (read-only unless you're the orchestrator)
+3. The 2–3 most recent blueprints in `plan/blueprints/` (`ls -t`) so you don't contradict in-flight decisions
+4. Any `plan/reference/*.md` the request touches
+
+**Current state (2026-06-12):** Phases 0–2 are largely shipped per [[Kanban]] (cashflow live; Emily on Gemini/Claude/Opencode; Hermes/Andrea Telegram→HUD loop confirmed — Tickets 45–48). Roadmap-table statuses below are **stale** and need a reconciliation pass. **Next planned:** Phase 3 — Knowledge. **New proposed track:** [[26061201-logs-email-ingestion-airbnb]] (Logs / Airbnb ledger — draft, placement pending).
+
 **Live board:** [[Kanban]]
 **Visual map:** `HUD Architecture v2.canvas` (open in Obsidian)
 
@@ -154,6 +178,7 @@ A single-server personal HUD (Hetzner Ubuntu) that combines an agentic second br
 - [[26060503-multi-tenant-server-layout]] — Phase 1 anchor (server layout). HUD + Portfolio + Hermes tenancy, agent navigation, AppArmor hardening plan.
 - [[26060701-hud-agent-runtime-emily]] — **Phase 1 partner anchor (agent runtime).** Emily persona on Gemini/Claude/Opencode + `packages/mcp-hud` cashflow MCP server (stdio mode).
 - [[26060901-hermes-distributed-tenant-and-mcp-bridge]] — **Phase 2 anchor.** Hermes tenant + Andrea persona + `mcp-hud` daemon mode + Tailscale mesh + per-identity MCP ACL. Brings Telegram and Hermes Desktop online.
+- [[26061201-logs-email-ingestion-airbnb]] — **New track (draft).** Logs domain: read-only Gmail ingestion of Airbnb emails (DKIM-gated, deterministic versioned parsers) → Logs tab → later Airbnb balance sheet + payout→Cashflow posting. Roadmap placement pending (OQ-6).
 - [[26060504-mvp-agent-strategy]] — Phase 4 precursor. Agent runtime, model routing, skill loading.
 - [[26060601-dev-mode-perf-audit]] — Phase 0 supporting. Dev-mode perf quick wins (informs Ticket 09).
 

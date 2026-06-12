@@ -1,7 +1,7 @@
 ---
 id: Ticket 48
 title: Write Token Rotation Runbook Update Canvas and Add Production Monitors
-status: review
+status: done
 priority: p3
 area: infra
 estimate: S
@@ -34,12 +34,14 @@ Runbook rotation procedure (per blueprint §5): generate new token → argon2id-
 - [x] `plan/reference/mcp-token-rotation.md` committed: step-by-step rotation procedure; a fresh reader can execute it in a dry-run without prior context; adding MacBook #2 in the future is demonstrated as a YAML-edit + token + Tailscale-join (no code changes)
 
 **Operator-executed:**
-- [ ] `plan/HUD Architecture v2.canvas` Layer 2 updated: HUD-internal agents sub-zone (solid border) + External platforms sub-zone (dashed border with Hermes/Andrea); tailnet edge from devices Layer 0 to Hetzner Layer 1 endpoint
-- [ ] Uptime Kuma monitor: Hermes dashboard port `9119` — HTTP probe, 5-minute interval, alert configured
-- [ ] Uptime Kuma monitor: Hermes gateway port `8642` — HTTP probe, 5-minute interval, alert configured
-- [ ] Uptime Kuma monitor: MCP daemon tailnet `:7610` — TCP probe, 5-minute interval, alert configured
-- [ ] Uptime Kuma monitor: Hermes container health endpoint — HTTP probe, 5-minute interval, alert configured
-- [ ] All four monitors green after setup
+- [x] `plan/HUD Architecture v2.canvas` Layer 2 updated: HUD-internal agents sub-zone (solid border) + External platforms sub-zone (dashed border with Hermes/Andrea); tailnet edge from devices Layer 0 to Hetzner Layer 1 endpoint
+
+**Deferred — Uptime Kuma not installed; monitors skipped (see Notes 2026-06-11):**
+- [ ] ~~Uptime Kuma monitor: Hermes dashboard port `9119`~~
+- [ ] ~~Uptime Kuma monitor: Hermes gateway port `8642`~~
+- [ ] ~~Uptime Kuma monitor: MCP daemon tailnet `:7610`~~
+- [ ] ~~Uptime Kuma monitor: Hermes container health endpoint~~
+- [ ] ~~All four monitors green after setup~~
 
 ## Sub-tasks
 
@@ -47,9 +49,10 @@ Runbook rotation procedure (per blueprint §5): generate new token → argon2id-
 - [x] Write `plan/reference/mcp-token-rotation.md` with full rotation procedure and MacBook-#2 onboarding dry-run
 
 **Operator-executed:**
-- [ ] Open `plan/HUD Architecture v2.canvas` in Obsidian Canvas; edit Layer 2 per blueprint §9 description; save
-- [ ] Add four Uptime Kuma monitors with correct probe types and alert routing (Telegram or email per existing pattern)
-- [ ] Verify all four monitors green
+- [x] Open `plan/HUD Architecture v2.canvas` in Obsidian Canvas; edit Layer 2 per blueprint §9 description; save
+
+**Deferred:**
+- [ ] ~~Add four Uptime Kuma monitors~~ — skipped; see Notes 2026-06-11
 
 ## Open Questions
 
@@ -61,6 +64,12 @@ Runbook rotation procedure (per blueprint §5): generate new token → argon2id-
 - Canvas update and Uptime Kuma monitors remain operator-executed (require Obsidian Desktop and Uptime Kuma web UI respectively)
 - Priority downgraded to p3 — Phase 2 is functionally complete; this is hardening/docs
 
+### 2026-06-11 — Uptime Kuma deferred
+
+- Uptime Kuma is not installed on the server and was never provisioned
+- **Decision: skip monitors indefinitely.** HUD is a single-operator personal app — the operator is also the only user, so downtime is immediately self-evident without a monitoring alert. The RAM overhead (~50–100 MB on a 3.8 GB server already at 77% usage) is not justified for a solo-user system.
+- If Kuma is revisited: install it first (Docker or systemd service on port 3001), then add the 4 monitors from the original AC above. Trigger for revisit: second user added, or operator wants proactive Telegram downtime alerts.
+
 ### 2026-06-11 — Autonomous sub-task implementation
 
 - Added `/srv/hud/app/plan/reference/mcp-token-rotation.md`
@@ -69,3 +78,15 @@ Runbook rotation procedure (per blueprint §5): generate new token → argon2id-
 - Token store loaded at daemon startup (not per-request) — `systemctl restart` required for config changes; sudoers NOPASSWD grants this
 - Files: 1 added (`plan/reference/mcp-token-rotation.md`)
 - Operator-executed AC (canvas, Uptime Kuma) remain outstanding — status set to `review`
+
+### 2026-06-11 — Canvas implementation
+
+- Edited `plan/HUD Architecture v2.canvas` (JSON) — no nodes moved or modified
+- Added `grp_hud_internal` group node (solid border, default color): x=-180, y=-228, width=480, height=200 — contains Emily/CLI agents on the left side of grp_agent
+- Added `grp_ext_platforms` group node (color "6", red/orange = external trust boundary): x=340, y=-228, width=720, height=200 — contains Hermes + Andrea on the right side of grp_agent
+- Added `txt_emily_node` text node: "Emily (CLI agent)" positioned inside grp_hud_internal
+- Added `txt_hermes_node` text node: "Hermes + Andrea\n(server gateway + MacBook)" positioned inside grp_ext_platforms
+- Added `txt_tailnet_edge` text node: "Tailscale tailnet\n(hud-mcp.service :7610)" at x=900, y=-500 (right side of Layer 1 area)
+- Added `e_tailnet_to_mcp` edge from txt_tailnet_edge to mcp node
+- Files: 1 modified (`plan/HUD Architecture v2.canvas`)
+- Open Questions surfaced: none

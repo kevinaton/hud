@@ -415,3 +415,41 @@ Error authenticating: FatalAuthenticationError: Manual authorization is required
 **Files:** 4 added (`​.claude/settings.json`, `.gemini/policies/no-direct-db-access.toml`, plus the two new directories `.claude/` and `.gemini/policies/`), 3 modified (`opencode.json`, `.gemini/settings.json`, `AGENT.md`).
 
 **Status rationale (`review`, not `done`):** every acceptance criterion that *can* be fully satisfied in this environment is satisfied and live-proven (Claude Code and OpenCode have complete config + live-MCP-works + live-refusal-transcript triples; Gemini has complete, research-honest config + partial live verification). The one gap — a live Gemini model-driven tool listing, mutation+audit row, and CLI-layer refusal transcript — is blocked by a missing model-auth credential for the `hud` user that is outside this ticket's scope to fix (an infra/secrets provisioning matter, flagged in Open Questions as a recommended follow-up). I'm flagging `review` so the operator can either (a) provision a `GEMINI_API_KEY` for `hud` and ask for a quick Gemini-only verification pass to close the loop, or (b) accept the config-level + source-level proof as sufficient and move straight to `done`. Either way, the technical control itself is in place and correctly designed — this is purely a "can I prove it live right now" gap, not a "does it work" gap.
+
+### 2026-06-08 — orchestrator: closed as done per Kevin's explicit instruction
+
+A follow-up engineer pass provisioned `GEMINI_API_KEY` into `hud`'s runtime
+environment (via `/srv/hud/secrets/.env` + a `.bashrc` secrets-loader,
+mirroring the existing `DATABASE_URL`/`NEXTAUTH_*` pattern — see commits
+`b348661`/`a93fa4a`). This **closed the original auth gap** described above:
+`gemini -p "ping"` now authenticates and responds in-character, and
+`gemini mcp list` reconfirms `✓ hud: ... Connected`.
+
+A **new, different** environment blocker then surfaced — the free-tier
+`GEMINI_API_KEY` hit its daily quota (`TerminalQuotaError`,
+`generate_content_free_tier_requests`, 20/day on `gemini-3.5-flash`,
+independently confirmed via source-level error classification and a direct
+`curl` test against a different model that returned `200`). This is the
+same failure class Ticket 24 documented previously, now reproduced with a
+fresh key — a structural free-tier/CLI-routing mismatch, not a credential
+or config defect. It blocked the final live mutation+refusal-transcript
+proof for Gemini specifically.
+
+Kevin reviewed this outcome and gave explicit direction: close Ticket 33 as
+`done` now (he will separately review the quota-limit issue on his own
+timeline — it does not gate this ticket). Per his instruction:
+
+- **Claude Code** — fully done, live-proven (config + MCP-still-works +
+  refusal transcript, audit_log ids 36-37)
+- **OpenCode** — fully done, live-proven (config + MCP-still-works +
+  refusal transcript, audit_log ids 38-39)
+- **Gemini** — config complete, independently source/parse-validated,
+  MCP registration re-confirmed live with the new `tools.core` +
+  Policy Engine config in place; auth credential now genuinely provisioned
+  and working; the one remaining item (live model-driven mutation +
+  refusal-transcript triple) is blocked by a free-tier daily quota cap —
+  documented as a known limitation, not a defect in the technical control,
+  which is correctly designed and in place exactly as specified
+
+All three CLIs now have native, CLI-enforced deny rules in place blocking
+direct `hud.db` access — the ticket's Goal is met. Closing as `done`.

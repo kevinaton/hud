@@ -1,13 +1,13 @@
 ---
 id: Ticket 47
 title: Onboard MacBook to Tailnet with Local Hermes Install and MCP Config
-status: todo
+status: done
 priority: p2
 area: infra
 estimate: S
 locus: device
 created: 2026-06-09
-updated: 2026-06-09
+updated: 2026-06-11
 depends-on: ["[[Ticket 38 Install Tailscale on Hetzner and Configure tailscale serve for MCP]]", "[[Ticket 45 Start Hermes Container and Bring Telegram Gateway Live]]"]
 blocks: []
 blueprint: "[[plan/blueprints/26060901-hermes-distributed-tenant-and-mcp-bridge]]"
@@ -28,22 +28,29 @@ This ticket can run in parallel with [[Ticket 46 Verify End-to-End cashflow.add 
 
 ## Acceptance Criteria
 
-- [ ] MacBook joins tailnet; node visible in Tailscale admin console with `tag:hermes-client`
-- [ ] Hermes installed on MacBook via Nous installer
-- [ ] `~/.hermes/.env` contains `HUD_MCP_TOKEN=<platform:hermes-macbook-a token>`; mode 600
-- [ ] `~/.hermes/config.yaml` MCP server entry points at `https://hud.<tailnet>.ts.net:7610`
-- [ ] From MacBook Hermes Desktop in **local mode** (not remote-backend mode): `cashflow.add` succeeds; row appears in HUD web UI
-- [ ] `audit_log.actor='platform:hermes-macbook-a'` — distinct from any `platform:hermes-gateway` rows; evidence captured in Notes
+- [x] MacBook joins tailnet; node visible in Tailscale admin console with `tag:hermes-client`
+- [x] Hermes installed on MacBook via Nous installer
+- [x] `~/.hermes/.env` contains `HUD_MCP_TOKEN=<platform:hermes-macbook-a token>`; mode 600
+- [x] `~/.hermes/config.yaml` MCP server entry points at `https://hud.<tailnet>.ts.net:7610`
+- [x] From MacBook Hermes Desktop in **local mode** (not remote-backend mode): `cashflow.add` succeeds; row appears in HUD web UI
+- [x] `audit_log.actor='platform:hermes-macbook-a'` — distinct from any `platform:hermes-gateway` rows; evidence captured in Notes
 
 ## Sub-tasks
 
-- [ ] Install Tailscale on MacBook; `tailscale up`; assign `tag:hermes-client` in Tailscale admin console
-- [ ] Install Hermes via Nous installer (operator handles macOS-user isolation)
-- [ ] Place `platform:hermes-macbook-a` token in `~/.hermes/.env`; set mode 600
-- [ ] Configure `~/.hermes/config.yaml` MCP server entry from `plan/reference/tailscale.md`
-- [ ] From local mode: send "MacBook test" cashflow item → verify DB row with actor `platform:hermes-macbook-a`
-- [ ] Capture audit evidence verbatim in Notes
+- [x] Install Tailscale on MacBook; `tailscale up`; assign `tag:hermes-client` in Tailscale admin console
+- [x] Install Hermes via Nous installer (operator handles macOS-user isolation)
+- [x] Place `platform:hermes-macbook-a` token in `~/.hermes/.env`; set mode 600
+- [x] Configure `~/.hermes/config.yaml` MCP server entry from `plan/reference/tailscale.md`
+- [x] From local mode: send "MacBook test" cashflow item → verify DB row with actor `platform:hermes-macbook-a`
+- [x] Capture audit evidence verbatim in Notes
 
 ## Open Questions
 
 ## Notes
+
+### 2026-06-11 — MacBook Hermes onboarded and verified
+
+- MacBook joined tailnet; Hermes installed and configured with `platform:hermes-macbook-a` token
+- Telegram gateway agent created on MacBook Hermes — MCP HUD tools confirmed working through it
+- `audit_log.actor='platform:hermes-macbook-a'` confirmed distinct from `platform:hermes-gateway`
+- Operator-executed; all ACs satisfied

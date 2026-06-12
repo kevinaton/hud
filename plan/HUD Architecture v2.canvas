@@ -4,6 +4,8 @@
 		{"id":"grp_gateway","type":"group","x":-200,"y":-740,"width":1520,"height":380,"label":"Layer 1 - Gateways"},
 		{"id":"grp_edge","type":"group","x":-200,"y":-1100,"width":1520,"height":280,"label":"Layer 0 - Edge (Cloudflare)"},
 		{"id":"grp_agent","type":"group","x":-200,"y":-240,"width":1300,"height":260,"label":"Layer 2 - Multi-Agent Runtime"},
+		{"id":"grp_hud_internal","type":"group","x":-180,"y":-228,"width":480,"height":200,"label":"HUD-internal agents"},
+		{"id":"grp_ext_platforms","type":"group","x":340,"y":-228,"width":720,"height":200,"label":"External platforms","color":"6"},
 		{"id":"grp_memory","type":"group","x":-200,"y":1040,"width":1300,"height":260,"label":"Layer 4 - Memory and Database"},
 		{"id":"2d58454cff035bcd","type":"group","x":160,"y":-500,"width":560,"height":110,"label":"Nexus (Obsidian clone in web)"},
 		{"id":"sqlite","type":"file","file":"plan/reference/SQlite.md","x":-140,"y":1080,"width":200,"height":60},
@@ -40,7 +42,10 @@
 		{"id":"ssh","type":"text","text":"SSH + CLI\n(Primary interface)","x":480,"y":-680,"width":240,"height":60},
 		{"id":"multi_agents","type":"text","text":"CLI Agents - Claude CLI, Gemini CLI, Opencode CLI","x":100,"y":-137,"width":280,"height":70},
 		{"id":"ff5d1aaf40caac6d","type":"text","text":"Hermes","x":540,"y":-137,"width":280,"height":70},
-		{"id":"loops","type":"text","text":"Loops & Schedules\n(agent-native)","x":-140,"y":740,"width":200,"height":60}
+		{"id":"loops","type":"text","text":"Loops & Schedules\n(agent-native)","x":-140,"y":740,"width":200,"height":60},
+		{"id":"txt_emily_node","type":"text","text":"Emily (CLI agent)","x":-160,"y":-200,"width":220,"height":50},
+		{"id":"txt_hermes_node","type":"text","text":"Hermes + Andrea\n(server gateway + MacBook)","x":360,"y":-200,"width":260,"height":60},
+		{"id":"txt_tailnet_edge","type":"text","text":"Tailscale tailnet\n(hud-mcp.service :7610)","x":900,"y":-500,"width":240,"height":60}
 	],
 	"edges":[
 		{"id":"e_cf_caddy","fromNode":"cf_tunnel","fromSide":"bottom","toNode":"caddy","toSide":"top"},
@@ -92,6 +97,7 @@
 		{"id":"e_caddy_portui","fromNode":"caddy","fromSide":"bottom","toNode":"portfolio_ui","toSide":"top"},
 		{"id":"e53951d74b54c019","fromNode":"telegram","fromSide":"bottom","toNode":"ff5d1aaf40caac6d","toSide":"top"},
 		{"id":"be8aa0bd648a1887","fromNode":"mcp","fromSide":"right","toNode":"apis","toSide":"left"},
-		{"id":"d13959e7bdb3f22f","fromNode":"ff5d1aaf40caac6d","fromSide":"bottom","toNode":"mcp","toSide":"left"}
+		{"id":"d13959e7bdb3f22f","fromNode":"ff5d1aaf40caac6d","fromSide":"bottom","toNode":"mcp","toSide":"left"},
+		{"id":"e_tailnet_to_mcp","fromNode":"txt_tailnet_edge","fromSide":"bottom","toNode":"mcp","toSide":"top"}
 	]
 }

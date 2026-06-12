@@ -5,7 +5,7 @@ description: HUD Obsidian vault conventions — kanban plugin format preservatio
 
 # HUD Obsidian Vault Conventions
 
-The HUD vault lives at `/Users/kevinaton/Documents/Project/HUD/plan/`. It is opened by Obsidian with the **Kanban** plugin (mrjackphil/obsidian-kanban) enabled. The vault is also edited via CLI by AI agents. Both consumers must produce files the other can read without surprise.
+The HUD vault lives at `/srv/hud/app/plan/`. It is opened by Obsidian with the **Kanban** plugin (mrjackphil/obsidian-kanban) enabled. The vault is also edited via CLI by AI agents. Both consumers must produce files the other can read without surprise.
 
 This skill captures the mechanical rules. Strategic/design questions go to the architect.
 

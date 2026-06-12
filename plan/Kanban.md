@@ -6,26 +6,31 @@ kanban-plugin: board
 
 ## Todo
 
-- [ ] [[Ticket 34 Extend audit_log Actor CHECK Constraint to Allow platform Prefix]]
-- [ ] [[Ticket 35 Add HTTP SSE Daemon Mode to mcp-hud with Bearer Auth and ACL]]
-- [ ] [[Ticket 36 Author hud-mcp.service Systemd Unit and ACL Token YAML Schemas]]
-- [ ] [[Ticket 37 Deploy hud-mcp Daemon to Hetzner]]
-- [ ] [[Ticket 38 Install Tailscale on Hetzner and Configure tailscale serve for MCP]]
-- [ ] [[Ticket 39 Add Per-Identity Rate Limiter and Observability to mcp-hud]]
-- [ ] [[Ticket 40 Provision Hermes Tenant with User Slice AppArmor and Rootless Docker]]
-- [ ] [[Ticket 41 Add Caddy Entries for hermes and hermes-api Subdomains]]
-- [ ] [[Ticket 42 Author Hermes docker-compose and Provisioning Script]]
-- [ ] [[Ticket 43 Configure Hermes MCP Entry Telegram Allowlist and Dashboard Auth on Server]]
-- [ ] [[Ticket 44 Write Andrea Persona and hud-cashflow-policy Skill for Hermes]]
-- [ ] [[Ticket 45 Start Hermes Container and Bring Telegram Gateway Live]]
-- [ ] [[Ticket 46 Verify End-to-End cashflow.add via Telegram and Hermes Desktop]]
-- [ ] [[Ticket 47 Onboard MacBook to Tailnet with Local Hermes Install and MCP Config]]
-- [ ] [[Ticket 48 Write Token Rotation Runbook Update Canvas and Add Production Monitors]]
+- [ ] [[Ticket 51 L0 Add Log and Airbnb Schema Migration and Extend Actor Tier]]
+- [ ] [[Ticket 52 L1 Build Gmail Read-Only Connector with Whitelist and DKIM Gate]]
+- [ ] [[Ticket 53 L2 Build Airbnb Email Parsers and Domain Lib]]
+- [ ] [[Ticket 54 L3 Build Logs Tab with Approval Workflow and Settings Panel]]
+- [ ] [[Ticket 55 L4 Schedule Ingest Timer Wire Secrets and Add Observability]]
+- [ ] [[Ticket 56 L5a Build Airbnb Balance Sheet Tab]]
+- [ ] [[Ticket 57 L5b Post Airbnb Payout Income to Cashflow]]
 
 ## In Progress
 
 ## Done
 
+- [x] [[Ticket 50 Add Date Filter to Cashflow Page with Custom Range Modal]]
+- [x] [[Ticket 49 Patch and Import Legacy Cashflow CSV into HUD]]
+- [x] [[Ticket 48 Write Token Rotation Runbook Update Canvas and Add Production Monitors]]
+- [x] [[Ticket 47 Onboard MacBook to Tailnet with Local Hermes Install and MCP Config]]
+- [x] [[Ticket 46 Verify End-to-End cashflow.add via Telegram and Hermes Desktop]]
+- [x] [[Ticket 45 Start Hermes Container and Bring Telegram Gateway Live]]
+- [x] [[Ticket 43 Configure Hermes MCP Entry Telegram Allowlist and Dashboard Auth on Server]]
+- [x] [[Ticket 42 Author Hermes docker-compose and Provisioning Script]]
+- [x] [[Ticket 41 Add Caddy Entries for hermes and hermes-api Subdomains]]
+- [x] [[Ticket 40 Provision Hermes Tenant with User Slice AppArmor and Rootless Docker]]
+- [x] [[Ticket 39 Add Per-Identity Rate Limiter and Observability to mcp-hud]]
+- [x] [[Ticket 38 Install Tailscale on Hetzner and Configure tailscale serve for MCP]]
+- [x] [[Ticket 37 Deploy hud-mcp Daemon to Hetzner]]
 - [x] [[Ticket 36 Author hud-mcp.service Systemd Unit and ACL Token YAML Schemas]]
 - [x] [[Ticket 44 Write Andrea Persona and hud-cashflow-policy Skill for Hermes]]
 - [x] [[Ticket 35 Add HTTP SSE Daemon Mode to mcp-hud with Bearer Auth and ACL]]
