@@ -1,10 +1,11 @@
 /**
  * (app) route group layout — protected area.
  *
- * Every page under (app)/ requires an authenticated session.
- * requireSession() will redirect to /login if no valid session exists.
+ * Enforces auth via requireSession() and renders the shared HudHeader
+ * (top nav + mobile hamburger) for every page in this group.
  */
 
+import { HudHeader } from '@/components/hud/HudHeader';
 import { requireSession } from '@/lib/auth/index';
 import type { Metadata } from 'next';
 
@@ -17,9 +18,17 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // This throws a redirect to /login if not authenticated.
-  // The return value (ctx) can be passed to child layouts via context if needed.
-  await requireSession();
+  const ctx = await requireSession();
+  const { user } = ctx;
 
-  return <>{children}</>;
+  return (
+    <div className="flex min-h-screen flex-col">
+      <HudHeader
+        avatarPath={user.avatarPath ?? null}
+        displayName={user.displayName ?? null}
+        email={user.email}
+      />
+      <div className="flex flex-1 flex-col">{children}</div>
+    </div>
+  );
 }

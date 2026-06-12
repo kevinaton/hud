@@ -15,9 +15,18 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const NAV_ITEMS = [
-  { label: 'FINANCE', href: '/finance/cashflow' },
-  { label: 'LOGS', href: '/logs' },
-  { label: 'AIRBNB', href: '/airbnb' },
+  {
+    label: 'FINANCE',
+    href: '/finance/cashflow',
+    match: '/finance',
+    children: [
+      { label: 'Cashflow', href: '/finance/cashflow' },
+      { label: 'Airbnb', href: '/finance/airbnb' },
+      { label: 'Reports', href: '/finance/reports' },
+    ],
+  },
+  { label: 'LOGS', href: '/logs', match: '/logs', children: [] },
+  { label: 'NEXUS', href: '/nexus', match: '/nexus', children: [] },
 ];
 
 interface AppNavDrawerProps {
@@ -123,25 +132,50 @@ export function AppNavDrawer({ currentPath }: AppNavDrawerProps) {
         {/* Nav links */}
         <nav aria-label="Main navigation" className="py-2">
           {NAV_ITEMS.map((item) => {
-            const isActive = currentPath?.startsWith(
-              item.href.split('/')[1] ? `/${item.href.split('/')[1]}` : item.href,
-            );
+            const isActive = currentPath?.startsWith(item.match);
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={close}
-                className={cn(
-                  'flex items-center px-4 py-3 font-body text-[14px] uppercase tracking-[0.1em]',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                  'transition-colors',
-                  isActive ? 'text-accent' : 'text-muted hover:text-foreground',
+              <div key={item.href}>
+                {/* Top-level item */}
+                <Link
+                  href={item.href}
+                  onClick={close}
+                  className={cn(
+                    'flex items-center px-4 py-3 font-body text-[14px] uppercase tracking-[0.1em]',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                    'transition-colors',
+                    isActive ? 'text-accent' : 'text-muted hover:text-foreground',
+                  )}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  {isActive && <span aria-hidden="true" className="mr-2 h-4 w-0.5 bg-accent" />}
+                  {item.label}
+                </Link>
+
+                {/* Sub-items (always visible when parent is active) */}
+                {item.children.length > 0 && isActive && (
+                  <div className="pb-1">
+                    {item.children.map((child) => {
+                      const childActive = currentPath === child.href || currentPath?.startsWith(child.href + '/');
+                      return (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          onClick={close}
+                          className={cn(
+                            'flex items-center pl-8 pr-4 py-2 font-body text-[13px]',
+                            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                            'transition-colors',
+                            childActive ? 'text-accent' : 'text-muted hover:text-foreground',
+                          )}
+                          aria-current={childActive ? 'page' : undefined}
+                        >
+                          {child.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
                 )}
-                aria-current={isActive ? 'page' : undefined}
-              >
-                {isActive && <span aria-hidden="true" className="mr-2 h-4 w-0.5 bg-accent" />}
-                {item.label}
-              </Link>
+              </div>
             );
           })}
         </nav>
