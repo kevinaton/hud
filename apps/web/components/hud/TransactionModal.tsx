@@ -425,7 +425,7 @@ export function TransactionModal({
                       }}
                       className={cn(
                         'rounded-[var(--radius)] border-border bg-transparent',
-                        'font-display tabular text-foreground placeholder:text-muted placeholder:font-body',
+                        'tabular text-foreground placeholder:text-muted placeholder:font-body',
                         'focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                       )}
                     />
@@ -450,7 +450,7 @@ export function TransactionModal({
                       {...field}
                       className={cn(
                         'rounded-[var(--radius)] border-border bg-transparent',
-                        'font-display tabular text-foreground',
+                        'tabular text-foreground',
                         'focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                       )}
                     />
