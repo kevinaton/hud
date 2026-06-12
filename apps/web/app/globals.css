@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Explicitly include shadcn component directories so Tailwind v4 scans them */
+@source "../components";
+@source "../hooks";
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
