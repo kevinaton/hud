@@ -8,9 +8,9 @@
  * Layout (in TRANSACTIONS header row):
  *   TRANSACTIONS        [This month ▾]  [+]
  *
- * Button style:
- *   bg-accent text-accent-fg font-body uppercase text-[11px] tracking-widest
- *   px-3 py-1 rounded-sm — matches [+] button aesthetic
+ * Button style (ghost — same height as [+]):
+ *   h-7 px-2 text-muted font-body uppercase text-[11px] tracking-widest
+ *   No background, no border, no fill — plain text + caret
  *
  * Dropdown panel:
  *   absolute, border border-border, bg-background, rounded-sm, z-20
@@ -126,11 +126,11 @@ export function CashflowFilterBar({ activeFilter, activeFilterLabel }: CashflowF
           aria-expanded={open}
           onClick={() => setOpen((prev) => !prev)}
           className={cn(
-            'flex items-center gap-1.5',
-            'bg-accent text-accent-fg font-body uppercase text-[11px] tracking-widest',
-            'px-3 py-1 rounded-sm',
+            'flex h-7 items-center gap-1',
+            'text-muted font-body uppercase text-[11px] tracking-widest',
+            'px-2',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-            'transition-opacity hover:opacity-80 active:opacity-70',
+            'hover:text-foreground transition-colors',
           )}
         >
           <span>{buttonLabel}</span>
