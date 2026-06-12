@@ -76,3 +76,6 @@ packages/mcp-hud/dist-new/
 # Example files (*.example.yaml) and test fixtures are committed.
 ops/secrets/mcp-tokens.yaml
 ops/secrets/mcp-acl.yaml
+
+# OAuth client secrets — never commit
+client_secret_*.json
