@@ -10,7 +10,7 @@ export default function NexusPage() {
   return (
     <main className="relative flex-1">
       <GridOverlay />
-      <div className="flex flex-col items-center justify-center px-4 py-20 text-center">
+      <div className="relative z-10 flex flex-col items-center justify-center px-4 py-20 text-center">
         <p className="font-display text-[13px] uppercase tracking-[0.2em] text-accent">Nexus</p>
         <p className="mt-2 font-body text-[14px] text-muted">
           The knowledge phase — Obsidian vault, notes, and agent memory.

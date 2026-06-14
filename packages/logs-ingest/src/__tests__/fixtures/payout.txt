@@ -1,33 +1,42 @@
 From: automated@airbnb.com
 Subject: We sent a payout of ₱49,878.59 PHP
 
-Payout sent
+₱49,878.59 PHP was sent today
 
-Hi Kevin,
+Your money was sent on Jun 10 and should arrive by Jun 13, 2026.
 
-We sent a payout of ₱49,878.59 PHP to your bank account.
+Bank account
 
-Transfer date: Jun 10, 2026
-Expected arrival: Jun 13, 2026
-To: Kevin Aton, 4131 (PHP)
+Kevin Aton, 4131 (PHP)
 
-Airbnb account ID: 39777780
+Airbnb account ID
 
-Your reservations:
+39777780
+
+Details
+
+John Smith   ₱1,504.05 PHP
+
+Home • 6/13/2026 - 6/14/2026
+
+My Listing (977049623688034712)
 
 HMJ9JX4ZYZ
-Guest: John Smith
-Jun 13 – 14, 2026
-₱1,504.05
+
+Ana Reyes   ₱3,200.50 PHP
+
+Home • 6/1/2026 - 6/3/2026
+
+My Listing (977049623688034712)
 
 HM9ABCDEFG
-Guest: Ana Reyes
-Jun 1 – 3, 2026
-₱3,200.50
+
+Carlos Tan   ₱45,174.04 PHP
+
+Home • 5/25/2026 - 6/1/2026
+
+My Listing (977049623688034712)
 
 HMXYZ12345
-Guest: Carlos Tan
-May 25 – Jun 1, 2026
-₱45,174.04
 
-Total payout: ₱49,878.59
+Total paid:   ₱49,878.59 PHP

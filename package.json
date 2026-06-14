@@ -21,7 +21,8 @@
     "db:seed": "pnpm --filter web db:seed",
     "import:cashflow": "pnpm --filter web import:cashflow",
     "db:reset-password": "tsx scripts/reset-password.ts",
-    "validate:mcp-config": "tsx scripts/validate-mcp-config.ts"
+    "validate:mcp-config": "tsx scripts/validate-mcp-config.ts",
+    "deploy": "bash scripts/deploy.sh"
   },
   "dependencies": {
     "better-sqlite3": "^12.10.0",

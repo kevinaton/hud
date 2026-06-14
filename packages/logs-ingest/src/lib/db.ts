@@ -191,13 +191,20 @@ export function getLogRaw(logEntryId: number): LogRaw | null {
 // ---------------------------------------------------------------------------
 // listPendingEntries
 //
-// Returns log_entries rows with status='pending' (for re-parse mode).
+// Returns log_entries rows with status='pending' or 'parse_failed' for
+// re-parse mode — both statuses indicate the entry has not been
+// successfully parsed yet.
 // ---------------------------------------------------------------------------
 export function listPendingEntries(userId: number): LogEntry[] {
   return db
     .select()
     .from(schema.logEntries)
-    .where(and(eq(schema.logEntries.userId, userId), eq(schema.logEntries.status, 'pending')))
+    .where(
+      and(
+        eq(schema.logEntries.userId, userId),
+        sql`${schema.logEntries.status} IN ('pending', 'parse_failed')`,
+      ),
+    )
     .all();
 }
 

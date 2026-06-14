@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
-    "build": "next build",
+    "build": "NODE_OPTIONS='--max-old-space-size=1536' next build",
     "postbuild": "node ./scripts/copy-standalone-assets.mjs",
     "start": "next start",
     "typecheck": "tsc --noEmit",

@@ -10,8 +10,11 @@ export default function ReportPage() {
   return (
     <div className="relative flex flex-col flex-1 bg-background">
       <GridOverlay />
-      <div className="flex flex-1 items-center justify-center px-4">
-        <p className="font-body text-muted uppercase" style={{ fontSize: '14px', letterSpacing: '0.12em' }}>
+      <div className="relative z-10 flex flex-1 items-center justify-center px-4">
+        <p
+          className="font-body text-muted uppercase"
+          style={{ fontSize: '14px', letterSpacing: '0.12em' }}
+        >
           Report — Coming in a future phase
         </p>
       </div>

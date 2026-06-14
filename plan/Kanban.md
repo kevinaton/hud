@@ -16,7 +16,10 @@ kanban-plugin: board
 
 ## In Progress
 
+
 ## Done
+
+- [x] [[Ticket 59 Fix GridOverlay Z-Index Stacking Behind Content]]
 
 - [x] [[Ticket 50 Add Date Filter to Cashflow Page with Custom Range Modal]]
 - [x] [[Ticket 49 Patch and Import Legacy Cashflow CSV into HUD]]

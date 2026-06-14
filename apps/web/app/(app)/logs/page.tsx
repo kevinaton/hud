@@ -214,66 +214,68 @@ export default async function LogsPage({
     <main className="relative flex-1">
       <GridOverlay />
 
-      {/* Pending count hero */}
-      {pendingCount > 0 && (
-        <div className="px-4 py-4">
-          <div className="rounded-[var(--radius)] border border-warning bg-surface px-4 py-3">
-            <p className="font-display tabular text-[28px] font-[300] text-warning">
-              {pendingCount}
-            </p>
-            <p className="font-body text-[12px] uppercase tracking-[0.18em] text-muted">
-              {pendingCount === 1 ? 'Entry' : 'Entries'} awaiting review
-            </p>
-          </div>
-        </div>
-      )}
-
-      <HazardStripe />
-
-      {/* Entries section */}
-      <section className="px-0">
-        <div className="flex items-center justify-between border-b border-border px-4 py-2">
-          <h2 className="font-body text-[12px] uppercase tracking-[0.18em] text-muted">
-            Log Entries
-          </h2>
-          <span className="font-body text-[12px] tabular text-muted">{entries.length}</span>
-        </div>
-
-        {/* Filter bar — client component */}
-        <Suspense>
-          <LogsFilterBar />
-        </Suspense>
-
-        {entries.length === 0 ? (
-          <p className="px-4 py-8 font-body text-[14px] text-muted text-center">
-            No entries found.
-          </p>
-        ) : (
-          <div className="bg-surface">
-            {entries.map((entry) => (
-              <LogEntryRow key={entry.id} entry={entry} />
-            ))}
+      <div className="relative z-10 flex flex-col flex-1">
+        {/* Pending count hero */}
+        {pendingCount > 0 && (
+          <div className="px-4 py-4">
+            <div className="rounded-[var(--radius)] border border-warning bg-surface px-4 py-3">
+              <p className="font-display tabular text-[28px] font-[300] text-warning">
+                {pendingCount}
+              </p>
+              <p className="font-body text-[12px] uppercase tracking-[0.18em] text-muted">
+                {pendingCount === 1 ? 'Entry' : 'Entries'} awaiting review
+              </p>
+            </div>
           </div>
         )}
-      </section>
 
-      <HazardStripe />
+        <HazardStripe />
 
-      {/* Settings panel */}
-      <section className="px-4 py-4">
-        <h2 className="mb-3 font-body text-[12px] uppercase tracking-[0.18em] text-muted">
-          Ingestion Settings
-        </h2>
-        <LogsSettingsPanel
-          approvalRequired={approvalRequired}
-          whitelist={whitelist.map((w) => ({
-            id: w.id,
-            sender: w.sender,
-            enabled: w.enabled,
-            note: w.note,
-          }))}
-        />
-      </section>
+        {/* Entries section */}
+        <section className="px-0">
+          <div className="flex items-center justify-between border-b border-border px-4 py-2">
+            <h2 className="font-body text-[12px] uppercase tracking-[0.18em] text-muted">
+              Log Entries
+            </h2>
+            <span className="font-body text-[12px] tabular text-muted">{entries.length}</span>
+          </div>
+
+          {/* Filter bar — client component */}
+          <Suspense>
+            <LogsFilterBar />
+          </Suspense>
+
+          {entries.length === 0 ? (
+            <p className="px-4 py-8 font-body text-[14px] text-muted text-center">
+              No entries found.
+            </p>
+          ) : (
+            <div className="bg-surface">
+              {entries.map((entry) => (
+                <LogEntryRow key={entry.id} entry={entry} />
+              ))}
+            </div>
+          )}
+        </section>
+
+        <HazardStripe />
+
+        {/* Settings panel */}
+        <section className="px-4 py-4">
+          <h2 className="mb-3 font-body text-[12px] uppercase tracking-[0.18em] text-muted">
+            Ingestion Settings
+          </h2>
+          <LogsSettingsPanel
+            approvalRequired={approvalRequired}
+            whitelist={whitelist.map((w) => ({
+              id: w.id,
+              sender: w.sender,
+              enabled: w.enabled,
+              note: w.note,
+            }))}
+          />
+        </section>
+      </div>
     </main>
   );
 }

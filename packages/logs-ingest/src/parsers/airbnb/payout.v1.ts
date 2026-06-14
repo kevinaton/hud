@@ -109,14 +109,12 @@ interface PayoutItem {
 function extractItems(body: string): PayoutItem[] | { error: string } {
   const items: PayoutItem[] = [];
 
-  // Split into "paragraphs" around each confirmation code
-  // Find all positions of HM codes
   const codeRe = /\b(HM[A-Z0-9]{8})\b/g;
-  const codePositions: { code: string; index: number }[] = [];
+  const codePositions: Array<{ code: string; index: number; end: number }> = [];
   let m: RegExpExecArray | null;
   // biome-ignore lint/suspicious/noAssignInExpressions: regex exec loop pattern
   while ((m = codeRe.exec(body)) !== null) {
-    codePositions.push({ code: m[1] ?? '', index: m.index });
+    codePositions.push({ code: m[1] ?? '', index: m.index, end: m.index + m[0].length });
   }
 
   if (codePositions.length === 0) {
@@ -126,29 +124,55 @@ function extractItems(body: string): PayoutItem[] | { error: string } {
   for (let i = 0; i < codePositions.length; i++) {
     const pos = codePositions[i];
     if (!pos) continue;
-    const nextPos = codePositions[i + 1];
-    // Slice the "section" for this item: from this code to the next (or end of body)
-    const sectionStart = pos.index;
-    const sectionEnd = nextPos ? nextPos.index : body.length;
+    const prevPos = codePositions[i - 1];
+
+    // Real Airbnb payout emails place details BEFORE the HM code in each block:
+    //   {Guest Name}   ₱{Amount} PHP
+    //   Home • {M/D/YYYY} - {M/D/YYYY}
+    //   {Property} ({listingId})
+    //   {HM code}
+    // Scanning backward (prev code end → current code end) puts the guest name
+    // and amount inside their own item's section instead of the next item's.
+    const sectionStart = prevPos ? prevPos.end : 0;
+    const sectionEnd = pos.end;
     const section = body.slice(sectionStart, sectionEnd);
 
     const code = pos.code.toUpperCase();
 
-    // Guest name — look for "Guest:" or a standalone name line
+    // Guest name — inline "Name   ₱Amount" format (multiple horizontal spaces)
     let guestName: string | null = null;
-    const guestMatch = section.match(/guest[:\s]+([A-Za-z][^\n\r]{1,50})/i);
-    if (guestMatch) guestName = (guestMatch[1] ?? '').trim();
+    const inlineGuestMatch = section.match(/^([A-Za-z][^\n\r]*?)[^\S\n]{2,}[₱\-]/m);
+    if (inlineGuestMatch) {
+      guestName = (inlineGuestMatch[1] ?? '').trim();
+    }
+    // Fallback: "Guest: Name" format
+    if (!guestName) {
+      const kwMatch = section.match(/guest[:\s]+([A-Za-z][^\n\r]{1,50})/i);
+      if (kwMatch) guestName = (kwMatch[1] ?? '').trim();
+    }
 
-    // Amount — find a ₱ amount in the section
+    // Amount — prefer inline pattern: multiple horizontal spaces before ₱
+    // disambiguates item amounts from standalone totals in the preamble
     let amountMinor: number | null = null;
-    const amountMatches = section.match(/([₱\-][\-₱PHP0-9,. ]+(?:\d{2}))/g);
-    if (amountMatches) {
-      for (const raw of amountMatches) {
-        try {
-          amountMinor = parsePhpAmount(raw);
-          break; // Take the first parseable amount
-        } catch {
-          /* try next */
+    const inlineAmountMatch = section.match(/[^\S\n]{2,}(₱[\d,]+\.\d{2})/);
+    if (inlineAmountMatch?.[1]) {
+      try {
+        amountMinor = parsePhpAmount(inlineAmountMatch[1]);
+      } catch {
+        // fall through
+      }
+    }
+    // Fallback: first ₱ amount anywhere in section
+    if (amountMinor === null) {
+      const amountMatches = section.match(/([₱\-][\-₱PHP0-9,. ]+(?:\d{2}))/g);
+      if (amountMatches) {
+        for (const raw of amountMatches) {
+          try {
+            amountMinor = parsePhpAmount(raw);
+            break;
+          } catch {
+            /* try next */
+          }
         }
       }
     }
@@ -157,28 +181,38 @@ function extractItems(body: string): PayoutItem[] | { error: string } {
       return { error: `amount_not_found_for_code_${code}` };
     }
 
-    // Date range
+    // Date range — numeric M/D/YYYY (real emails) or named-month format (legacy)
     let dateRangeStart: string | null = null;
     let dateRangeEnd: string | null = null;
-    const rangeRe = /([A-Za-z]+\.?\s+\d{1,2})\s*[–\-]\s*(?:[A-Za-z]+\.?\s+)?(\d{1,2},?\s*\d{4})/;
-    const rangeMatch = section.match(rangeRe);
-    if (rangeMatch) {
-      const startRaw = rangeMatch[1] ?? '';
-      const endRaw = rangeMatch[2] ?? '';
-      const yearMatch = endRaw.match(/(\d{4})/);
-      const year = yearMatch ? Number(yearMatch[1]) : new Date().getFullYear();
-      // Get month from start
-      const startMonthMatch = startRaw.match(/([A-Za-z]+)/);
-      const monthKey = (startMonthMatch?.[1] ?? '').toLowerCase().slice(0, 3);
-      const month = MONTH_NAMES[monthKey];
-      const startDayMatch = startRaw.match(/(\d{1,2})$/);
-      const startDay = startDayMatch ? Number(startDayMatch[1]) : null;
-      if (month && startDay) {
-        dateRangeStart = `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(startDay).padStart(2, '0')}T00:00:00+08:00`;
-      }
-      const endDayMatch = endRaw.match(/^(\d{1,2})/);
-      if (month && endDayMatch) {
-        dateRangeEnd = `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(Number(endDayMatch[1])).padStart(2, '0')}T00:00:00+08:00`;
+
+    const numericMatch = section.match(
+      /(\d{1,2})\/(\d{1,2})\/(\d{4})\s*[-–]\s*(\d{1,2})\/(\d{1,2})\/(\d{4})/,
+    );
+    if (numericMatch) {
+      const [, sm, sd, sy, em, ed, ey] = numericMatch;
+      const pad2 = (s: string | undefined) => String(Number(s ?? '1')).padStart(2, '0');
+      dateRangeStart = `${sy}-${pad2(sm)}-${pad2(sd)}T00:00:00+08:00`;
+      dateRangeEnd = `${ey}-${pad2(em)}-${pad2(ed)}T00:00:00+08:00`;
+    } else {
+      const rangeRe = /([A-Za-z]+\.?\s+\d{1,2})\s*[–\-]\s*(?:[A-Za-z]+\.?\s+)?(\d{1,2},?\s*\d{4})/;
+      const rangeMatch = section.match(rangeRe);
+      if (rangeMatch) {
+        const startRaw = rangeMatch[1] ?? '';
+        const endRaw = rangeMatch[2] ?? '';
+        const yearMatch = endRaw.match(/(\d{4})/);
+        const year = yearMatch ? Number(yearMatch[1]) : new Date().getFullYear();
+        const startMonthMatch = startRaw.match(/([A-Za-z]+)/);
+        const monthKey = (startMonthMatch?.[1] ?? '').toLowerCase().slice(0, 3);
+        const month = MONTH_NAMES[monthKey];
+        const startDayMatch = startRaw.match(/(\d{1,2})$/);
+        const startDay = startDayMatch ? Number(startDayMatch[1]) : null;
+        if (month && startDay) {
+          dateRangeStart = `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(startDay).padStart(2, '0')}T00:00:00+08:00`;
+        }
+        const endDayMatch = endRaw.match(/^(\d{1,2})/);
+        if (month && endDayMatch) {
+          dateRangeEnd = `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(Number(endDayMatch[1])).padStart(2, '0')}T00:00:00+08:00`;
+        }
       }
     }
 
