@@ -79,3 +79,6 @@ ops/secrets/mcp-acl.yaml
 
 # OAuth client secrets — never commit
 client_secret_*.json
+
+# Local dev seed scripts — never ship
+scripts/seed-airbnb-dev.ts
