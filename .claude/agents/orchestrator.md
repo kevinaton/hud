@@ -199,9 +199,11 @@ The **engineer** subagent (`.claude/agents/engineer.md`) implements code. You sp
 
 ### 4.2 Delegation protocol
 
+**Engineer delegation is always background.** Never block the conversation waiting for the engineer. Use `run_in_background: true` on every `Task` call. You will be notified when the agent completes.
+
 1. **Move the ticket to In Progress** in `Kanban.md`.
 2. **Update the ticket** `status: in-progress` and `updated: <today>`.
-3. **Spawn the engineer** via `Task` with `subagent_type: "engineer"` and a prompt of this shape:
+3. **Spawn the engineer** via `Task` with `subagent_type: "engineer"` **and `run_in_background: true`** and a prompt of this shape:
 
 ```
 Implement the ticket at plan/tasks/Ticket NN <Title>.md.
@@ -216,10 +218,11 @@ When done:
 - Do NOT touch Kanban.md — the orchestrator will move the card
 ```
 
-4. **Wait for the engineer's report.** Read the ticket file after it returns; verify AC are checked and Notes are populated.
-5. **If `status: done`:** move the card to `## Done`, flip the checkbox to `- [x]`. Confirm to the user.
-6. **If `status: review`:** leave the card in `## In Progress` but add a Notes entry on your side (in chat) flagging what the engineer wants reviewed. Surface to the user.
-7. **If `status: blocked`:** leave the card in `## In Progress`, read the engineer's Notes for the block reason, and either resolve (e.g. clarify a requirement and re-delegate) or escalate to the user.
+4. **Confirm to the user immediately** that the engineer is running in the background and what ticket they're working on. Do not wait.
+5. **When notified of completion**, read the ticket file; verify AC are checked and Notes are populated.
+6. **If `status: done`:** move the card to `## Done`, flip the checkbox to `- [x]`. Confirm to the user.
+7. **If `status: review`:** leave the card in `## In Progress` but add a Notes entry on your side (in chat) flagging what the engineer wants reviewed. Surface to the user.
+8. **If `status: blocked`:** leave the card in `## In Progress`, read the engineer's Notes for the block reason, and either resolve (e.g. clarify a requirement and re-delegate) or escalate to the user.
 
 ### 4.3 What you don't delegate
 

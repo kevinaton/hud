@@ -6,21 +6,26 @@ kanban-plugin: board
 
 ## Todo
 
-- [ ] [[Ticket 51 L0 Add Log and Airbnb Schema Migration and Extend Actor Tier]]
-- [ ] [[Ticket 52 L1 Build Gmail Read-Only Connector with Whitelist and DKIM Gate]]
-- [ ] [[Ticket 53 L2 Build Airbnb Email Parsers and Domain Lib]]
-- [ ] [[Ticket 54 L3 Build Logs Tab with Approval Workflow and Settings Panel]]
-- [ ] [[Ticket 55 L4 Schedule Ingest Timer Wire Secrets and Add Observability]]
-- [ ] [[Ticket 56 L5a Build Airbnb Balance Sheet Tab]]
-- [ ] [[Ticket 57 L5b Post Airbnb Payout Income to Cashflow]]
 
 ## In Progress
+
+- [ ] [[Ticket 55 L4 Schedule Ingest Timer Wire Secrets and Add Observability]]
 
 
 ## Done
 
+- [x] [[Ticket 62 Add Local Dev Airbnb Seed Script]]
+- [x] [[Ticket 61 Fix inert Boolean Attribute Warning in AppNavDrawer]]
+- [x] [[Ticket 60 Redesign Airbnb Page Layout with Tab Navigation and Redesigned Booking Cards]]
+- [x] [[Ticket 58 Redesign Cashflow Filter as Inline Dropdown Button]]
+- [x] [[Ticket 57 L5b Post Airbnb Payout Income to Cashflow]]
+- [x] [[Ticket 56 L5a Build Airbnb Balance Sheet Tab]]
+- [x] [[Ticket 54 L3 Build Logs Tab with Approval Workflow and Settings Panel]]
+- [x] [[Ticket 53 L2 Build Airbnb Email Parsers and Domain Lib]]
+- [x] [[Ticket 52 L1 Build Gmail Read-Only Connector with Whitelist and DKIM Gate]]
+- [x] [[Ticket 51 L0 Add Log and Airbnb Schema Migration and Extend Actor Tier]]
 - [x] [[Ticket 59 Fix GridOverlay Z-Index Stacking Behind Content]]
-
+- [x] [[Ticket 59 Enhance Sign-In Page with Live Clock Attempts Footer and Animated Bar Component]]
 - [x] [[Ticket 50 Add Date Filter to Cashflow Page with Custom Range Modal]]
 - [x] [[Ticket 49 Patch and Import Legacy Cashflow CSV into HUD]]
 - [x] [[Ticket 48 Write Token Rotation Runbook Update Canvas and Add Production Monitors]]
