@@ -84,7 +84,7 @@ export default async function CashflowPage({
       <div className="relative z-10 flex flex-col flex-1">
         {/* Main content — padded container */}
         <div className="flex flex-col flex-1 p-4">
-          <section className="border border-border">
+          <section className="border border-border bg-background">
             {/* ---------------------------------------------------------------- */}
             {/* Hero card — Net Income                                           */}
             {/* ---------------------------------------------------------------- */}
@@ -95,7 +95,7 @@ export default async function CashflowPage({
                   amountMinor={current.net}
                   currency="PHP"
                   variant="neutral"
-                  className="font-display text-3xl tabular text-foreground"
+                  className="font-display text-3xl tabular text-warning"
                   style={{
                     fontWeight: 400,
                     lineHeight: 1,
@@ -115,7 +115,7 @@ export default async function CashflowPage({
                   Net Income
                 </span>
                 <span
-                  className="font-body text-muted-2"
+                  className="font-body text-muted-2 te"
                   style={{ fontSize: '11px', letterSpacing: '0.1em' }}
                 >
                   {periodLabel}

@@ -117,7 +117,7 @@ export function CashflowTransactionSection({
       {/* ---------------------------------------------------------------- */}
       {/* Transaction list                                                 */}
       {/* ---------------------------------------------------------------- */}
-      <div className="flex flex-col flex-1 pb-8 border border-border">
+      <div className="flex flex-col flex-1 pb-8 border border-border bg-background">
         {transactions.length === 0 ? (
           <div className="flex flex-1 items-center justify-center py-16">
             <p
