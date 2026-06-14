@@ -7,12 +7,16 @@
  *  - Fetching CSRF token from GET /api/auth/csrf on mount (sets cookie + returns token in body)
  *  - Injecting CSRF token into POST header
  *  - Showing remaining-attempts count via WarningCounter (server-driven, not client-side math)
+ *    Counter renders BELOW the ACCESS button per Figma node 346-47.
  *  - Showing lockout countdown when account is locked
  *  - Showing error messages from server response
  *  - Redirecting on success
+ *  - LiveClock (HH:MM:SS:cs + timezone label) and AnimatedBar accent below the card
  */
 
+import { LiveClock } from '@/components/hud/LiveClock';
 import { WarningCounter } from '@/components/hud/WarningCounter';
+import { AnimatedBar } from '@/components/ui/animated-bar';
 import { LOCKOUT_DURATION_MINUTES, LOCKOUT_THRESHOLD } from '@/lib/auth/lockout-constants';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -142,72 +146,80 @@ export function LoginForm() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* Warning counter — always visible, starting at the full threshold on fresh load */}
-      <WarningCounter count={remainingAttempts} label="Attempts Remaining" />
-
-      {/* Error message */}
-      {error && (
-        <div
-          role="alert"
-          className="font-body text-destructive"
-          style={{ fontSize: '13px', letterSpacing: '0.04em' }}
-        >
-          {errorMessage()}
-        </div>
-      )}
-
-      {/* Login form */}
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
-        <div className="flex flex-col gap-1">
-          <label
-            htmlFor="email"
-            className="font-body uppercase text-muted"
-            style={{ fontSize: '11px', letterSpacing: '0.18em' }}
+    <>
+      <div className="flex flex-col gap-8">
+        {/* Error message */}
+        {error && (
+          <div
+            role="alert"
+            className="font-body text-destructive"
+            style={{ fontSize: '13px', letterSpacing: '0.04em' }}
           >
-            Email
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            disabled={pending || isLocked || !csrfToken}
-            className="border border-border bg-background px-3 py-2 font-body text-foreground outline-none focus:border-accent disabled:opacity-50"
-            style={{ fontSize: '14px', borderRadius: 'var(--radius)' }}
-          />
-        </div>
+            {errorMessage()}
+          </div>
+        )}
 
-        <div className="flex flex-col gap-1">
-          <label
-            htmlFor="password"
-            className="font-body uppercase text-muted"
-            style={{ fontSize: '11px', letterSpacing: '0.18em' }}
+        {/* Login form */}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="email"
+              className="font-body uppercase text-muted"
+              style={{ fontSize: '11px', letterSpacing: '0.18em' }}
+            >
+              Email
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              disabled={pending || isLocked || !csrfToken}
+              className="border border-border bg-background px-3 py-2 font-body text-foreground outline-none focus:border-accent disabled:opacity-50"
+              style={{ fontSize: '14px', borderRadius: 'var(--radius)' }}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="password"
+              className="font-body uppercase text-muted"
+              style={{ fontSize: '11px', letterSpacing: '0.18em' }}
+            >
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              disabled={pending || isLocked || !csrfToken}
+              className="border border-border bg-background px-3 py-2 font-body text-foreground outline-none focus:border-accent disabled:opacity-50"
+              style={{ fontSize: '14px', borderRadius: 'var(--radius)' }}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={pending || isLocked || !csrfToken}
+            className="mt-2 border border-accent bg-transparent px-6 py-2 font-display uppercase text-accent transition-colors hover:bg-accent hover:text-accent-fg disabled:cursor-not-allowed disabled:opacity-40"
+            style={{ fontSize: '13px', letterSpacing: '0.18em' }}
           >
-            Password
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            disabled={pending || isLocked || !csrfToken}
-            className="border border-border bg-background px-3 py-2 font-body text-foreground outline-none focus:border-accent disabled:opacity-50"
-            style={{ fontSize: '14px', borderRadius: 'var(--radius)' }}
-          />
-        </div>
+            {pending ? 'Authenticating...' : 'Authenticate'}
+          </button>
+        </form>
 
-        <button
-          type="submit"
-          disabled={pending || isLocked || !csrfToken}
-          className="mt-2 border border-accent bg-transparent px-6 py-2 font-display uppercase text-accent transition-colors hover:bg-accent hover:text-accent-fg disabled:cursor-not-allowed disabled:opacity-40"
-          style={{ fontSize: '13px', letterSpacing: '0.18em' }}
-        >
-          {pending ? 'Authenticating...' : 'Authenticate'}
-        </button>
-      </form>
-    </div>
+        {/* Attempts counter — below ACCESS button per Figma node 346-47 */}
+        <WarningCounter count={remainingAttempts} label="Attempts Remaining" />
+
+        {/* Live clock — HH:MM:SS:cs with timezone label */}
+        <LiveClock />
+      </div>
+
+      {/* Animated accent bar fixed to the bottom of the viewport */}
+      <AnimatedBar variant="accent" />
+    </>
   );
 }
