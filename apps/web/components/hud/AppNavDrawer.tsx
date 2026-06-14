@@ -106,7 +106,7 @@ export function AppNavDrawer() {
         role="dialog"
         aria-modal="true"
         aria-label="Navigation"
-        inert={!open ? ('' as unknown as boolean) : undefined}
+        inert={!open || undefined}
         style={{ transform: open ? 'translateX(0)' : 'translateX(-100%)', width: '60vw', height: '100dvh' }}
         className="fixed left-0 top-0 z-[70] bg-background transition-transform duration-200 ease-out"
       >
