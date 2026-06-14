@@ -1,7 +1,7 @@
 ---
 id: Ticket 60
 title: Redesign Airbnb Page Layout with Tab Navigation and Redesigned Booking Cards
-status: in-progress
+status: done
 priority: p2
 area: feature
 estimate: M
@@ -101,58 +101,58 @@ See `.claude/skills/hud-money/SKILL.md` for amount display rules.
 ## Acceptance Criteria
 
 ### Summary card
-- [ ] Summary section is a single full-width stacked card: Projected row on top, Realized row below, each with a large display-size amount
-- [ ] A period filter button ("This month ▾") renders top-right of the summary section, same options as `CashflowFilterBar`: `This month / 30 days / 90 days / Custom`
-- [ ] Filter state is stored in URL search param `?filter=this-month` (default) — same pattern as cashflow
-- [ ] All data on the page (totals, counts, lists) is scoped to the selected filter period
-- [ ] A `+N% INC` / `+N% inc` percentage-change badge renders in green next to `Projected` and `Realized` labels; percentage = current-period total ÷ previous equal-length period total − 1 (show `+0%` if no prior-period data)
-- [ ] Status counts (`Confirmed / Paid Out / Cancelled`) render as an inline row inside the summary card, scoped to the filter period
-- [ ] HazardStripe retained at the bottom of the summary card
+- [x] Summary section is a single full-width stacked card: Projected row on top, Realized row below, each with a large display-size amount
+- [x] A period filter button ("This month ▾") renders top-right of the summary section, same options as `CashflowFilterBar`: `This month / 30 days / 90 days / Custom`
+- [x] Filter state is stored in URL search param `?filter=this-month` (default) — same pattern as cashflow
+- [x] All data on the page (totals, counts, lists) is scoped to the selected filter period
+- [x] A `+N% INC` / `+N% inc` percentage-change badge renders in green next to `Projected` and `Realized` labels; percentage = current-period total ÷ previous equal-length period total − 1 (show `+0%` if no prior-period data)
+- [x] Status counts (`Confirmed / Paid Out / Cancelled`) render as an inline row inside the summary card, scoped to the filter period
+- [x] HazardStripe retained at the bottom of the summary card
 
 ### Tab navigation
-- [ ] A horizontal tab bar (`Bookings | Pay Outs | Cancelled`) renders below the summary card
-- [ ] Active tab is underlined in accent color; inactive tabs are muted
-- [ ] Tab state is driven by URL search param `?tab=bookings` (default); RSC reads the param server-side
-- [ ] A `N total` count renders right-aligned below the tab bar, showing the count for the active tab's list
+- [x] A horizontal tab bar (`Bookings | Pay Outs | Cancelled`) renders below the summary card
+- [x] Active tab is underlined in accent color; inactive tabs are muted
+- [x] Tab state is driven by URL search param `?tab=bookings` (default); RSC reads the param server-side
+- [x] A `N total` count renders right-aligned below the tab bar, showing the count for the active tab's list
 
 ### Bookings tab
-- [ ] Active reservations list renders under the Bookings tab
-- [ ] Each booking card: row 1 = guest name (bold) + status plain colored text (no border/pill); row 2 = ₱ amount (large); row 3 = `N nights | CODE`; row 4 = formatted check-in date
-- [ ] Check-in date formatted as `Mon DD, YYYY` in the UI (DB stores ISO `YYYY-MM-DD` — no change to DB); time suffix `| HHMMhrs` rendered only if a time component exists in the field, otherwise omitted
-- [ ] Status colors: `Paid Out` = success, `Confirmed` = accent, `Cancelled` = muted — plain inline text, no border, no pill, no uppercase tracking
+- [x] Active reservations list renders under the Bookings tab
+- [x] Each booking card: row 1 = guest name (bold) + status plain colored text (no border/pill); row 2 = ₱ amount (large); row 3 = `N nights | CODE`; row 4 = formatted check-in date
+- [x] Check-in date formatted as `Mon DD, YYYY` in the UI (DB stores ISO `YYYY-MM-DD` — no change to DB); time suffix `| HHMMhrs` rendered only if a time component exists in the field, otherwise omitted
+- [x] Status colors: `Paid Out` = success, `Confirmed` = accent, `Cancelled` = muted — plain inline text, no border, no pill, no uppercase tracking
 
 ### Pay Outs tab
-- [ ] Payouts list renders under the Pay Outs tab
-- [ ] Each payout card: payout total (large, top, full width) → divider → bank label + `N Items ▼` (collapsible trigger on same row) → expanded items below
-- [ ] Collapsible trigger is the bank label row, not a separate button
-- [ ] Each expanded item: guest name (bold left) + amount (green right), confirmation code (muted), formatted date (muted)
-- [ ] `sentDate` and `expectedArrivalDate` hidden from the main card view (retain in DB; can surface in a future detail view)
-- [ ] "Posted to cashflow" badge retained if `cashflowTransactionId` is present (can be in expanded area)
+- [x] Payouts list renders under the Pay Outs tab
+- [x] Each payout card: payout total (large, top, full width) → divider → bank label + `N Items ▼` (collapsible trigger on same row) → expanded items below
+- [x] Collapsible trigger is the bank label row, not a separate button
+- [x] Each expanded item: guest name (bold left) + amount (green right), confirmation code (muted), formatted date (muted)
+- [x] `sentDate` and `expectedArrivalDate` hidden from the main card view (retain in DB; can surface in a future detail view)
+- [x] "Posted to cashflow" badge retained if `cashflowTransactionId` is present (can be in expanded area)
 
 ### Cancelled tab
-- [ ] Cancelled reservations list renders under the Cancelled tab
-- [ ] Each cancelled card: guest name (bold) + confirmation code (muted) — no amount, no date, no status badge, no nights
-- [ ] Cancelled items removed from the Bookings tab entirely
+- [x] Cancelled reservations list renders under the Cancelled tab
+- [x] Each cancelled card: guest name (bold) + confirmation code (muted) — no amount, no date, no status badge, no nights
+- [x] Cancelled items removed from the Bookings tab entirely
 
 ### Cleanup
-- [ ] HazardStripes between sections removed (tabs replace them)
-- [ ] `opacity-60` on cancelled rows removed (they are now in their own tab)
-- [ ] No regression to existing data — all reservations, payouts, and payout items still queryable
+- [x] HazardStripes between sections removed (tabs replace them)
+- [x] `opacity-60` on cancelled rows removed (they are now in their own tab)
+- [x] No regression to existing data — all reservations, payouts, and payout items still queryable
 
 ## Sub-tasks
 
-- [ ] Wire period filter to Airbnb page: add `?filter` search param support; pass resolved date range to all DB queries; reuse or adapt `CashflowFilterBar` component for the Airbnb route
-- [ ] Add `getAirbnbPreviousPeriodTotals` query (or equivalent) to compute % change vs prior period
-- [ ] Refactor summary section: single stacked full-width card, display-scale amounts, % change badges, inline counts, `This month ▾` button top-right
-- [ ] Add `AirbnbTabBar` client component; read `?tab` from URL, default `bookings`; pass active tab to RSC via search param
-- [ ] Restructure page: three conditional sections driven by active tab param
-- [ ] Redesign `BookingRow`: guest name primary, amount large, nights|code row, formatted date row, plain colored status text
-- [ ] Format check-in date utility: `YYYY-MM-DD` → `Mon DD, YYYY`; append `| HHMMhrs` only if time exists
-- [ ] Redesign `PayoutRow`: payout total dominant, bank+count collapsible trigger, inline expanded items with guest/amount/code/date
-- [ ] Build `CancelledRow`: name + code only, minimal
-- [ ] Add `N total` count below tab bar per active tab
-- [ ] Remove HazardStripes between sections; retain one after summary card
-- [ ] Smoke-test: all three tabs, filter switching, % change badges, empty states
+- [x] Wire period filter to Airbnb page: add `?filter` search param support; pass resolved date range to all DB queries; reuse or adapt `CashflowFilterBar` component for the Airbnb route
+- [x] Add `getAirbnbPreviousPeriodTotals` query (or equivalent) to compute % change vs prior period
+- [x] Refactor summary section: single stacked full-width card, display-scale amounts, % change badges, inline counts, `This month ▾` button top-right
+- [x] Add `AirbnbTabBar` client component; read `?tab` from URL, default `bookings`; pass active tab to RSC via search param
+- [x] Restructure page: three conditional sections driven by active tab param
+- [x] Redesign `BookingRow`: guest name primary, amount large, nights|code row, formatted date row, plain colored status text
+- [x] Format check-in date utility: `YYYY-MM-DD` → `Mon DD, YYYY`; append `| HHMMhrs` only if time exists
+- [x] Redesign `PayoutRow`: payout total dominant, bank+count collapsible trigger, inline expanded items with guest/amount/code/date
+- [x] Build `CancelledRow`: name + code only, minimal
+- [x] Add `N total` count below tab bar per active tab
+- [x] Remove HazardStripes between sections; retain one after summary card
+- [x] Smoke-test: all three tabs, filter switching, % change badges, empty states
 
 ## Open Questions
 
@@ -165,4 +165,15 @@ _(All resolved — no open questions at ticket creation)_
 
 ## Notes
 
-_Engineer appends progress notes here during implementation._
+### 2026-06-14 — implementation
+
+- Added `apps/web/lib/db/airbnb.ts`: 4 new read queries — `listReservationsByRange`, `listPayoutsByRange`, `getAirbnbTotalsByRange`, `getAirbnbPreviousPeriodTotals` (all scoped by YYYY-MM-DD date range on check_in / sent_date). Added `gte`/`lt` import from drizzle-orm.
+- Added `apps/web/components/hud/AirbnbFilterBar.tsx`: adapts `CashflowFilterBar` for `/finance/airbnb` route; preserves `?tab=` param on filter change.
+- Added `apps/web/components/hud/AirbnbDateRangeModal.tsx`: adapts `CashflowDateRangeModal` for airbnb route; passes `activeTab` to preserve tab on custom range apply.
+- Added `apps/web/components/hud/AirbnbTabBar.tsx`: client component, three tabs (Bookings / Pay Outs / Cancelled), `?tab=` URL param, cyan underline on active, muted inactive.
+- Added `apps/web/components/hud/AirbnbPayoutCard.tsx`: client component; payout total dominant at top; bank label + N Items collapsible trigger; expanded items show guest name bold + amount green + code muted + date muted.
+- Rewrote `apps/web/app/(app)/finance/airbnb/page.tsx`: full RSC rewrite — resolves `?filter` via `resolveFilterRange`, extracts YYYY-MM-DD for date-only columns, resolves `?tab`, renders summary card + AirbnbTabBar + tab-conditional content. `BookingCard` and `CancelledCard` are inline server components. `PayoutCardWrapper` loads payout items server-side and passes to `AirbnbPayoutCard`.
+- Old `PayoutDetail` component no longer used on the airbnb page (not deleted — may be used elsewhere).
+- Files: 4 added, 2 modified
+- Commits: 1 (`feat(airbnb): redesign page layout with tab nav, filter bar, and card redesigns`)
+- Open Questions surfaced: none
