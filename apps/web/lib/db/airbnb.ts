@@ -24,7 +24,7 @@ import {
   transactions,
 } from '@hud/db';
 import type { AirbnbPayout, AirbnbPayoutItem, AirbnbReservation } from '@hud/db';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lt, sql } from 'drizzle-orm';
 import { db } from './index';
 import type { ReqCtx } from './transactions';
 
@@ -584,12 +584,55 @@ export function listReservations(userId: number): AirbnbReservation[] {
     .all();
 }
 
+/**
+ * List reservations scoped to a date range (by check_in date).
+ * from/to are ISO date strings, e.g. "2026-06-01" / "2026-07-01".
+ * Range is [from, to) — from inclusive, to exclusive.
+ */
+export function listReservationsByRange(
+  userId: number,
+  from: string,
+  to: string,
+): AirbnbReservation[] {
+  return db
+    .select()
+    .from(airbnbReservations)
+    .where(
+      and(
+        eq(airbnbReservations.userId, userId),
+        gte(airbnbReservations.checkIn, from),
+        lt(airbnbReservations.checkIn, to),
+      ),
+    )
+    .orderBy(desc(airbnbReservations.checkIn))
+    .all();
+}
+
 /** List all payouts for history view, newest first. */
 export function listPayouts(userId: number): AirbnbPayout[] {
   return db
     .select()
     .from(airbnbPayouts)
     .where(eq(airbnbPayouts.userId, userId))
+    .orderBy(desc(airbnbPayouts.sentDate))
+    .all();
+}
+
+/**
+ * List payouts scoped to a date range (by sent_date).
+ * from/to are ISO date strings "YYYY-MM-DD". Range is [from, to).
+ */
+export function listPayoutsByRange(userId: number, from: string, to: string): AirbnbPayout[] {
+  return db
+    .select()
+    .from(airbnbPayouts)
+    .where(
+      and(
+        eq(airbnbPayouts.userId, userId),
+        gte(airbnbPayouts.sentDate, from),
+        lt(airbnbPayouts.sentDate, to),
+      ),
+    )
     .orderBy(desc(airbnbPayouts.sentDate))
     .all();
 }
@@ -628,6 +671,51 @@ export function getAirbnbTotals(userId: number): AirbnbTotals {
     countCanceled: Math.trunc(Number(row?.countCanceled ?? 0)),
     countPaidOut: Math.trunc(Number(row?.countPaidOut ?? 0)),
   };
+}
+
+/**
+ * Aggregated totals scoped to a date range (by check_in date).
+ * from/to are ISO date strings "YYYY-MM-DD". Range is [from, to).
+ */
+export function getAirbnbTotalsByRange(userId: number, from: string, to: string): AirbnbTotals {
+  const row = db
+    .select({
+      totalProjected: sql<number>`COALESCE(SUM(CASE WHEN status != 'canceled' THEN projected_earning_minor ELSE 0 END), 0)`,
+      totalRealized: sql<number>`COALESCE(SUM(CASE WHEN status != 'canceled' THEN realized_earning_minor ELSE 0 END), 0)`,
+      countConfirmed: sql<number>`SUM(CASE WHEN status = 'confirmed' THEN 1 ELSE 0 END)`,
+      countCanceled: sql<number>`SUM(CASE WHEN status = 'canceled' THEN 1 ELSE 0 END)`,
+      countPaidOut: sql<number>`SUM(CASE WHEN status = 'paid_out' THEN 1 ELSE 0 END)`,
+    })
+    .from(airbnbReservations)
+    .where(
+      and(
+        eq(airbnbReservations.userId, userId),
+        gte(airbnbReservations.checkIn, from),
+        lt(airbnbReservations.checkIn, to),
+      ),
+    )
+    .get();
+
+  return {
+    totalProjectedMinor: Math.trunc(Number(row?.totalProjected ?? 0)),
+    totalRealizedMinor: Math.trunc(Number(row?.totalRealized ?? 0)),
+    countConfirmed: Math.trunc(Number(row?.countConfirmed ?? 0)),
+    countCanceled: Math.trunc(Number(row?.countCanceled ?? 0)),
+    countPaidOut: Math.trunc(Number(row?.countPaidOut ?? 0)),
+  };
+}
+
+/**
+ * Aggregated totals for the prior equal-length period — used for % change badges.
+ * priorFrom/priorTo are ISO date strings "YYYY-MM-DD". Range is [priorFrom, priorTo).
+ * Returns the same shape as AirbnbTotals.
+ */
+export function getAirbnbPreviousPeriodTotals(
+  userId: number,
+  priorFrom: string,
+  priorTo: string,
+): AirbnbTotals {
+  return getAirbnbTotalsByRange(userId, priorFrom, priorTo);
 }
 
 // ---------------------------------------------------------------------------
